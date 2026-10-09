@@ -108,3 +108,39 @@ T.case('format_clock', function()
   T.eq(K.format_clock(61999), '01:01')
   T.eq(K.format_clock(3600000), '60:00')
 end)
+
+T.case('mouse and scroll wheel events are not keystrokes', function()
+  local old = vim.o.mouse
+  vim.o.mouse = 'nvi'
+  local buf = buffer()
+  local t = K.start(buf)
+  keys('<ScrollWheelDown><ScrollWheelDown><ScrollWheelUp><LeftMouse><LeftRelease>')
+  T.eq(t.keys(), 0)
+  keys('x')
+  T.eq(t.keys(), 1)
+  t.stop()
+  vim.o.mouse = old
+end)
+
+T.case('unloading the buffer (:bdelete) stops the tracker', function()
+  local buf = buffer()
+  vim.bo[buf].bufhidden = 'hide'
+  local t = K.start(buf)
+  keys('x')
+  vim.cmd('enew')
+  vim.cmd('bdelete! ' .. buf)
+  vim.api.nvim_set_current_buf(buf)
+  keys('ix<Esc>')
+  T.eq(t.keys(), 1)
+end)
+
+-- Terminals send a paste as one bracketed paste, which the TUI hands to nvim_paste (Neovim >= 0.10):
+-- no on_key event at all, so a paste costs 0 keys, never its length (measured 2026-10-09).
+T.case('a terminal paste (nvim_paste) is not a keystroke, however long', function()
+  local buf = buffer({ '' })
+  local t = K.start(buf)
+  vim.api.nvim_paste('a long pasted text\nwith a second line', false, -1)
+  T.eq(t.keys(), 0)
+  T.eq(vim.api.nvim_buf_get_lines(buf, 0, -1, false)[2], 'with a second line')
+  t.stop()
+end)

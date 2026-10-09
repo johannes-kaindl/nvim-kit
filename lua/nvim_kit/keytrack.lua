@@ -1,10 +1,21 @@
 -- Count the keys a person types in one buffer and time them from the first one. Only typed keys
 -- count (vim.on_key's `typed`): a macro replay counts the keys that started it, not the ones it
--- replays. A plugin's own command (opts.exclude_cmdline) does not count, `:` included.
+-- replays. A plugin's own command (opts.exclude_cmdline) does not count, `:` included, and
+-- neither do mouse and scroll wheel events. Unloading or wiping the buffer stops the tracker.
 local MOD = ...
 local M = {}
 
 local uv = vim.uv or vim.loop
+
+-- Mouse and wheel events arrive as typed keys too (mouse=nvi is Neovim's default); reading the
+-- text with the mouse is not a keystroke.
+local function is_mouse(typed)
+  local name = vim.fn.keytrans(typed)
+  return name:find('Mouse', 1, true) ~= nil
+    or name:find('Release>', 1, true) ~= nil
+    or name:find('Drag>', 1, true) ~= nil
+    or name:find('ScrollWheel', 1, true) ~= nil
+end
 
 function M.format_clock(ms)
   local s = math.floor(ms / 1000)
@@ -36,7 +47,7 @@ function M.start(buf, opts)
   end
 
   key_ns = vim.on_key(function(_, typed)
-    if stopped or typed == nil or typed == '' or vim.api.nvim_get_current_buf() ~= buf then
+    if stopped or typed == nil or typed == '' or vim.api.nvim_get_current_buf() ~= buf or is_mouse(typed) then
       return
     end
     if not first then
@@ -76,7 +87,8 @@ function M.start(buf, opts)
       end,
     })
   end
-  vim.api.nvim_create_autocmd('BufWipeout', { group = group, buffer = buf, callback = stop })
+  -- :bdelete unloads without wiping; either way the text is gone and the run is over.
+  vim.api.nvim_create_autocmd({ 'BufUnload', 'BufWipeout' }, { group = group, buffer = buf, callback = stop })
 
   return {
     keys = function()
