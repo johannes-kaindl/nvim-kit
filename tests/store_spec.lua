@@ -75,3 +75,25 @@ T.case('set_aside moves a file that is valid JSON but not usable', function()
   T.eq(vim.fn.filereadable(p), 0)
   T.eq(raw(aside), '[1, 2]')
 end)
+
+T.case('read with expect = object moves aside a file that is JSON but not an object', function()
+  local p = tmp()
+  vim.fn.writefile({ '[1, 2]' }, p)
+  local v, info = S.read(p, { expect = 'object' })
+  T.eq(v, nil)
+  T.ok(info.broken, 'moved aside')
+  T.eq(raw(info.broken), '[1, 2]')
+  vim.fn.writefile({ '{}' }, p)
+  T.json_eq(S.read(p, { expect = 'object' }), '{}')
+end)
+
+T.case('update passes expect on to the read', function()
+  local p = tmp()
+  vim.fn.writefile({ '"just a string"' }, p)
+  local seen
+  S.update(p, function(v, info)
+    seen = info
+    return v or {}
+  end, { expect = 'object' })
+  T.ok(seen.broken, 'moved aside before fn ran')
+end)

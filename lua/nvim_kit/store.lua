@@ -31,18 +31,27 @@ function M.set_aside(path)
   return aside
 end
 
+local function is_object(v)
+  return type(v) == 'table'
+    and (next(v) == nil and getmetatable(v) ~= nil or (next(v) ~= nil and not vim.islist(v)))
+end
+
 --- Read path. Returns the decoded value (nil when the file does not exist) and an info table;
---- info.broken names where a file without valid JSON was moved.
-function M.read(path)
+--- info.broken names where a file without valid JSON was moved. opts.expect = 'object' also moves
+--- aside valid JSON that is not an object (a list, a string, a number).
+function M.read(path, opts)
   local text = read_text(path)
   if text == nil then
     return nil, {}
   end
   local ok, value = pcall(vim.json.decode, text)
-  if ok then
-    return value, {}
+  if not ok then
+    return nil, { broken = M.set_aside(path), error = value }
   end
-  return nil, { broken = M.set_aside(path), error = value }
+  if opts and opts.expect == 'object' and not is_object(value) then
+    return nil, { broken = M.set_aside(path), error = 'not a JSON object' }
+  end
+  return value, {}
 end
 
 --- Write value as JSON: a temp file next to path, then one rename over it.
@@ -64,10 +73,11 @@ local function finish(path, ...)
   return ...
 end
 
---- Re-read path, apply fn(value_or_nil, info), write fn's first return value, and return all
---- of fn's return values. There is no cache: every update starts from the file on disk.
-function M.update(path, fn)
-  local value, info = M.read(path)
+--- Re-read path (with opts as for read), apply fn(value_or_nil, info), write fn's first return
+--- value, and return all of fn's return values. There is no cache: every update starts from the
+--- file on disk.
+function M.update(path, fn, opts)
+  local value, info = M.read(path, opts)
   return finish(path, fn(value, info))
 end
 

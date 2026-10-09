@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- `nvim_kit.winbar` — a winbar that belongs to one buffer: `attach(buf, provider)` sets it window-locally wherever the buffer is shown (also when it was attached while hidden); another buffer in the same window has none; the text is shown literally.
+- `nvim_kit.text` — `bar(pct, width)`, a text progress bar.
+- `nvim_kit.panel.set(buf, render)` — besides a list, a function `render(width)`: width is the text width of the narrowest window showing the buffer (window width minus number, sign and fold columns), and the panel is rendered again on resize, split and column option changes.
+- `nvim_kit.scratch.set_lines(buf, lines, marks)` — whole-line highlights `{ { lnum, hl_group } }`, replacing earlier ones.
+- `nvim_kit.store.read/update(path, …, { expect = 'object' })` — valid JSON that is not an object is moved aside like broken JSON.
+
+### Fixed
+- `nvim_kit.keytrack` no longer counts mouse clicks and the scroll wheel (they arrive as typed keys with Neovim's default `mouse=nvi`), and stops on `:bdelete` (`BufUnload`), not only on wipe. A terminal paste (bracketed, via `nvim_paste`) produces no key event and costs 0 keys — now pinned by a test.
+- `nvim_kit.scratch.open` hands every window that showed the replaced buffer over to the new one (deleting it used to close those windows), and the initial text is no longer undoable (`u` past the start emptied the buffer).
+
 ## [0.3.0] — 2026-10-09
 
 ### Added

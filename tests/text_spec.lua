@@ -1,0 +1,10 @@
+local T = require('nvim_kit.test')
+local X = require('nvim_kit.text')
+
+T.case('bar fills cells for a percentage, rounded, clamped to 0..100', function()
+  T.eq(X.bar(0, 10), '[░░░░░░░░░░]')
+  T.eq(X.bar(28, 10), '[███░░░░░░░]')
+  T.eq(X.bar(100, 4), '[████]')
+  T.eq(X.bar(150, 4), '[████]')
+  T.eq(X.bar(-5, 4), '[░░░░]')
+end)

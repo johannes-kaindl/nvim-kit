@@ -6,7 +6,7 @@ Source library for Neovim plugins — vendored into each plugin, never installed
 
 ## What it is
 
-A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, time-zone-free calendar dates, a JSON state store two editors can share, view buffers, a panel above line 1, and keystroke tracking. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
+A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, time-zone-free calendar dates, a JSON state store two editors can share, view buffers, a panel above line 1, a buffer-bound winbar, keystroke tracking, and small text pieces. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
 
 ## How to consume it
 
@@ -99,6 +99,18 @@ panel.wrap(long_text, width)          -- → list of lines
 
 Neovim draws virtual lines above the first line only while the window's `topfill` makes room for them, and `gg` resets it to 0. The panel makes room again whenever the cursor is on line 1 without it, and leaves a panel scrolled half away with `<C-e>` alone.
 
+Long text: pass a function instead of a list, and the panel calls it with the width it may use — the narrowest window showing the buffer, minus number, sign and fold columns — again after every resize or split:
+
+```lua
+panel.set(buf, function(width)
+  local lines = {}
+  for _, l in ipairs(panel.wrap(objective, width - 4)) do
+    lines[#lines + 1] = { { '  ' .. l, 'Comment' } }
+  end
+  return lines
+end)
+```
+
 **`nvim_kit.keytrack`** — typed keys and time in one buffer.
 
 ```lua
@@ -109,7 +121,18 @@ local t = require('nvim_kit.keytrack').start(buf, {
 t.keys(); t.elapsed_ms(); t.stop()
 ```
 
-Time runs from the first key. Only typed keys count: a macro replay counts the keys that started it, not the ones it replays.
+Time runs from the first key. Only typed keys count: a macro replay counts the keys that started it, not the ones it replays. Mouse clicks and the scroll wheel do not count, a terminal paste costs nothing, and `:bdelete` ends the tracking.
+
+**`nvim_kit.winbar`** — a winbar that belongs to one buffer.
+
+```lua
+require('nvim_kit.winbar').attach(buf, function(b) return 'M-01 · 00:42 · 17 keys' end)
+vim.cmd('redrawstatus!')   -- after the text changed
+```
+
+It is set window-locally wherever the buffer is shown; another buffer in the same window has no winbar. The text is shown literally.
+
+**`nvim_kit.text`** — `require('nvim_kit.text').bar(28, 20)` → `[██████░░░░░░░░░░░░░░]`.
 
 ## Development
 
