@@ -49,6 +49,7 @@ Tools: `brew install stylua selene`. Neovim ≥ 0.10.
 - **Feeding keys in tests:** `nvim_feedkeys(keys, 'tx', false)`. Without `t`, `vim.on_key`'s `typed` is empty and `q` records nothing; with `n`, mappings are bypassed (a buffer-local `<CR>` never fires).
 - **Headless `nvim -l` never fires `CursorMoved`,** and the view's `topline` stays stale until a redraw (`line('w0')` is current). Tests raise `CursorMoved` themselves with `nvim_exec_autocmds`.
 - **`vim.on_key`: returning `''` discards the key** (0.11+) — a counting callback returns nothing.
+- **`:enew` reuses an unnamed, empty buffer** instead of switching away from it — no `BufWinLeave`, window options unchanged. Test buffers that must be left get a name and a line of text (measured 2026-10-09, it faked a winbar bug).
 
 ## Memory
 
