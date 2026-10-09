@@ -3,7 +3,9 @@
 -- Null handling: nulls inside objects are absent (luanil), top-level null arguments arrive
 -- as nil at their position, and the comparison treats vim.NIL as nil.
 local M = {}
-local T = require('nvim_kit.test')
+-- Relative require: a vendored copy lives under the plugin's namespace (lua/<plugin>/kit/),
+-- and must load its sibling from there, never a global nvim_kit of another version.
+local T = require(((...):gsub('conformance$', 'test')))
 
 local function read(path)
   local f = io.open(path, 'r')
@@ -15,6 +17,25 @@ local function read(path)
   return text
 end
 
+-- Validates the raw decode, where JSON null is still vim.NIL: after luanil an `expected: null`
+-- and a missing `expected` look the same, and a stub returning nil would pass the latter.
+local function validate(file, raw)
+  if type(raw) ~= 'table' or type(raw['function']) ~= 'string' or type(raw.cases) ~= 'table' then
+    error(('nvim-kit conformance: %s is not a vector file'):format(file))
+  end
+  if #raw.cases == 0 then
+    error(('nvim-kit conformance: %s has no cases'):format(file))
+  end
+  for i, c in ipairs(raw.cases) do
+    if type(c.args) ~= 'table' or (next(c.args) ~= nil and #c.args == 0) then
+      error(('nvim-kit conformance: %s case %d has no args list'):format(file, i))
+    end
+    if c.expected == nil then
+      error(('nvim-kit conformance: %s case %d has no expected value'):format(file, i))
+    end
+  end
+end
+
 function M.load_dir(dir)
   local files = vim.fn.globpath(dir, '*.json', false, true)
   table.sort(files)
@@ -23,9 +44,11 @@ function M.load_dir(dir)
   end
   local vectors = {}
   for _, file in ipairs(files) do
-    local v = vim.json.decode(read(file), { luanil = { object = true } })
-    if type(v) ~= 'table' or type(v['function']) ~= 'string' or type(v.cases) ~= 'table' then
-      error(('nvim-kit conformance: %s is not a vector file'):format(file))
+    local text = read(file)
+    validate(file, vim.json.decode(text))
+    local v = vim.json.decode(text, { luanil = { object = true } })
+    if vectors[v['function']] then
+      error(('nvim-kit conformance: function %s is defined twice (%s)'):format(v['function'], file))
     end
     vectors[v['function']] = v
   end

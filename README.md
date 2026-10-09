@@ -13,8 +13,8 @@ A small set of Lua modules that the Neovim plugins of this workspace share: a te
 Copy the modules you need into your plugin under its own namespace, byte for byte, with a provenance line on top, and pin the source in a `VENDOR.json` next to them:
 
 ```
-lua/<plugin>/kit/test.lua          -- line 1: -- vendored from nvim-kit@0.1.0 (lua/nvim_kit/test.lua) — do not edit; re-vendor
-lua/<plugin>/kit/VENDOR.json       -- { "source": "nvim-kit", "tag": "0.1.0", "sha": "…", "commit": "…", "files": [...], "license": "AGPL-3.0-only" }
+lua/<plugin>/kit/test.lua          -- line 1: -- vendored from nvim-kit@0.1.1 (lua/nvim_kit/test.lua) — do not edit; re-vendor
+lua/<plugin>/kit/VENDOR.json       -- { "source": "nvim-kit", "tag": "0.1.1", "sha": "…", "commit": "…", "files": [...], "license": "AGPL-3.0-only" }
 ```
 
 Vendoring instead of a shared dependency is deliberate: Neovim loads one version per module name, so two plugins needing different kit versions would collide silently. Under the plugin's own namespace they cannot.
@@ -37,7 +37,7 @@ vim.opt.rtp:prepend(root)
 require('nvim_kit.test').main(root .. '/tests')
 ```
 
-The run exits 1 on a failing case, on a spec that fails to load, and when no case ran at all.
+Specs are collected from the directory and its subdirectories. The run exits 1 on a failing case, on a spec that fails to load, and when no case ran at all.
 
 **`nvim_kit.conformance`** — checks a port of rules against JSON vectors from the reference implementation (`{ schema, function, cases = { { name, args, expected } } }`).
 
@@ -46,7 +46,7 @@ local report = require('nvim_kit.conformance').run_dir('spec/conformance', { get
 assert(#report.failures == 0, vim.inspect(report.failures))
 ```
 
-A vector without an implementation counts as a failure. Top-level `null` arguments arrive as `nil` at their position; `false` stays `false`.
+A vector without an implementation counts as a failure; a vector file without cases, with a case missing `expected`, or defining the same function as another file is refused. Top-level `null` arguments arrive as `nil` at their position; `false` stays `false`.
 
 **`nvim_kit.data`** — loads a JSON data file only if it declares the expected schema version.
 

@@ -6,7 +6,9 @@ local function run_specs(files)
   local dir = vim.fn.tempname()
   vim.fn.mkdir(dir, 'p')
   for name, body in pairs(files) do
-    vim.fn.writefile(vim.split(body, '\n'), dir .. '/' .. name)
+    local path = dir .. '/' .. name
+    vim.fn.mkdir(vim.fn.fnamemodify(path, ':h'), 'p')
+    vim.fn.writefile(vim.split(body, '\n'), path)
   end
   local runner = dir .. '/run.lua'
   vim.fn.writefile({
@@ -63,5 +65,15 @@ T.case('a passing spec makes the runner exit 0', function()
       ['a_spec.lua'] = "local T = require('nvim_kit.test')\nT.case('x', function() T.eq(1, 1) end)",
     }),
     0
+  )
+end)
+
+T.case('counter-check: a failing spec in a subdirectory is found (review I5)', function()
+  T.eq(
+    run_specs({
+      ['a_spec.lua'] = "local T = require('nvim_kit.test')\nT.case('x', function() T.eq(1, 1) end)",
+      ['sub/b_spec.lua'] = "local T = require('nvim_kit.test')\nT.case('y', function() T.eq(1, 2) end)",
+    }),
+    1
   )
 end)

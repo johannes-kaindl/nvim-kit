@@ -71,10 +71,10 @@ local function out(line)
   io.write(line, '\n')
 end
 
---- Run every *_spec.lua in dir. Returns the number of passed and failed cases; a spec that
---- fails to load counts as one failure.
+--- Run every *_spec.lua in dir and its subdirectories. Returns the number of passed and failed
+--- cases; a spec that fails to load counts as one failure.
 function M.run_dir(dir)
-  local files = vim.fn.globpath(dir, '*_spec.lua', false, true)
+  local files = vim.fn.globpath(dir, '**/*_spec.lua', false, true)
   table.sort(files)
   local passed, failed = 0, 0
   for _, file in ipairs(files) do

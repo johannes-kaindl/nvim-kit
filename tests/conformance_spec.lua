@@ -75,3 +75,105 @@ T.case('an empty vector dir is an error', function()
     C.load_dir(d)
   end, 'no vector files')
 end)
+
+-- Review findings 2026-10-09 (C2, I4, M2).
+local function tmpdir()
+  local d = vim.fn.tempname()
+  vim.fn.mkdir(d, 'p')
+  return d
+end
+
+local function write_json(dir, name, text)
+  vim.fn.writefile(vim.split(text, '\n'), dir .. '/' .. name)
+end
+
+T.case('works when vendored under another namespace, without nvim_kit on the runtimepath', function()
+  local root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h')
+  local plug = tmpdir()
+  vim.fn.mkdir(plug .. '/lua/plug/kit', 'p')
+  for _, m in ipairs({ 'test', 'conformance', 'data' }) do
+    vim.fn.writefile(
+      vim.fn.readfile(root .. '/lua/nvim_kit/' .. m .. '.lua'),
+      plug .. '/lua/plug/kit/' .. m .. '.lua'
+    )
+  end
+  local script = plug .. '/probe.lua'
+  vim.fn.writefile({
+    ('vim.opt.rtp = { %q, vim.env.VIMRUNTIME }'):format(plug),
+    "local ok = pcall(require, 'nvim_kit.test')",
+    'if ok then os.exit(3) end',
+    "local C = require('plug.kit.conformance')",
+    ('local r = C.run_dir(%q, { add = function(a, b) return a + b end, pick = function(a, b, c) return { first = a, second = b, third = c } end })'):format(
+      DIR
+    ),
+    'os.exit(#r.failures == 0 and 0 or 2)',
+  }, script)
+  T.eq(vim.system({ 'nvim', '--headless', '-u', 'NONE', '-l', script }):wait().code, 0)
+end)
+
+T.case('a vector file with no cases is an error, not a pass', function()
+  local d = tmpdir()
+  write_json(d, 'x.json', '{ "schema": 1, "function": "x", "cases": [] }')
+  T.raises(function()
+    C.load_dir(d)
+  end, 'has no cases')
+end)
+
+T.case('two vector files for one function are an error', function()
+  local d = tmpdir()
+  write_json(
+    d,
+    'a.json',
+    '{ "schema": 1, "function": "x", "cases": [ { "name": "a", "args": [], "expected": 1 } ] }'
+  )
+  write_json(
+    d,
+    'b.json',
+    '{ "schema": 1, "function": "x", "cases": [ { "name": "b", "args": [], "expected": 2 } ] }'
+  )
+  T.raises(function()
+    C.load_dir(d)
+  end, 'twice')
+end)
+
+T.case('a case without an expected key is an error (a nil-returning stub must not pass)', function()
+  local d = tmpdir()
+  write_json(
+    d,
+    'x.json',
+    '{ "schema": 1, "function": "x", "cases": [ { "name": "no expected", "args": [1] } ] }'
+  )
+  T.raises(function()
+    C.load_dir(d)
+  end, 'no expected')
+end)
+
+T.case('a case whose args are not a list is an error', function()
+  local d = tmpdir()
+  write_json(
+    d,
+    'x.json',
+    '{ "schema": 1, "function": "x", "cases": [ { "name": "obj", "args": { "a": 1 }, "expected": 1 } ] }'
+  )
+  T.raises(function()
+    C.load_dir(d)
+  end, 'args')
+end)
+
+T.case('expected null stays a real expectation', function()
+  local d = tmpdir()
+  write_json(
+    d,
+    'x.json',
+    '{ "schema": 1, "function": "x", "cases": [ { "name": "null", "args": [], "expected": null } ] }'
+  )
+  T.eq(
+    C.run(C.load_dir(d).x, function()
+      return nil
+    end),
+    {}
+  )
+  T.ok(#C.run(C.load_dir(d).x, function()
+    return 1
+  end) > 0)
+end)
