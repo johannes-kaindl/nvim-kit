@@ -20,8 +20,8 @@
 | `lua/nvim_kit/scratch.lua` | named view buffer with buffer-local keys (`open`, `find`, `set_lines`) | 0.3.0 |
 | `lua/nvim_kit/panel.lua` | virtual lines above line 1 kept visible (`set`, `wrap`) | 0.3.0 |
 | `lua/nvim_kit/keytrack.lua` | typed keys and time in one buffer, own commands excluded (`start`, `format_clock`) | 0.3.0 |
-| `lua/nvim_kit/winbar.lua` | winbar bound to one buffer (`attach`, `render`) | unreleased (0.4.0) |
-| `lua/nvim_kit/text.lua` | small text pieces (`bar`) | unreleased (0.4.0) |
+| `lua/nvim_kit/winbar.lua` | winbar bound to one buffer (`attach`, `render`) | 0.4.0 |
+| `lua/nvim_kit/text.lua` | small text pieces (`bar`) | 0.4.0 |
 
 All of them are `0.x`: their interface may still change when the second real user arrives. That user may adapt or improve them through the gate; SemVer and the consumers' pins absorb the change.
 

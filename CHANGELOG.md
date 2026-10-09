@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.4.0] — 2026-10-09
 
 ### Added
 - `nvim_kit.winbar` — a winbar that belongs to one buffer: `attach(buf, provider)` sets it window-locally wherever the buffer is shown (also when it was attached while hidden); another buffer in the same window has none; the text is shown literally.
