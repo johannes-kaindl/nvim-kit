@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- `nvim_kit.date` — calendar dates as `YYYY-MM-DD` without time zones: `days_from_civil`, `civil_from_days` (day ordinals from 1970-01-01, like code-kit's `civilCalendar`), `add_days(ymd, n)` and `utc_today()`. Pure calendar arithmetic, never `os.time`, whose local time and daylight-saving switch shift a day; malformed and impossible dates raise. First user: neurovim.nvim's streak rule.
+
 ## [0.1.1] — 2026-10-09
 
 ### Fixed

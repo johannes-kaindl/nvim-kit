@@ -6,7 +6,7 @@ Source library for Neovim plugins — vendored into each plugin, never installed
 
 ## What it is
 
-A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, and a schema-checked JSON loader. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
+A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, and time-zone-free calendar dates. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
 
 ## How to consume it
 
@@ -55,6 +55,17 @@ local data = require('nvim_kit.data').load(path, { schema = 1 })
 ```
 
 It raises on a missing file, broken JSON, or a different or missing schema. `null` inside objects becomes an absent field.
+
+**`nvim_kit.date`** — calendar dates as `YYYY-MM-DD`, without time zones.
+
+```lua
+local date = require('nvim_kit.date')
+date.add_days('2026-03-30', -1)  -- '2026-03-29', also under TZ=Europe/Berlin
+date.utc_today()                  -- today's UTC date
+date.days_from_civil(1970, 1, 1)  -- 0; date.civil_from_days(0) → 1970, 1, 1
+```
+
+Day arithmetic is pure calendar math, never `os.time`: in local time a daylight-saving switch moves "one day earlier" by an hour and can land on the wrong date. A malformed or impossible date (`2025-02-29`) raises.
 
 ## Development
 
