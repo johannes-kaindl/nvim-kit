@@ -1,0 +1,6 @@
+{ "schema": 1, "function": "pick", "cases": [
+  { "name": "null in the middle keeps the position", "args": ["a", null, "c"], "expected": { "first": "a", "second": null, "third": "c" } },
+  { "name": "false stays false", "args": [false, true, "x"], "expected": { "first": false, "second": true, "third": "x" } },
+  { "name": "nested null is absent", "args": [{ "k": null, "n": 1 }, 0, "y"], "expected": { "first": { "n": 1 }, "second": 0, "third": "y" } },
+  { "name": "empty list", "args": [[], 1, "z"], "expected": { "first": [], "second": 1, "third": "z" } }
+] }
