@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.3.0] — 2026-10-09
 
 ### Added
 - `nvim_kit.store` — a JSON state file two editors can share: read exactly (`null` stays `vim.NIL`, `{}` stays an object, so the file keeps its shape for other programs), written atomically (temp file, then rename), re-read right before every write (`update`), and a file without valid JSON moved aside to `<path>.broken-<UTC time>` instead of being dropped (`read`, `set_aside`).

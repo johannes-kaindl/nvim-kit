@@ -12,14 +12,14 @@
 
 | Module | Purpose | Since |
 |---|---|---|
-| `lua/nvim_kit/test.lua` | test runner for headless Neovim (`case`, `eq`, `ok`, `raises`, `deep_equal`, `run_dir`, `main`; `json_eq` unreleased) | 0.1.0 |
+| `lua/nvim_kit/test.lua` | test runner for headless Neovim (`case`, `eq`, `ok`, `raises`, `deep_equal`, `run_dir`, `main`; `json_eq` since 0.3.0) | 0.1.0 |
 | `lua/nvim_kit/conformance.lua` | runs a port of rules against JSON vectors from the reference implementation | 0.1.0 |
 | `lua/nvim_kit/data.lua` | loads JSON data with a required schema version | 0.1.0 |
 | `lua/nvim_kit/date.lua` | `YYYY-MM-DD` calendar arithmetic without time zones (`days_from_civil`, `civil_from_days`, `add_days`, `utc_today`) | 0.2.0 |
-| `lua/nvim_kit/store.lua` | JSON state file: exact read, atomic write, re-read before every write, broken file moved aside (`read`, `write`, `update`, `set_aside`) | unreleased (0.3.0) |
-| `lua/nvim_kit/scratch.lua` | named view buffer with buffer-local keys (`open`, `find`, `set_lines`) | unreleased (0.3.0) |
-| `lua/nvim_kit/panel.lua` | virtual lines above line 1 kept visible (`set`, `wrap`) | unreleased (0.3.0) |
-| `lua/nvim_kit/keytrack.lua` | typed keys and time in one buffer, own commands excluded (`start`, `format_clock`) | unreleased (0.3.0) |
+| `lua/nvim_kit/store.lua` | JSON state file: exact read, atomic write, re-read before every write, broken file moved aside (`read`, `write`, `update`, `set_aside`) | 0.3.0 |
+| `lua/nvim_kit/scratch.lua` | named view buffer with buffer-local keys (`open`, `find`, `set_lines`) | 0.3.0 |
+| `lua/nvim_kit/panel.lua` | virtual lines above line 1 kept visible (`set`, `wrap`) | 0.3.0 |
+| `lua/nvim_kit/keytrack.lua` | typed keys and time in one buffer, own commands excluded (`start`, `format_clock`) | 0.3.0 |
 
 All of them are `0.x`: their interface may still change when the second real user arrives. That user may adapt or improve them through the gate; SemVer and the consumers' pins absorb the change.
 
