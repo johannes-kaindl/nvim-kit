@@ -67,6 +67,39 @@ function M.raises(fn, substring)
   end
 end
 
+-- Canonical JSON text: sorted keys; [] and {} and null stay what vim.json.encode makes of them.
+-- deep_equal treats [] and {} (and nil and vim.NIL) alike — fine for values, wrong for data that
+-- is written to disk, where the difference is the file's shape.
+local function canonical(v)
+  if type(v) ~= 'table' or v == vim.NIL or next(v) == nil then
+    return vim.json.encode(v)
+  end
+  local parts = {}
+  if vim.islist(v) then
+    for _, x in ipairs(v) do
+      parts[#parts + 1] = canonical(x)
+    end
+    return '[' .. table.concat(parts, ',') .. ']'
+  end
+  local keys = vim.tbl_keys(v)
+  table.sort(keys, function(a, b)
+    return tostring(a) < tostring(b)
+  end)
+  for _, k in ipairs(keys) do
+    parts[#parts + 1] = vim.json.encode(tostring(k)) .. ':' .. canonical(v[k])
+  end
+  return '{' .. table.concat(parts, ',') .. '}'
+end
+
+--- Strict comparison for data that goes to disk: actual's canonical JSON must equal that of
+--- expected_json_text. Unlike deep_equal it tells [] from {} and null from an absent key.
+function M.json_eq(actual, expected_json_text, msg)
+  local a, e = canonical(actual), canonical(vim.json.decode(expected_json_text))
+  if a ~= e then
+    error(('%sexpected %s, got %s'):format(msg and (msg .. ': ') or '', e, a), 2)
+  end
+end
+
 local function out(line)
   io.write(line, '\n')
 end

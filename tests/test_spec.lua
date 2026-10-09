@@ -77,3 +77,16 @@ T.case('counter-check: a failing spec in a subdirectory is found (review I5)', f
     1
   )
 end)
+
+T.case('json_eq tells [] from {} and null from absent', function()
+  T.json_eq(vim.json.decode('{"a": null, "o": {}}'), '{"o": {}, "a": null}')
+  T.raises(function()
+    T.json_eq({}, '{}')
+  end, 'expected')
+  T.raises(function()
+    T.json_eq({}, '{"a": null}')
+  end, 'expected')
+  T.raises(function()
+    T.json_eq({ a = 1 }, '{"a": 2}')
+  end, 'expected')
+end)
