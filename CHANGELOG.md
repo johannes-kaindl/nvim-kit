@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- `nvim_kit.health` — building blocks for a plugin's `:checkhealth`: `neovim(min)`, `json(path, opts)` (schema, object, missing/invalid levels, advice), `writable(dir)` (a missing directory counts by its nearest existing parent), `vendored(manifest)`. Diagnosis only: a check never moves, repairs, creates or writes anything.
+- `nvim_kit.store.is_object(v)` — public, shared with `health`.
+- `make test NVIM=<path>` runs the suite with another Neovim (the minimum version run: Neovim 0.10.4, 77/77).
+
 ## [0.4.0] — 2026-10-09
 
 ### Added

@@ -31,7 +31,8 @@ function M.set_aside(path)
   return aside
 end
 
-local function is_object(v)
+--- A JSON object as vim.json.decode returns it: a non-list table, or an empty one marked as {}.
+function M.is_object(v)
   return type(v) == 'table'
     and (next(v) == nil and getmetatable(v) ~= nil or (next(v) ~= nil and not vim.islist(v)))
 end
@@ -48,7 +49,7 @@ function M.read(path, opts)
   if not ok then
     return nil, { broken = M.set_aside(path), error = value }
   end
-  if opts and opts.expect == 'object' and not is_object(value) then
+  if opts and opts.expect == 'object' and not M.is_object(value) then
     return nil, { broken = M.set_aside(path), error = 'not a JSON object' }
   end
   return value, {}

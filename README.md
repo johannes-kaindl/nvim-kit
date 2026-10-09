@@ -134,11 +134,32 @@ It is set window-locally wherever the buffer is shown; another buffer in the sam
 
 **`nvim_kit.text`** — `require('nvim_kit.text').bar(28, 20)` → `[██████░░░░░░░░░░░░░░]`.
 
+**`nvim_kit.health`** — building blocks for `:checkhealth <plugin>`; they only read.
+
+```lua
+-- lua/myplugin/health.lua
+local health = require('myplugin.kit.health')
+return {
+  check = function()
+    vim.health.start('Neovim')
+    health.neovim('0.10')
+    vim.health.start('Data')
+    health.json(data_path, { label = 'data', schema = 1 })
+    health.json(save_path, { label = 'save', expect = 'object', missing = 'ok', invalid = 'warn' })
+    health.writable(vim.fn.stdpath('data') .. '/myplugin', 'save directory')
+    health.vendored(kit_dir .. '/VENDOR.json', 'library')
+  end,
+}
+```
+
+A broken file stays exactly as it is: the check reports it, the plugin decides what to do on its next start.
+
 ## Development
 
 ```bash
 brew install stylua selene
 make check        # stylua --check, selene, tests in headless Neovim
+make test NVIM=/path/to/nvim-0.10   # the suite with another Neovim (minimum version)
 ```
 
 New modules start at `0.x` and become stable with their second real user. Every module ships with tests, including a counter-check that shows the test can fail. Contributor rules: [`AGENTS.md`](AGENTS.md); changes: [`CHANGELOG.md`](CHANGELOG.md).

@@ -22,6 +22,7 @@
 | `lua/nvim_kit/keytrack.lua` | typed keys and time in one buffer, own commands excluded (`start`, `format_clock`) | 0.3.0 |
 | `lua/nvim_kit/winbar.lua` | winbar bound to one buffer (`attach`, `render`) | 0.4.0 |
 | `lua/nvim_kit/text.lua` | small text pieces (`bar`) | 0.4.0 |
+| `lua/nvim_kit/health.lua` | `:checkhealth` building blocks, read-only (`neovim`, `json`, `writable`, `vendored`) | unreleased (0.5.0) |
 
 All of them are `0.x`: their interface may still change when the second real user arrives. That user may adapt or improve them through the gate; SemVer and the consumers' pins absorb the change.
 
@@ -29,6 +30,7 @@ All of them are `0.x`: their interface may still change when the second real use
 
 ```bash
 make check     # stylua --check lua tests · selene lua tests · nvim --headless -u NONE -l tests/run.lua
+make test NVIM=/path/to/nvim   # minimum version run, e.g. the Neovim 0.10.4 release tarball
 stylua lua tests   # format
 ```
 
