@@ -12,10 +12,14 @@
 
 | Module | Purpose | Since |
 |---|---|---|
-| `lua/nvim_kit/test.lua` | test runner for headless Neovim (`case`, `eq`, `ok`, `raises`, `deep_equal`, `run_dir`, `main`) | 0.1.0 |
+| `lua/nvim_kit/test.lua` | test runner for headless Neovim (`case`, `eq`, `ok`, `raises`, `deep_equal`, `run_dir`, `main`; `json_eq` unreleased) | 0.1.0 |
 | `lua/nvim_kit/conformance.lua` | runs a port of rules against JSON vectors from the reference implementation | 0.1.0 |
 | `lua/nvim_kit/data.lua` | loads JSON data with a required schema version | 0.1.0 |
 | `lua/nvim_kit/date.lua` | `YYYY-MM-DD` calendar arithmetic without time zones (`days_from_civil`, `civil_from_days`, `add_days`, `utc_today`) | 0.2.0 |
+| `lua/nvim_kit/store.lua` | JSON state file: exact read, atomic write, re-read before every write, broken file moved aside (`read`, `write`, `update`, `set_aside`) | unreleased (0.3.0) |
+| `lua/nvim_kit/scratch.lua` | named view buffer with buffer-local keys (`open`, `find`, `set_lines`) | unreleased (0.3.0) |
+| `lua/nvim_kit/panel.lua` | virtual lines above line 1 kept visible (`set`, `wrap`) | unreleased (0.3.0) |
+| `lua/nvim_kit/keytrack.lua` | typed keys and time in one buffer, own commands excluded (`start`, `format_clock`) | unreleased (0.3.0) |
 
 All of them are `0.x`: their interface may still change when the second real user arrives. That user may adapt or improve them through the gate; SemVer and the consumers' pins absorb the change.
 
@@ -40,6 +44,9 @@ Tools: `brew install stylua selene`. Neovim ≥ 0.10.
 - **`vim.NIL` is truthy.** `vim.json.decode` returns JSON `null` as `vim.NIL`; decode with `{ luanil = { object = true } }` so nulls inside objects become absent fields, and compare with `deep_equal`, which treats `vim.NIL` as `nil`. Nulls inside arrays stay `vim.NIL` so positions survive.
 - **selene's `lua51` standard does not model `io.stdout` methods** — use `io.write`.
 - **`nvim -l` scripts end via `os.exit(code)`;** an uncaught error exits 1.
+- **Feeding keys in tests:** `nvim_feedkeys(keys, 'tx', false)`. Without `t`, `vim.on_key`'s `typed` is empty and `q` records nothing; with `n`, mappings are bypassed (a buffer-local `<CR>` never fires).
+- **Headless `nvim -l` never fires `CursorMoved`,** and the view's `topline` stays stale until a redraw (`line('w0')` is current). Tests raise `CursorMoved` themselves with `nvim_exec_autocmds`.
+- **`vim.on_key`: returning `''` discards the key** (0.11+) — a counting callback returns nothing.
 
 ## Memory
 

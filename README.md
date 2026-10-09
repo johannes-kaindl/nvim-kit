@@ -6,7 +6,7 @@ Source library for Neovim plugins — vendored into each plugin, never installed
 
 ## What it is
 
-A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, and time-zone-free calendar dates. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
+A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, time-zone-free calendar dates, a JSON state store two editors can share, view buffers, a panel above line 1, and keystroke tracking. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
 
 ## How to consume it
 
@@ -66,6 +66,50 @@ date.days_from_civil(1970, 1, 1)  -- 0; date.civil_from_days(0) → 1970, 1, 1
 ```
 
 Day arithmetic is pure calendar math, never `os.time`: in local time a daylight-saving switch moves "one day earlier" by an hour and can land on the wrong date. A malformed or impossible date (`2025-02-29`) raises.
+
+**`nvim_kit.store`** — a JSON state file that two editors can share.
+
+```lua
+local store = require('nvim_kit.store')
+local saved, extra = store.update(path, function(current, info)
+  current = current or { runs = 0 }   -- nil when there is no file yet (or it was broken: info.broken)
+  current.runs = current.runs + 1
+  return current, 'anything else'
+end)
+```
+
+`update` re-reads the file right before it writes, so an edit another Neovim saved in between is kept; the write goes to a temp file and is renamed over the old one. `null` and `{}` survive a round trip. A file without valid JSON is moved to `<path>.broken-<UTC time>` and reported in `info.broken` — never silently dropped.
+
+**`nvim_kit.scratch`** — a named view buffer with buffer-local keys.
+
+```lua
+local buf = require('nvim_kit.scratch').open('myplugin://list', lines, {
+  filetype = 'markdown',              -- optional; modifiable = false, bufhidden = 'wipe' by default
+  keys = { ['<CR>'] = open_item, q = close },
+})
+```
+
+**`nvim_kit.panel`** — virtual lines above line 1 that stay visible.
+
+```lua
+local panel = require('nvim_kit.panel')
+panel.set(buf, { { { 'Objective', 'Title' } }, { { '  ' .. step, 'Comment' } } })
+panel.wrap(long_text, width)          -- → list of lines
+```
+
+Neovim draws virtual lines above the first line only while the window's `topfill` makes room for them, and `gg` resets it to 0. The panel makes room again whenever the cursor is on line 1 without it, and leaves a panel scrolled half away with `<C-e>` alone.
+
+**`nvim_kit.keytrack`** — typed keys and time in one buffer.
+
+```lua
+local t = require('nvim_kit.keytrack').start(buf, {
+  exclude_cmdline = '^%s*MyPlugin',   -- the plugin's own commands do not count
+  on_tick = function() vim.cmd('redrawstatus!') end,
+})
+t.keys(); t.elapsed_ms(); t.stop()
+```
+
+Time runs from the first key. Only typed keys count: a macro replay counts the keys that started it, not the ones it replays.
 
 ## Development
 

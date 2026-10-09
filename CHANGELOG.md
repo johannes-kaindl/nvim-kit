@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- `nvim_kit.store` — a JSON state file two editors can share: read exactly (`null` stays `vim.NIL`, `{}` stays an object, so the file keeps its shape for other programs), written atomically (temp file, then rename), re-read right before every write (`update`), and a file without valid JSON moved aside to `<path>.broken-<UTC time>` instead of being dropped (`read`, `set_aside`).
+- `nvim_kit.scratch` — a plugin's own view buffer: named, not backed by a file, with buffer-local keys only; opening the same name replaces the old buffer.
+- `nvim_kit.panel` — virtual lines above line 1 (a heading, an objective). Neovim shows them only while the window's `topfill` makes room, and `gg` resets it; the panel makes room again when the cursor is on line 1 without it. `wrap` breaks long lines to a width.
+- `nvim_kit.keytrack` — counts the keys a person types in one buffer and times them from the first key. Only typed keys count (a macro replay counts the keys that started it); a plugin's own command line can be excluded, `:` included; optional one-second tick. `format_clock(ms)` gives `mm:ss`.
+- `test.json_eq` — strict comparison over canonical JSON: tells `[]` from `{}` and `null` from an absent key, unlike `deep_equal`. For data that goes to disk.
+
 ## [0.2.0] — 2026-10-09
 
 ### Added
