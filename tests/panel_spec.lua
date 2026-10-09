@@ -64,3 +64,41 @@ T.case('wrap breaks at word boundaries and splits overlong words', function()
   T.eq(P.wrap('', 10), { '' })
   T.eq(P.wrap('a  b', 10), { 'a b' })
 end)
+
+local function textwidth(win)
+  return vim.api.nvim_win_get_width(win) - vim.fn.getwininfo(win)[1].textoff
+end
+
+T.case('a render function gets the text width: window minus number and sign columns', function()
+  vim.cmd('silent! only')
+  local buf = long_buffer()
+  vim.wo.number = true
+  vim.wo.signcolumn = 'yes'
+  local seen
+  P.set(buf, function(width)
+    seen = width
+    return { { { string.rep('x', width) } } }
+  end)
+  local win = vim.api.nvim_get_current_win()
+  T.eq(seen, textwidth(win))
+  T.ok(seen < vim.api.nvim_win_get_width(win), 'number and sign columns are subtracted')
+  vim.wo.number = false
+  vim.wo.signcolumn = 'auto'
+end)
+
+T.case('after a split the panel is rendered again for the narrowest window', function()
+  vim.cmd('silent! only')
+  local buf = long_buffer()
+  local seen
+  P.set(buf, function(width)
+    seen = width
+    return { { { 'objective' } } }
+  end)
+  local full = seen
+  vim.cmd('vsplit')
+  -- headless: no redraw, so the resize events the editor raises are raised here
+  vim.api.nvim_exec_autocmds('VimResized', {})
+  T.ok(seen < full, ('rendered for %d after the split, %d before'):format(seen, full))
+  T.eq(seen, math.min(textwidth(vim.fn.win_findbuf(buf)[1]), textwidth(vim.fn.win_findbuf(buf)[2])))
+  vim.cmd('silent! only')
+end)
