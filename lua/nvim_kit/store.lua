@@ -6,10 +6,15 @@ local M = {}
 
 local uv = vim.uv or vim.loop
 
+-- nil only when the file does not exist. A file that exists but cannot be read (permissions) is an
+-- error: treating it as missing would let the next write replace it silently.
 local function read_text(path)
-  local f = io.open(path, 'rb')
+  local f, err = io.open(path, 'rb')
   if not f then
-    return nil
+    if uv.fs_stat(path) == nil then
+      return nil
+    end
+    error(('nvim-kit store: cannot read %s (%s) — left untouched'):format(path, tostring(err)), 0)
   end
   local text = f:read('*a')
   f:close()
@@ -38,6 +43,7 @@ function M.is_object(v)
 end
 
 --- Read path. Returns the decoded value (nil when the file does not exist) and an info table;
+--- raises when the file exists but cannot be read, so that update never overwrites it;
 --- info.broken names where a file without valid JSON was moved. opts.expect = 'object' also moves
 --- aside valid JSON that is not an object (a list, a string, a number).
 function M.read(path, opts)

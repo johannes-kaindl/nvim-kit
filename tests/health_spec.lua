@@ -92,3 +92,17 @@ T.case('vendored: names source, tag and short sha', function()
   T.ok(out:find('kit: nvim-kit@0.5.0 (abcdef1)', 1, true), out)
   T.ok(out:find('ERROR gone', 1, true), out)
 end)
+
+T.case(
+  'json: a file that exists but cannot be read is reported at the invalid level, never as missing',
+  function()
+    local p = file('{"x": 1}')
+    vim.fn.setfperm(p, '---------')
+    local out = report(function()
+      T.eq(H.json(p, { label = 'save', missing = 'ok', missing_text = 'no save yet', invalid = 'warn' }), nil)
+    end)
+    vim.fn.setfperm(p, 'rw-r--r--')
+    T.eq(out:find('no save yet', 1, true), nil, out)
+    T.ok(out:find('WARNING save', 1, true) and out:find('cannot be read', 1, true), out)
+  end
+)

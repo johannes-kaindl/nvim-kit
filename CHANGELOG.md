@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- `nvim_kit.store` treated a file that exists but cannot be read (permissions) like a missing one, so the next `update` replaced it silently. `read` and `update` now raise `cannot read <path> (…) — left untouched`; only a file that does not exist reads as `nil`.
+- `nvim_kit.health.json` reported such a file as missing ("no save yet"); it now reports it at the `invalid` level with the error.
+
 ## [0.5.0] — 2026-10-10
 
 ### Added
