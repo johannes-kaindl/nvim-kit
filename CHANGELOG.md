@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.5.1] — 2026-10-10
 
 ### Fixed
 - `nvim_kit.store` treated a file that exists but cannot be read (permissions) like a missing one, so the next `update` replaced it silently. `read` and `update` now raise `cannot read <path> (…) — left untouched`; only a file that does not exist reads as `nil`.
