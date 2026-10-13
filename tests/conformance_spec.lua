@@ -177,3 +177,44 @@ T.case('expected null stays a real expectation', function()
     return 1
   end) > 0)
 end)
+
+-- Review finding M2b (neurovim.nvim phase 2): a null inside an array argument can only arrive as
+-- vim.NIL, which is truthy; nil would leave a hole. Such a vector is refused when it is loaded.
+T.case('a null inside an array argument is an error, naming file, case and position', function()
+  local d = tmpdir()
+  write_json(
+    d,
+    'x.json',
+    '{ "schema": 1, "function": "x", "cases": [ { "name": "holey", "args": [0, { "l": [1, null] }], "expected": 1 } ] }'
+  )
+  T.raises(function()
+    C.load_dir(d)
+  end, 'x.json case 1 (holey): null inside an array at args[2].l[2]')
+  write_json(
+    d,
+    'x.json',
+    '{ "schema": 1, "function": "x", "cases": [ { "name": "flat", "args": [[null]], "expected": 1 } ] }'
+  )
+  T.raises(function()
+    C.load_dir(d)
+  end, 'args[1][1]')
+end)
+
+T.case('nulls the runner can pass stay allowed: top-level, inside objects, in expected', function()
+  local d = tmpdir()
+  write_json(
+    d,
+    'x.json',
+    '{ "schema": 1, "function": "x", "cases": [ { "name": "ok", "args": [null, [{ "k": null }]], "expected": [null, 1] } ] }'
+  )
+  local seen
+  T.eq(
+    C.run(C.load_dir(d).x, function(a, b)
+      seen = { a = a, b = b }
+      return { nil, 1 }
+    end),
+    {}
+  )
+  T.ok(seen.a == nil)
+  T.eq(seen.b, { {} })
+end)
