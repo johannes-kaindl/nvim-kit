@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-10-13
+
 ### Changed
 - `nvim_kit.test.deep_equal` (and with it `T.eq` and the conformance comparison) tells an empty object from an empty list, as JSON does: `vim.empty_dict()` or `{}` from `vim.json.decode` no longer equals a plain `{}`. A test that expected `{}` for an empty object now writes `vim.empty_dict()`. Other metatables are still ignored, and `vim.NIL` still equals `nil`.
 - `nvim_kit.test.ok` fails on `vim.NIL` like on `nil` and `false` (Lua counts `vim.NIL` as true).
