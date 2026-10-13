@@ -45,7 +45,8 @@ Tools: `brew install stylua selene`. Neovim ≥ 0.10.
 
 ## Gotchas
 
-- **`vim.NIL` is truthy.** `vim.json.decode` returns JSON `null` as `vim.NIL`; decode with `{ luanil = { object = true } }` so nulls inside objects become absent fields, and compare with `deep_equal`, which treats `vim.NIL` as `nil`. Nulls inside arrays stay `vim.NIL` so positions survive.
+- **`vim.NIL` is truthy.** `vim.json.decode` returns JSON `null` as `vim.NIL`; decode with `{ luanil = { object = true } }` so nulls inside objects become absent fields, and compare with `deep_equal`, which treats `vim.NIL` as `nil`. Nulls inside arrays stay `vim.NIL` so positions survive. `T.ok(vim.NIL)` fails (since 0.6.0).
+- **An empty object is not an empty list.** `vim.json.decode('{}')` carries the metatable of `vim.empty_dict()`, `'[]'` is a plain `{}`, and `deep_equal` (so `T.eq` and the conformance comparison) tells them apart since 0.6.0, as `vim.json.encode` does. Expect a decoded empty object with `vim.empty_dict()`, not `{}`.
 - **selene's `lua51` standard does not model `io.stdout` methods** — use `io.write`.
 - **`nvim -l` scripts end via `os.exit(code)`;** an uncaught error exits 1.
 - **Feeding keys in tests:** `nvim_feedkeys(keys, 'tx', false)`. Without `t`, `vim.on_key`'s `typed` is empty and `q` records nothing; with `n`, mappings are bypassed (a buffer-local `<CR>` never fires).
