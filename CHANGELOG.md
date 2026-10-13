@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- `nvim_kit.test.deep_equal` (and with it `T.eq` and the conformance comparison) tells an empty object from an empty list, as JSON does: `vim.empty_dict()` or `{}` from `vim.json.decode` no longer equals a plain `{}`. A test that expected `{}` for an empty object now writes `vim.empty_dict()`. Other metatables are still ignored, and `vim.NIL` still equals `nil`.
+- `nvim_kit.test.ok` fails on `vim.NIL` like on `nil` and `false` (Lua counts `vim.NIL` as true).
+- `nvim_kit.conformance.load_dir` refuses a vector with a `null` inside an array argument (e.g. `args[2].l[2]`), naming file, case and position: the port would receive it as `vim.NIL`, which is truthy, and `nil` would leave a hole. A top-level `null` argument (arrives as `nil`), a `null` inside an object (absent) and a `null` in `expected` stay allowed.
+
 ## [0.5.1] — 2026-10-10
 
 ### Fixed
