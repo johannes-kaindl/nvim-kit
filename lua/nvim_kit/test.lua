@@ -51,8 +51,9 @@ function M.eq(actual, expected, msg)
   end
 end
 
+--- Passes on a truthy value. vim.NIL (JSON null) fails like nil, although Lua counts it as true.
 function M.ok(value, msg)
-  if not value then
+  if not value or value == vim.NIL then
     error(msg or 'expected a truthy value', 2)
   end
 end
