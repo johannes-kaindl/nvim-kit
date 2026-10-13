@@ -13,8 +13,13 @@ local function is_nil(v)
   return v == nil or v == vim.NIL
 end
 
---- Deep equality for test values: vim.NIL equals nil, metatables are ignored (vim.json.decode
---- marks empty objects with one), numbers compare by value.
+-- vim.json.decode marks an empty object with this metatable; vim.json.encode writes it as {},
+-- any other empty table as [].
+local DICT_MT = getmetatable(vim.empty_dict())
+
+--- Deep equality for test values: vim.NIL equals nil, numbers compare by value, metatables are
+--- ignored — except that an empty object (vim.empty_dict(), or {} from vim.json.decode) differs
+--- from an empty list, as {} and [] do in JSON.
 function M.deep_equal(a, b)
   if is_nil(a) and is_nil(b) then
     return true
@@ -24,6 +29,9 @@ function M.deep_equal(a, b)
   end
   if type(a) ~= 'table' then
     return a == b
+  end
+  if next(a) == nil and next(b) == nil then
+    return (getmetatable(a) == DICT_MT) == (getmetatable(b) == DICT_MT)
   end
   for k, v in pairs(a) do
     if not M.deep_equal(v, b[k]) then
@@ -69,8 +77,8 @@ function M.raises(fn, substring)
 end
 
 -- Canonical JSON text: sorted keys; [] and {} and null stay what vim.json.encode makes of them.
--- deep_equal treats [] and {} (and nil and vim.NIL) alike — fine for values, wrong for data that
--- is written to disk, where the difference is the file's shape.
+-- deep_equal treats nil and vim.NIL alike — fine for values, wrong for data that is written to
+-- disk, where an absent key and a null are different files.
 local function canonical(v)
   if type(v) ~= 'table' or v == vim.NIL or next(v) == nil then
     return vim.json.encode(v)
@@ -93,7 +101,7 @@ local function canonical(v)
 end
 
 --- Strict comparison for data that goes to disk: actual's canonical JSON must equal that of
---- expected_json_text. Unlike deep_equal it tells [] from {} and null from an absent key.
+--- expected_json_text. Unlike deep_equal it tells null from an absent key.
 function M.json_eq(actual, expected_json_text, msg)
   local a, e = canonical(actual), canonical(vim.json.decode(expected_json_text))
   if a ~= e then
