@@ -136,10 +136,30 @@ local function parse(stdout, max_hits)
   return hits, truncated
 end
 
+--- Whether a ripgrep (Rust regex) pattern needs rg's --multiline: it holds a literal newline or
+--- a `\n` escape (an `n` after an odd number of backslashes; `\\n` is a backslash and an "n").
+--- A `\n` inside a character class counts too. Raises when pattern is not a string.
+function M.needs_multiline(pattern)
+  if type(pattern) ~= 'string' then
+    error('nvim-kit rg: needs_multiline needs a pattern (a string)', 2)
+  end
+  if pattern:find('\n', 1, true) then
+    return true
+  end
+  for slashes in pattern:gmatch('(\\+)n') do
+    if #slashes % 2 == 1 then
+      return true
+    end
+  end
+  return false
+end
+
 --- Search text with ripgrep, asynchronously. Returns a handle; handle:cancel() stops rg and
 --- answers { ok = false, error = 'cancelled' } at once.
---- opts = { pattern, replacement = <string|nil>, multiline = <bool>, max_hits = <n|nil>,
+--- opts = { pattern, replacement = <string|nil>, multiline = <bool|nil>, max_hits = <n|nil>,
 ---          timeout_ms = <n|nil>, exe = <'rg'> }
+--- multiline nil (the default) is derived from the pattern with needs_multiline; false is an
+--- explicit off (rg then refuses a pattern with \n as rg-error), true an explicit on.
 --- cb({ ok = true, hits = { { start, stop, match, replacement, line } }, truncated })
 ---   | cb({ ok = false, error = kind, detail })
 --- start and stop are 0-based byte offsets into text, stop exclusive; line is the 1-based line of
@@ -184,7 +204,11 @@ function M.search(text, opts, cb)
     return handle
   end
   local args = { exe, '--no-config', '--json', '--text', '--encoding=none' }
-  if opts.multiline then
+  local multiline = opts.multiline
+  if multiline == nil then
+    multiline = M.needs_multiline(opts.pattern)
+  end
+  if multiline then
     args[#args + 1] = '--multiline'
   end
   if opts.replacement ~= nil then
