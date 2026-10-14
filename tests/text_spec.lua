@@ -61,10 +61,42 @@ T.case('truncate: a NUL byte is a character, and it works in a fast callback', f
 end)
 
 T.case('truncate: an invalid byte counts as one character, nothing is cut inside a sequence', function()
-  -- a character starts at every byte outside 0x80..0xBF
+  -- a lead byte takes only the continuation bytes it announces; any other byte is a character
   T.eq(X.truncate('\255\255\255', 2), '\255\255…')
-  T.eq(X.truncate('ä\128x', 1), 'ä\128…') -- a stray continuation byte stays with its lead
-  T.eq(X.truncate('\128ab', 0), '…') -- one at the start is a character of its own
+  T.eq(X.truncate('ä\128x', 1), 'ä…') -- a stray continuation byte is a character of its own
+  T.eq(X.truncate('\128ab', 0), '…')
+  T.eq(X.truncate('\226\130a', 2), '\226\130…') -- a cut-off sequence: each byte is one
+  -- a run of continuation bytes is not one long character (re-review of finding I3)
+  T.eq(X.truncate('a' .. ('\128'):rep(100), 5), 'a\128\128\128\128…')
+  T.eq(X.truncate(('\171'):rep(50), 3), '\171\171\171…')
+  -- 5- and 6-byte forms are one character each, as vim.fn.strchars counts them
+  T.eq(
+    X.truncate('\248\136\128\128\128\252\132\128\128\128\128x', 2),
+    '\248\136\128\128\128\252\132\128\128\128\128…'
+  )
+end)
+
+T.case('truncate: counts as vim.fn.strchars does, invalid UTF-8 included (NUL aside)', function()
+  -- what truncate did with strchars/strcharpart, which raise on NUL and need the main loop
+  local function reference(s, n)
+    if vim.fn.strchars(s) <= n then
+      return s
+    end
+    return vim.fn.strcharpart(s, 0, n) .. '…'
+  end
+  -- bytes that make up characters of every length 1..6 as Vim counts them, and broken ones
+  local pool = { 'a', '\128', '\191', '\192', '\223', '\224', '\239', '\240', '\247', '\248' }
+  vim.list_extend(pool, { '\251', '\252', '\253', '\254', '\255', 'ä', '€', '𝄞', 'e\204\129' })
+  vim.list_extend(pool, { '\128\128', '\128\128\128\128', '\191\191\191\191\191' })
+  math.randomseed(7)
+  for _ = 1, 5000 do
+    local parts = {}
+    for _ = 1, math.random(0, 10) do
+      parts[#parts + 1] = pool[math.random(#pool)]
+    end
+    local s, n = table.concat(parts), math.random(0, 12)
+    T.eq(X.truncate(s, n), reference(s, n), vim.inspect({ s, n }))
+  end
 end)
 
 T.case('truncate: max_chars 0 leaves only the mark', function()

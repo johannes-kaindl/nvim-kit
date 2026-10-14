@@ -67,11 +67,32 @@ function M.clean_utf8(s)
   return table.concat(out)
 end
 
+-- The length of the character at byte i of s as Vim counts it (utf_ptr2len): the length its lead
+-- byte announces when all those continuation bytes follow, else 1.
+local function char_len(s, i)
+  local c = s:byte(i)
+  local len = c >= 0xFC and c <= 0xFD and 6
+    or c >= 0xF8 and c <= 0xFB and 5
+    or c >= 0xF0 and c <= 0xF7 and 4
+    or c >= 0xE0 and c <= 0xEF and 3
+    or c >= 0xC0 and c <= 0xDF and 2
+    or 1
+  for k = 1, len - 1 do
+    local b = s:byte(i + k)
+    if not b or b < 0x80 or b > 0xBF then
+      return 1
+    end
+  end
+  return len
+end
+
 --- s cut to its first max_chars characters plus mark (default U+2026) when it is longer, else s
 --- itself. Counts characters (UTF-8 code points), not bytes, so it never cuts inside a multibyte
---- character. Counted in plain Lua: a character starts at the first byte and at every byte
---- outside 0x80..0xBF, so a NUL byte is a character (vim.fn.strchars raised E976 on it), an
---- invalid byte counts as one, and it runs in a fast callback too.
+--- character. Counted in plain Lua the way vim.fn.strchars counts: a lead byte 0xC0..0xFD
+--- followed by all the continuation bytes (0x80..0xBF) it announces is one character (2 to 6
+--- bytes, as Vim reads them: overlong forms and surrogates included); every other byte is one
+--- character, so a run of stray continuation bytes counts byte by byte. A NUL byte is a
+--- character too (vim.fn.strchars raised E976 on it), and it runs in a fast callback.
 function M.truncate(s, max_chars, mark)
   if type(s) ~= 'string' then
     error('nvim-kit text: truncate needs s (a string)', 2)
@@ -82,15 +103,13 @@ function M.truncate(s, max_chars, mark)
   if mark ~= nil and type(mark) ~= 'string' then
     error('nvim-kit text: truncate: mark must be a string', 2)
   end
-  local n = 0
-  for i = 1, #s do
-    local b = s:byte(i)
-    if i == 1 or b < 0x80 or b > 0xBF then
-      n = n + 1
-      if n > max_chars then
-        return s:sub(1, i - 1) .. (mark == nil and '…' or mark)
-      end
+  local n, i = 0, 1
+  while i <= #s do
+    n = n + 1
+    if n > max_chars then
+      return s:sub(1, i - 1) .. (mark == nil and '…' or mark)
     end
+    i = i + char_len(s, i)
   end
   return s
 end
