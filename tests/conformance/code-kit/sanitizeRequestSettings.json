@@ -1,0 +1,346 @@
+{
+  "schema": 1,
+  "function": "sanitizeRequestSettings",
+  "cases": [
+    {
+      "name": "null",
+      "args": [
+        null
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "dropped": []
+      }
+    },
+    {
+      "name": "string",
+      "args": [
+        "nonsense"
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "dropped": []
+      }
+    },
+    {
+      "name": "array",
+      "args": [
+        [
+          1,
+          2
+        ]
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "dropped": []
+      }
+    },
+    {
+      "name": "empty object",
+      "args": [
+        {}
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "dropped": []
+      }
+    },
+    {
+      "name": "all valid",
+      "args": [
+        {
+          "overrides": {
+            "structured": {
+              "qwen3.8": {
+                "temperature": 0.2,
+                "top_k": 40
+              }
+            }
+          },
+          "thinking": {
+            "structured": "low"
+          },
+          "lastOnLevel": {
+            "creative": "high"
+          },
+          "levelPickerInChat": true
+        }
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {
+            "structured": {
+              "qwen3.8": {
+                "temperature": 0.2,
+                "top_k": 40
+              }
+            }
+          },
+          "thinking": {
+            "structured": "low"
+          },
+          "lastOnLevel": {
+            "creative": "high"
+          },
+          "levelPickerInChat": true
+        },
+        "dropped": []
+      }
+    },
+    {
+      "name": "unknown mode",
+      "args": [
+        {
+          "overrides": {
+            "chatty": {
+              "qwen3.8": {
+                "temperature": 0.2
+              }
+            }
+          }
+        }
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "dropped": [
+          "overrides.chatty"
+        ]
+      }
+    },
+    {
+      "name": "unknown family",
+      "args": [
+        {
+          "overrides": {
+            "structured": {
+              "llama": {
+                "temperature": 0.2
+              }
+            }
+          }
+        }
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "dropped": [
+          "overrides.structured.llama"
+        ]
+      }
+    },
+    {
+      "name": "family key unknown is allowed",
+      "args": [
+        {
+          "overrides": {
+            "structured": {
+              "unknown": {
+                "temperature": 0.3
+              }
+            }
+          }
+        }
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {
+            "structured": {
+              "unknown": {
+                "temperature": 0.3
+              }
+            }
+          },
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "dropped": []
+      }
+    },
+    {
+      "name": "unknown field",
+      "args": [
+        {
+          "overrides": {
+            "structured": {
+              "gemma4": {
+                "temp": 0.2
+              }
+            }
+          }
+        }
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "dropped": [
+          "overrides.structured.gemma4.temp"
+        ]
+      }
+    },
+    {
+      "name": "values out of range",
+      "args": [
+        {
+          "overrides": {
+            "structured": {
+              "gemma4": {
+                "top_p": 0.05,
+                "temperature": 3
+              }
+            }
+          }
+        }
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "dropped": [
+          "overrides.structured.gemma4.temperature",
+          "overrides.structured.gemma4.top_p"
+        ]
+      }
+    },
+    {
+      "name": "family with nothing kept leaves no entry",
+      "args": [
+        {
+          "overrides": {
+            "structured": {
+              "gemma4": {
+                "top_p": 0.05
+              }
+            }
+          }
+        }
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "dropped": [
+          "overrides.structured.gemma4.top_p"
+        ]
+      }
+    },
+    {
+      "name": "invalid thinking level",
+      "args": [
+        {
+          "thinking": {
+            "structured": "max",
+            "creative": "off"
+          }
+        }
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {},
+          "thinking": {
+            "creative": "off"
+          },
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "dropped": [
+          "thinking.structured"
+        ]
+      }
+    },
+    {
+      "name": "levelPickerInChat not a boolean",
+      "args": [
+        {
+          "levelPickerInChat": "yes"
+        }
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "dropped": [
+          "levelPickerInChat"
+        ]
+      }
+    },
+    {
+      "name": "reasoning_effort valid and invalid",
+      "args": [
+        {
+          "overrides": {
+            "agent": {
+              "gpt-oss": {
+                "reasoning_effort": "minimal"
+              }
+            },
+            "creative": {
+              "gpt-oss": {
+                "reasoning_effort": "turbo"
+              }
+            }
+          }
+        }
+      ],
+      "expected": {
+        "settings": {
+          "overrides": {
+            "agent": {
+              "gpt-oss": {
+                "reasoning_effort": "minimal"
+              }
+            }
+          },
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "dropped": [
+          "overrides.creative.gpt-oss.reasoning_effort"
+        ]
+      }
+    }
+  ]
+}

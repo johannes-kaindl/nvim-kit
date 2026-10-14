@@ -1,0 +1,150 @@
+{
+  "schema": 1,
+  "function": "validateOverride",
+  "cases": [
+    {
+      "name": "temperature in range",
+      "args": [
+        "temperature",
+        0.1
+      ],
+      "expected": 0.1
+    },
+    {
+      "name": "temperature above 2",
+      "args": [
+        "temperature",
+        2.5
+      ],
+      "expected": null
+    },
+    {
+      "name": "temperature negative",
+      "args": [
+        "temperature",
+        -1
+      ],
+      "expected": null
+    },
+    {
+      "name": "temperature as string",
+      "args": [
+        "temperature",
+        "0.1"
+      ],
+      "expected": null
+    },
+    {
+      "name": "top_p below 0.1 (garbage on LM Studio)",
+      "args": [
+        "top_p",
+        0.05
+      ],
+      "expected": null
+    },
+    {
+      "name": "top_p at 1",
+      "args": [
+        "top_p",
+        1
+      ],
+      "expected": 1
+    },
+    {
+      "name": "top_k integer",
+      "args": [
+        "top_k",
+        40
+      ],
+      "expected": 40
+    },
+    {
+      "name": "top_k fraction",
+      "args": [
+        "top_k",
+        40.5
+      ],
+      "expected": null
+    },
+    {
+      "name": "top_k zero",
+      "args": [
+        "top_k",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "min_p at 1",
+      "args": [
+        "min_p",
+        1
+      ],
+      "expected": 1
+    },
+    {
+      "name": "presence_penalty at 2",
+      "args": [
+        "presence_penalty",
+        2
+      ],
+      "expected": 2
+    },
+    {
+      "name": "max_tokens 1",
+      "args": [
+        "max_tokens",
+        1
+      ],
+      "expected": 1
+    },
+    {
+      "name": "max_tokens 0",
+      "args": [
+        "max_tokens",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "max_tokens at MAX_SAFE_INTEGER",
+      "args": [
+        "max_tokens",
+        9007199254740991
+      ],
+      "expected": 9007199254740991
+    },
+    {
+      "name": "reasoning_effort xhigh",
+      "args": [
+        "reasoning_effort",
+        "xhigh"
+      ],
+      "expected": "xhigh"
+    },
+    {
+      "name": "reasoning_effort unknown word",
+      "args": [
+        "reasoning_effort",
+        "extreme"
+      ],
+      "expected": null
+    },
+    {
+      "name": "reasoning_effort as number",
+      "args": [
+        "reasoning_effort",
+        5
+      ],
+      "expected": null
+    },
+    {
+      "name": "null value",
+      "args": [
+        "temperature",
+        null
+      ],
+      "expected": null
+    }
+  ]
+}

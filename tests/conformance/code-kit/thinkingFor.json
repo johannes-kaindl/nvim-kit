@@ -1,0 +1,142 @@
+{
+  "schema": 1,
+  "function": "thinkingFor",
+  "cases": [
+    {
+      "name": "default · agent",
+      "args": [
+        {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "agent"
+      ],
+      "expected": "low"
+    },
+    {
+      "name": "default · structured",
+      "args": [
+        {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "structured"
+      ],
+      "expected": "off"
+    },
+    {
+      "name": "default · transform",
+      "args": [
+        {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "transform"
+      ],
+      "expected": "off"
+    },
+    {
+      "name": "default · grounded",
+      "args": [
+        {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "grounded"
+      ],
+      "expected": "off"
+    },
+    {
+      "name": "default · companion",
+      "args": [
+        {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "companion"
+      ],
+      "expected": "off"
+    },
+    {
+      "name": "default · creative",
+      "args": [
+        {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "creative"
+      ],
+      "expected": "medium"
+    },
+    {
+      "name": "default · complete",
+      "args": [
+        {
+          "overrides": {},
+          "thinking": {},
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "complete"
+      ],
+      "expected": "off"
+    },
+    {
+      "name": "stored level wins",
+      "args": [
+        {
+          "overrides": {},
+          "thinking": {
+            "structured": "low"
+          },
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "structured"
+      ],
+      "expected": "low"
+    },
+    {
+      "name": "stored off wins over a thinking mode",
+      "args": [
+        {
+          "overrides": {},
+          "thinking": {
+            "creative": "off"
+          },
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "creative"
+      ],
+      "expected": "off"
+    },
+    {
+      "name": "another mode's level does not leak",
+      "args": [
+        {
+          "overrides": {},
+          "thinking": {
+            "structured": "high"
+          },
+          "lastOnLevel": {},
+          "levelPickerInChat": false
+        },
+        "agent"
+      ],
+      "expected": "low"
+    }
+  ]
+}

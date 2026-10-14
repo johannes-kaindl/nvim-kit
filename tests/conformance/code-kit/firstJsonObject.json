@@ -1,0 +1,439 @@
+{
+  "schema": 1,
+  "function": "firstJsonObject",
+  "cases": [
+    {
+      "name": "bare object",
+      "args": [
+        "{\"regex\":\"\\\\d+\",\"replacement\":\"N\",\"explanation\":\"digits\"}",
+        {}
+      ],
+      "expected": {
+        "regex": "\\d+",
+        "replacement": "N",
+        "explanation": "digits"
+      }
+    },
+    {
+      "name": "json fence",
+      "args": [
+        "```json\n{\"regex\":\"\\\\d+\",\"replacement\":\"N\",\"explanation\":\"digits\"}\n```",
+        {}
+      ],
+      "expected": {
+        "regex": "\\d+",
+        "replacement": "N",
+        "explanation": "digits"
+      }
+    },
+    {
+      "name": "untagged fence",
+      "args": [
+        "```\n{\"regex\":\"\\\\d+\",\"replacement\":\"N\",\"explanation\":\"digits\"}\n```",
+        {}
+      ],
+      "expected": {
+        "regex": "\\d+",
+        "replacement": "N",
+        "explanation": "digits"
+      }
+    },
+    {
+      "name": "leading prose",
+      "args": [
+        "Sure, here you go:\n{\"regex\":\"\\\\d+\",\"replacement\":\"N\",\"explanation\":\"digits\"}",
+        {}
+      ],
+      "expected": {
+        "regex": "\\d+",
+        "replacement": "N",
+        "explanation": "digits"
+      }
+    },
+    {
+      "name": "think block before",
+      "args": [
+        "<think>hmm {\"nope\":1}</think>{\"regex\":\"\\\\d+\",\"replacement\":\"N\",\"explanation\":\"digits\"}",
+        {}
+      ],
+      "expected": {
+        "regex": "\\d+",
+        "replacement": "N",
+        "explanation": "digits"
+      }
+    },
+    {
+      "name": "braces inside a string",
+      "args": [
+        "{\"regex\":\"a{2,3}\",\"replacement\":\"b\",\"explanation\":\"x\"}",
+        {}
+      ],
+      "expected": {
+        "regex": "a{2,3}",
+        "replacement": "b",
+        "explanation": "x"
+      }
+    },
+    {
+      "name": "escaped quote and brace inside a string",
+      "args": [
+        "{\"a\":\"x\\\"}y\"}",
+        {}
+      ],
+      "expected": {
+        "a": "x\"}y"
+      }
+    },
+    {
+      "name": "no json",
+      "args": [
+        "I cannot do that.",
+        {}
+      ],
+      "expected": null
+    },
+    {
+      "name": "fence without object, default reads the text",
+      "args": [
+        "```\nnicht json\n```\n{\"regex\":\"\\\\d+\",\"replacement\":\"N\",\"explanation\":\"digits\"}",
+        {}
+      ],
+      "expected": {
+        "regex": "\\d+",
+        "replacement": "N",
+        "explanation": "digits"
+      }
+    },
+    {
+      "name": "object inside a list",
+      "args": [
+        "[{\"tool\":\"x\"}]",
+        {}
+      ],
+      "expected": {
+        "tool": "x"
+      }
+    },
+    {
+      "name": "list of numbers is no object",
+      "args": [
+        "[1,2,3]",
+        {}
+      ],
+      "expected": null
+    },
+    {
+      "name": "stray close cuts what is before",
+      "args": [
+        "Gedanke ohne Anfang</think>{\"tool\":\"read_note\"}",
+        {}
+      ],
+      "expected": {
+        "tool": "read_note"
+      }
+    },
+    {
+      "name": "two stray closes cut to the last",
+      "args": [
+        "a</think>b</think>{\"tool\":\"t\"}",
+        {}
+      ],
+      "expected": {
+        "tool": "t"
+      }
+    },
+    {
+      "name": "object before a stray close is dropped",
+      "args": [
+        "{\"tool\":\"gedacht\"}</think>{\"tool\":\"echt\"}",
+        {}
+      ],
+      "expected": {
+        "tool": "echt"
+      }
+    },
+    {
+      "name": "object between two stray closes is dropped",
+      "args": [
+        "</think>{\"tool\":\"gedacht\"}</think>{\"tool\":\"echt\"}",
+        {}
+      ],
+      "expected": {
+        "tool": "echt"
+      }
+    },
+    {
+      "name": "unclosed think drops the rest",
+      "args": [
+        "<think>hm {\"a\":1}",
+        {}
+      ],
+      "expected": null
+    },
+    {
+      "name": "object before an unclosed think",
+      "args": [
+        "{\"a\":1}<think>hm {\"b\":2}",
+        {}
+      ],
+      "expected": {
+        "a": 1
+      }
+    },
+    {
+      "name": "truncated object",
+      "args": [
+        "{\"a\":",
+        {}
+      ],
+      "expected": null
+    },
+    {
+      "name": "broken span, good one behind it",
+      "args": [
+        "{x: 1} {\"b\":2}",
+        {}
+      ],
+      "expected": {
+        "b": 2
+      }
+    },
+    {
+      "name": "NaN is no json",
+      "args": [
+        "{\"a\":NaN} {\"b\":2}",
+        {}
+      ],
+      "expected": {
+        "b": 2
+      }
+    },
+    {
+      "name": "Infinity is no json",
+      "args": [
+        "{\"a\":Infinity} {\"b\":2}",
+        {}
+      ],
+      "expected": {
+        "b": 2
+      }
+    },
+    {
+      "name": "hex number is no json",
+      "args": [
+        "{\"a\":0x10} {\"b\":2}",
+        {}
+      ],
+      "expected": {
+        "b": 2
+      }
+    },
+    {
+      "name": "leading zero is no json",
+      "args": [
+        "{\"a\":01} {\"b\":2}",
+        {}
+      ],
+      "expected": {
+        "b": 2
+      }
+    },
+    {
+      "name": "two objects, first wins",
+      "args": [
+        "{\"a\":1} und {\"b\":2}",
+        {}
+      ],
+      "expected": {
+        "a": 1
+      }
+    },
+    {
+      "name": "unicode values",
+      "args": [
+        "{\"t\":\"ä€😀\"}",
+        {}
+      ],
+      "expected": {
+        "t": "ä€😀"
+      }
+    },
+    {
+      "name": "nested object and list",
+      "args": [
+        "{\"a\":[{\"b\":1}],\"c\":{\"d\":true}}",
+        {}
+      ],
+      "expected": {
+        "a": [
+          {
+            "b": 1
+          }
+        ],
+        "c": {
+          "d": true
+        }
+      }
+    },
+    {
+      "name": "bracket in prose before",
+      "args": [
+        "Klar [ok]: {\"changes\":[{\"op\":\"remove\"}]}",
+        {}
+      ],
+      "expected": {
+        "changes": [
+          {
+            "op": "remove"
+          }
+        ]
+      }
+    },
+    {
+      "name": "wikilinks are no json",
+      "args": [
+        "Hier ist deine Antwort mit [[Link]].",
+        {}
+      ],
+      "expected": null
+    },
+    {
+      "name": "empty text",
+      "args": [
+        "",
+        {}
+      ],
+      "expected": null
+    },
+    {
+      "name": "fence first: fence without object ends the search",
+      "args": [
+        "```\nnicht json\n```\n{\"regex\":\"\\\\d+\",\"replacement\":\"N\",\"explanation\":\"digits\"}",
+        {
+          "fence": "first"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "name": "fence first: tool object in a json fence",
+      "args": [
+        "Ich suche mal.\n```json\n{\"tool\":\"search_notes\",\"arguments\":{\"query\":\"Rezepte\"}}\n```",
+        {
+          "fence": "first"
+        }
+      ],
+      "expected": {
+        "tool": "search_notes",
+        "arguments": {
+          "query": "Rezepte"
+        }
+      }
+    },
+    {
+      "name": "fence last: the last block wins",
+      "args": [
+        "```json\n{\"a\":1}\n```\ntext\n```json\n{\"b\":2}\n```",
+        {
+          "fence": "last"
+        }
+      ],
+      "expected": {
+        "b": 2
+      }
+    },
+    {
+      "name": "fence tag json skips an untagged block",
+      "args": [
+        "```\n{\"a\":1}\n```\n```json\n{\"b\":2}\n```",
+        {
+          "fence": "first",
+          "fenceTag": "json"
+        }
+      ],
+      "expected": {
+        "b": 2
+      }
+    },
+    {
+      "name": "repair: typographic quotes",
+      "args": [
+        "{“a”: “b”}",
+        {
+          "repair": true
+        }
+      ],
+      "expected": {
+        "a": "b"
+      }
+    },
+    {
+      "name": "repair: typographic quotes after multibyte prose",
+      "args": [
+        "Grüße: {„k“: 1}",
+        {
+          "repair": true
+        }
+      ],
+      "expected": {
+        "k": 1
+      }
+    },
+    {
+      "name": "repair: trailing comma",
+      "args": [
+        "{\"a\":1,}",
+        {
+          "repair": true
+        }
+      ],
+      "expected": {
+        "a": 1
+      }
+    },
+    {
+      "name": "repair: a strict span later wins over a repairable one",
+      "args": [
+        "{\"a\":1,} {\"b\":2}",
+        {
+          "repair": true
+        }
+      ],
+      "expected": {
+        "b": 2
+      }
+    },
+    {
+      "name": "repair: single typographic quotes",
+      "args": [
+        "{“a”: “it’s”}",
+        {
+          "repair": true
+        }
+      ],
+      "expected": {
+        "a": "it's"
+      }
+    },
+    {
+      "name": "no repair: trailing comma fails",
+      "args": [
+        "{\"a\":1,}",
+        {}
+      ],
+      "expected": null
+    },
+    {
+      "name": "think false keeps the block",
+      "args": [
+        "<think>{\"a\":1}</think>",
+        {
+          "think": false
+        }
+      ],
+      "expected": {
+        "a": 1
+      }
+    }
+  ]
+}

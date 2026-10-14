@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "function": "familyFromName",
+  "cases": [
+    {
+      "name": "qwen3.8-27b",
+      "args": [
+        "qwen3.8-27b"
+      ],
+      "expected": "qwen3.8"
+    },
+    {
+      "name": "Qwen3.8-27B-MLX-4bit",
+      "args": [
+        "Qwen3.8-27B-MLX-4bit"
+      ],
+      "expected": "qwen3.8"
+    },
+    {
+      "name": "qwen3.6:27b",
+      "args": [
+        "qwen3.6:27b"
+      ],
+      "expected": "qwen3.6"
+    },
+    {
+      "name": "qwen/qwen3.6-35b-a3b",
+      "args": [
+        "qwen/qwen3.6-35b-a3b"
+      ],
+      "expected": "qwen3.6"
+    },
+    {
+      "name": "gemma4:12b",
+      "args": [
+        "gemma4:12b"
+      ],
+      "expected": "gemma4"
+    },
+    {
+      "name": "gemma-4-27b-it",
+      "args": [
+        "gemma-4-27b-it"
+      ],
+      "expected": "gemma4"
+    },
+    {
+      "name": "google/gemma_4",
+      "args": [
+        "google/gemma_4"
+      ],
+      "expected": "gemma4"
+    },
+    {
+      "name": "GEMMA4",
+      "args": [
+        "GEMMA4"
+      ],
+      "expected": "gemma4"
+    },
+    {
+      "name": "gpt-oss:20b",
+      "args": [
+        "gpt-oss:20b"
+      ],
+      "expected": "gpt-oss"
+    },
+    {
+      "name": "openai/gpt-oss-120b",
+      "args": [
+        "openai/gpt-oss-120b"
+      ],
+      "expected": "gpt-oss"
+    },
+    {
+      "name": "llama3.1:8b",
+      "args": [
+        "llama3.1:8b"
+      ],
+      "expected": null
+    },
+    {
+      "name": "verdigado-pro",
+      "args": [
+        "verdigado-pro"
+      ],
+      "expected": null
+    },
+    {
+      "name": "qwen3",
+      "args": [
+        "qwen3"
+      ],
+      "expected": null
+    },
+    {
+      "name": "qwen3.80",
+      "args": [
+        "qwen3.80"
+      ],
+      "expected": "qwen3.8"
+    },
+    {
+      "name": "gemma4-qwen3.8",
+      "args": [
+        "gemma4-qwen3.8"
+      ],
+      "expected": "qwen3.8"
+    },
+    {
+      "name": "empty name",
+      "args": [
+        ""
+      ],
+      "expected": null
+    }
+  ]
+}

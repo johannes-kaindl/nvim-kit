@@ -1,0 +1,4881 @@
+{
+  "schema": 1,
+  "function": "stripThinkBlocks",
+  "cases": [
+    {
+      "name": "pairs only · []",
+      "args": [
+        "",
+        {}
+      ],
+      "expected": ""
+    },
+    {
+      "name": "pairs only · [\"<think>\"]",
+      "args": [
+        "<think>",
+        {}
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\"]",
+      "args": [
+        "</think>",
+        {}
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "pairs only · [\"a\"]",
+      "args": [
+        "a",
+        {}
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"<think>\"]",
+      "args": [
+        "<think><think>",
+        {}
+      ],
+      "expected": "<think><think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"</think>\"]",
+      "args": [
+        "<think></think>",
+        {}
+      ],
+      "expected": ""
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"a\"]",
+      "args": [
+        "<think>a",
+        {}
+      ],
+      "expected": "<think>a"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"<think>\"]",
+      "args": [
+        "</think><think>",
+        {}
+      ],
+      "expected": "</think><think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"</think>\"]",
+      "args": [
+        "</think></think>",
+        {}
+      ],
+      "expected": "</think></think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"a\"]",
+      "args": [
+        "</think>a",
+        {}
+      ],
+      "expected": "</think>a"
+    },
+    {
+      "name": "pairs only · [\"a\",\"<think>\"]",
+      "args": [
+        "a<think>",
+        {}
+      ],
+      "expected": "a<think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"</think>\"]",
+      "args": [
+        "a</think>",
+        {}
+      ],
+      "expected": "a</think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"a\"]",
+      "args": [
+        "aa",
+        {}
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think><think><think>",
+        {}
+      ],
+      "expected": "<think><think><think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think><think></think>",
+        {}
+      ],
+      "expected": ""
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "<think><think>a",
+        {}
+      ],
+      "expected": "<think><think>a"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think></think><think>",
+        {}
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think></think></think>",
+        {}
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "<think></think>a",
+        {}
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "<think>a<think>",
+        {}
+      ],
+      "expected": "<think>a<think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "<think>a</think>",
+        {}
+      ],
+      "expected": ""
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "<think>aa",
+        {}
+      ],
+      "expected": "<think>aa"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think><think><think>",
+        {}
+      ],
+      "expected": "</think><think><think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think><think></think>",
+        {}
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "</think><think>a",
+        {}
+      ],
+      "expected": "</think><think>a"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think></think><think>",
+        {}
+      ],
+      "expected": "</think></think><think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think></think></think>",
+        {}
+      ],
+      "expected": "</think></think></think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "</think></think>a",
+        {}
+      ],
+      "expected": "</think></think>a"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "</think>a<think>",
+        {}
+      ],
+      "expected": "</think>a<think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "</think>a</think>",
+        {}
+      ],
+      "expected": "</think>a</think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "</think>aa",
+        {}
+      ],
+      "expected": "</think>aa"
+    },
+    {
+      "name": "pairs only · [\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "a<think><think>",
+        {}
+      ],
+      "expected": "a<think><think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "a<think></think>",
+        {}
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "pairs only · [\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "a<think>a",
+        {}
+      ],
+      "expected": "a<think>a"
+    },
+    {
+      "name": "pairs only · [\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "a</think><think>",
+        {}
+      ],
+      "expected": "a</think><think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "a</think></think>",
+        {}
+      ],
+      "expected": "a</think></think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "a</think>a",
+        {}
+      ],
+      "expected": "a</think>a"
+    },
+    {
+      "name": "pairs only · [\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "aa<think>",
+        {}
+      ],
+      "expected": "aa<think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "aa</think>",
+        {}
+      ],
+      "expected": "aa</think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"a\",\"a\"]",
+      "args": [
+        "aaa",
+        {}
+      ],
+      "expected": "aaa"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think><think><think><think>",
+        {}
+      ],
+      "expected": "<think><think><think><think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think><think><think></think>",
+        {}
+      ],
+      "expected": ""
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "<think><think><think>a",
+        {}
+      ],
+      "expected": "<think><think><think>a"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think><think></think><think>",
+        {}
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think><think></think></think>",
+        {}
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "<think><think></think>a",
+        {}
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "<think><think>a<think>",
+        {}
+      ],
+      "expected": "<think><think>a<think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "<think><think>a</think>",
+        {}
+      ],
+      "expected": ""
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "<think><think>aa",
+        {}
+      ],
+      "expected": "<think><think>aa"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think></think><think><think>",
+        {}
+      ],
+      "expected": "<think><think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think></think><think></think>",
+        {}
+      ],
+      "expected": ""
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "<think></think><think>a",
+        {}
+      ],
+      "expected": "<think>a"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think></think></think><think>",
+        {}
+      ],
+      "expected": "</think><think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think></think></think></think>",
+        {}
+      ],
+      "expected": "</think></think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "<think></think></think>a",
+        {}
+      ],
+      "expected": "</think>a"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "<think></think>a<think>",
+        {}
+      ],
+      "expected": "a<think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "<think></think>a</think>",
+        {}
+      ],
+      "expected": "a</think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "<think></think>aa",
+        {}
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think>a<think><think>",
+        {}
+      ],
+      "expected": "<think>a<think><think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think>a<think></think>",
+        {}
+      ],
+      "expected": ""
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "<think>a<think>a",
+        {}
+      ],
+      "expected": "<think>a<think>a"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think>a</think><think>",
+        {}
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think>a</think></think>",
+        {}
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "<think>a</think>a",
+        {}
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "<think>aa<think>",
+        {}
+      ],
+      "expected": "<think>aa<think>"
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "<think>aa</think>",
+        {}
+      ],
+      "expected": ""
+    },
+    {
+      "name": "pairs only · [\"<think>\",\"a\",\"a\",\"a\"]",
+      "args": [
+        "<think>aaa",
+        {}
+      ],
+      "expected": "<think>aaa"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think><think><think><think>",
+        {}
+      ],
+      "expected": "</think><think><think><think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think><think><think></think>",
+        {}
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "</think><think><think>a",
+        {}
+      ],
+      "expected": "</think><think><think>a"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think><think></think><think>",
+        {}
+      ],
+      "expected": "</think><think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think><think></think></think>",
+        {}
+      ],
+      "expected": "</think></think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "</think><think></think>a",
+        {}
+      ],
+      "expected": "</think>a"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "</think><think>a<think>",
+        {}
+      ],
+      "expected": "</think><think>a<think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "</think><think>a</think>",
+        {}
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "</think><think>aa",
+        {}
+      ],
+      "expected": "</think><think>aa"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think></think><think><think>",
+        {}
+      ],
+      "expected": "</think></think><think><think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think></think><think></think>",
+        {}
+      ],
+      "expected": "</think></think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "</think></think><think>a",
+        {}
+      ],
+      "expected": "</think></think><think>a"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think></think></think><think>",
+        {}
+      ],
+      "expected": "</think></think></think><think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think></think></think></think>",
+        {}
+      ],
+      "expected": "</think></think></think></think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "</think></think></think>a",
+        {}
+      ],
+      "expected": "</think></think></think>a"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "</think></think>a<think>",
+        {}
+      ],
+      "expected": "</think></think>a<think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "</think></think>a</think>",
+        {}
+      ],
+      "expected": "</think></think>a</think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "</think></think>aa",
+        {}
+      ],
+      "expected": "</think></think>aa"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think>a<think><think>",
+        {}
+      ],
+      "expected": "</think>a<think><think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think>a<think></think>",
+        {}
+      ],
+      "expected": "</think>a"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "</think>a<think>a",
+        {}
+      ],
+      "expected": "</think>a<think>a"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think>a</think><think>",
+        {}
+      ],
+      "expected": "</think>a</think><think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think>a</think></think>",
+        {}
+      ],
+      "expected": "</think>a</think></think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "</think>a</think>a",
+        {}
+      ],
+      "expected": "</think>a</think>a"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "</think>aa<think>",
+        {}
+      ],
+      "expected": "</think>aa<think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "</think>aa</think>",
+        {}
+      ],
+      "expected": "</think>aa</think>"
+    },
+    {
+      "name": "pairs only · [\"</think>\",\"a\",\"a\",\"a\"]",
+      "args": [
+        "</think>aaa",
+        {}
+      ],
+      "expected": "</think>aaa"
+    },
+    {
+      "name": "pairs only · [\"a\",\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "a<think><think><think>",
+        {}
+      ],
+      "expected": "a<think><think><think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "a<think><think></think>",
+        {}
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "pairs only · [\"a\",\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "a<think><think>a",
+        {}
+      ],
+      "expected": "a<think><think>a"
+    },
+    {
+      "name": "pairs only · [\"a\",\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "a<think></think><think>",
+        {}
+      ],
+      "expected": "a<think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "a<think></think></think>",
+        {}
+      ],
+      "expected": "a</think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "a<think></think>a",
+        {}
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "pairs only · [\"a\",\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "a<think>a<think>",
+        {}
+      ],
+      "expected": "a<think>a<think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "a<think>a</think>",
+        {}
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "pairs only · [\"a\",\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "a<think>aa",
+        {}
+      ],
+      "expected": "a<think>aa"
+    },
+    {
+      "name": "pairs only · [\"a\",\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "a</think><think><think>",
+        {}
+      ],
+      "expected": "a</think><think><think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "a</think><think></think>",
+        {}
+      ],
+      "expected": "a</think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "a</think><think>a",
+        {}
+      ],
+      "expected": "a</think><think>a"
+    },
+    {
+      "name": "pairs only · [\"a\",\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "a</think></think><think>",
+        {}
+      ],
+      "expected": "a</think></think><think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "a</think></think></think>",
+        {}
+      ],
+      "expected": "a</think></think></think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "a</think></think>a",
+        {}
+      ],
+      "expected": "a</think></think>a"
+    },
+    {
+      "name": "pairs only · [\"a\",\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "a</think>a<think>",
+        {}
+      ],
+      "expected": "a</think>a<think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "a</think>a</think>",
+        {}
+      ],
+      "expected": "a</think>a</think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "a</think>aa",
+        {}
+      ],
+      "expected": "a</think>aa"
+    },
+    {
+      "name": "pairs only · [\"a\",\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "aa<think><think>",
+        {}
+      ],
+      "expected": "aa<think><think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "aa<think></think>",
+        {}
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "pairs only · [\"a\",\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "aa<think>a",
+        {}
+      ],
+      "expected": "aa<think>a"
+    },
+    {
+      "name": "pairs only · [\"a\",\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "aa</think><think>",
+        {}
+      ],
+      "expected": "aa</think><think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "aa</think></think>",
+        {}
+      ],
+      "expected": "aa</think></think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "aa</think>a",
+        {}
+      ],
+      "expected": "aa</think>a"
+    },
+    {
+      "name": "pairs only · [\"a\",\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "aaa<think>",
+        {}
+      ],
+      "expected": "aaa<think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "aaa</think>",
+        {}
+      ],
+      "expected": "aaa</think>"
+    },
+    {
+      "name": "pairs only · [\"a\",\"a\",\"a\",\"a\"]",
+      "args": [
+        "aaaa",
+        {}
+      ],
+      "expected": "aaaa"
+    },
+    {
+      "name": "pairs only · \"kein Tag <think hier\"",
+      "args": [
+        "kein Tag <think hier",
+        {}
+      ],
+      "expected": "kein Tag <think hier"
+    },
+    {
+      "name": "pairs only · \"<THINK>a</THINK>\"",
+      "args": [
+        "<THINK>a</THINK>",
+        {}
+      ],
+      "expected": "<THINK>a</THINK>"
+    },
+    {
+      "name": "pairs only · \"ä<think>ö</think>ü\"",
+      "args": [
+        "ä<think>ö</think>ü",
+        {}
+      ],
+      "expected": "äü"
+    },
+    {
+      "name": "pairs only · \"x<think>a<think>b</think>y</think>z\"",
+      "args": [
+        "x<think>a<think>b</think>y</think>z",
+        {}
+      ],
+      "expected": "xy</think>z"
+    },
+    {
+      "name": "stray close · []",
+      "args": [
+        "",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\"]",
+      "args": [
+        "<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "stray close · [\"</think>\"]",
+      "args": [
+        "</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"a\"]",
+      "args": [
+        "a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"<think>\"]",
+      "args": [
+        "<think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think><think>"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"</think>\"]",
+      "args": [
+        "<think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\",\"a\"]",
+      "args": [
+        "<think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>a"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"<think>\"]",
+      "args": [
+        "</think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"</think>\"]",
+      "args": [
+        "</think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"</think>\",\"a\"]",
+      "args": [
+        "</think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"a\",\"<think>\"]",
+      "args": [
+        "a<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think>"
+    },
+    {
+      "name": "stray close · [\"a\",\"</think>\"]",
+      "args": [
+        "a</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"a\",\"a\"]",
+      "args": [
+        "aa",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think><think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think><think><think>"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think><think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "<think><think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think><think>a"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think></think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think></think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "<think></think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "<think>a<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>a<think>"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "<think>a</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "<think>aa",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>aa"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think><think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think><think>"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think><think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "</think><think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>a"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think></think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think></think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "</think></think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "</think>a<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think>"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "</think>a</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "</think>aa",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "stray close · [\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "a<think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think><think>"
+    },
+    {
+      "name": "stray close · [\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "a<think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "a<think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think>a"
+    },
+    {
+      "name": "stray close · [\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "a</think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "stray close · [\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "a</think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "a</think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "aa<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aa<think>"
+    },
+    {
+      "name": "stray close · [\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "aa</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"a\",\"a\",\"a\"]",
+      "args": [
+        "aaa",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aaa"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think><think><think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think><think><think><think>"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think><think><think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\",\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "<think><think><think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think><think><think>a"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think><think></think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think><think></think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\",\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "<think><think></think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "<think><think>a<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think><think>a<think>"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "<think><think>a</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\",\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "<think><think>aa",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think><think>aa"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think></think><think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think><think>"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think></think><think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\",\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "<think></think><think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>a"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think></think></think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think></think></think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\",\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "<think></think></think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "<think></think>a<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think>"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "<think></think>a</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\",\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "<think></think>aa",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think>a<think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>a<think><think>"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think>a<think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\",\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "<think>a<think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>a<think>a"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think>a</think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think>a</think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\",\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "<think>a</think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "<think>aa<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>aa<think>"
+    },
+    {
+      "name": "stray close · [\"<think>\",\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "<think>aa</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"<think>\",\"a\",\"a\",\"a\"]",
+      "args": [
+        "<think>aaa",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>aaa"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think><think><think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think><think><think>"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think><think><think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"</think>\",\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "</think><think><think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think><think>a"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think><think></think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think><think></think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"</think>\",\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "</think><think></think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "</think><think>a<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>a<think>"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "</think><think>a</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"</think>\",\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "</think><think>aa",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>aa"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think></think><think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think><think>"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think></think><think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"</think>\",\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "</think></think><think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>a"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think></think></think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think></think></think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"</think>\",\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "</think></think></think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "</think></think>a<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think>"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "</think></think>a</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"</think>\",\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "</think></think>aa",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think>a<think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think><think>"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think>a<think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "</think>a<think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think>a"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think>a</think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think>a</think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"</think>\",\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "</think>a</think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "</think>aa<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aa<think>"
+    },
+    {
+      "name": "stray close · [\"</think>\",\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "</think>aa</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"</think>\",\"a\",\"a\",\"a\"]",
+      "args": [
+        "</think>aaa",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aaa"
+    },
+    {
+      "name": "stray close · [\"a\",\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "a<think><think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think><think><think>"
+    },
+    {
+      "name": "stray close · [\"a\",\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "a<think><think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"a\",\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "a<think><think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think><think>a"
+    },
+    {
+      "name": "stray close · [\"a\",\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "a<think></think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think>"
+    },
+    {
+      "name": "stray close · [\"a\",\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "a<think></think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"a\",\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "a<think></think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "stray close · [\"a\",\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "a<think>a<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think>a<think>"
+    },
+    {
+      "name": "stray close · [\"a\",\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "a<think>a</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"a\",\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "a<think>aa",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think>aa"
+    },
+    {
+      "name": "stray close · [\"a\",\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "a</think><think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think><think>"
+    },
+    {
+      "name": "stray close · [\"a\",\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "a</think><think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"a\",\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "a</think><think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>a"
+    },
+    {
+      "name": "stray close · [\"a\",\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "a</think></think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "stray close · [\"a\",\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "a</think></think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"a\",\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "a</think></think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"a\",\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "a</think>a<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a<think>"
+    },
+    {
+      "name": "stray close · [\"a\",\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "a</think>a</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"a\",\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "a</think>aa",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "stray close · [\"a\",\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "aa<think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aa<think><think>"
+    },
+    {
+      "name": "stray close · [\"a\",\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "aa<think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "stray close · [\"a\",\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "aa<think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aa<think>a"
+    },
+    {
+      "name": "stray close · [\"a\",\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "aa</think><think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<think>"
+    },
+    {
+      "name": "stray close · [\"a\",\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "aa</think></think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"a\",\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "aa</think>a",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "stray close · [\"a\",\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "aaa<think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aaa<think>"
+    },
+    {
+      "name": "stray close · [\"a\",\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "aaa</think>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "stray close · [\"a\",\"a\",\"a\",\"a\"]",
+      "args": [
+        "aaaa",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "aaaa"
+    },
+    {
+      "name": "stray close · \"kein Tag <think hier\"",
+      "args": [
+        "kein Tag <think hier",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "kein Tag <think hier"
+    },
+    {
+      "name": "stray close · \"<THINK>a</THINK>\"",
+      "args": [
+        "<THINK>a</THINK>",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "<THINK>a</THINK>"
+    },
+    {
+      "name": "stray close · \"ä<think>ö</think>ü\"",
+      "args": [
+        "ä<think>ö</think>ü",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "äü"
+    },
+    {
+      "name": "stray close · \"x<think>a<think>b</think>y</think>z\"",
+      "args": [
+        "x<think>a<think>b</think>y</think>z",
+        {
+          "dropStrayClose": true
+        }
+      ],
+      "expected": "z"
+    },
+    {
+      "name": "unclosed · []",
+      "args": [
+        "",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\"]",
+      "args": [
+        "<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"</think>\"]",
+      "args": [
+        "</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"a\"]",
+      "args": [
+        "a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"<think>\"]",
+      "args": [
+        "<think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"</think>\"]",
+      "args": [
+        "<think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"a\"]",
+      "args": [
+        "<think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"<think>\"]",
+      "args": [
+        "</think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"</think>\"]",
+      "args": [
+        "</think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"a\"]",
+      "args": [
+        "</think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"<think>\"]",
+      "args": [
+        "a<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"</think>\"]",
+      "args": [
+        "a</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"a\"]",
+      "args": [
+        "aa",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think><think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think><think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "<think><think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think></think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think></think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "<think></think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "<think>a<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "<think>a</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "<think>aa",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think><think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think><think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "</think><think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think></think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think></think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think></think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "</think></think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think>a"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "</think>a<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>a"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "</think>a</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>a</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "</think>aa",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>aa"
+    },
+    {
+      "name": "unclosed · [\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "a<think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "a<think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "a<think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "a</think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "a</think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think></think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "a</think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think>a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "aa<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "unclosed · [\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "aa</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa</think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"a\",\"a\"]",
+      "args": [
+        "aaa",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aaa"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think><think><think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think><think><think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "<think><think><think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think><think></think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think><think></think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "<think><think></think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "<think><think>a<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "<think><think>a</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "<think><think>aa",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think></think><think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think></think><think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "<think></think><think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think></think></think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think></think></think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think>"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "<think></think></think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>a"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "<think></think>a<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "<think></think>a</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think>"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "<think></think>aa",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think>a<think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think>a<think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "<think>a<think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think>a</think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think>a</think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "<think>a</think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "<think>aa<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "<think>aa</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"<think>\",\"a\",\"a\",\"a\"]",
+      "args": [
+        "<think>aaa",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think><think><think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think><think><think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "</think><think><think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think><think></think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think><think></think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "</think><think></think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>a"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "</think><think>a<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "</think><think>a</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "</think><think>aa",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think></think><think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think></think><think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "</think></think><think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think></think></think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think></think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think></think></think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think></think></think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "</think></think></think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think></think>a"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "</think></think>a<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think>a"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "</think></think>a</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think>a</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "</think></think>aa",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think></think>aa"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think>a<think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>a"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think>a<think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>a"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "</think>a<think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>a"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think>a</think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>a</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think>a</think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>a</think></think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "</think>a</think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>a</think>a"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "</think>aa<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>aa"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "</think>aa</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>aa</think>"
+    },
+    {
+      "name": "unclosed · [\"</think>\",\"a\",\"a\",\"a\"]",
+      "args": [
+        "</think>aaa",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "</think>aaa"
+    },
+    {
+      "name": "unclosed · [\"a\",\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "a<think><think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "a<think><think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "a<think><think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "a<think></think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "a<think></think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "a<think></think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "unclosed · [\"a\",\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "a<think>a<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "a<think>a</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "a<think>aa",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "a</think><think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "a</think><think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "a</think><think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "a</think></think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think></think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "a</think></think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think></think></think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "a</think></think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think></think>a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "a</think>a<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think>a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "a</think>a</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think>a</think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "a</think>aa",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a</think>aa"
+    },
+    {
+      "name": "unclosed · [\"a\",\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "aa<think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "unclosed · [\"a\",\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "aa<think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "unclosed · [\"a\",\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "aa<think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "unclosed · [\"a\",\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "aa</think><think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa</think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "aa</think></think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa</think></think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "aa</think>a",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa</think>a"
+    },
+    {
+      "name": "unclosed · [\"a\",\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "aaa<think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aaa"
+    },
+    {
+      "name": "unclosed · [\"a\",\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "aaa</think>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aaa</think>"
+    },
+    {
+      "name": "unclosed · [\"a\",\"a\",\"a\",\"a\"]",
+      "args": [
+        "aaaa",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aaaa"
+    },
+    {
+      "name": "unclosed · \"kein Tag <think hier\"",
+      "args": [
+        "kein Tag <think hier",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "kein Tag <think hier"
+    },
+    {
+      "name": "unclosed · \"<THINK>a</THINK>\"",
+      "args": [
+        "<THINK>a</THINK>",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "<THINK>a</THINK>"
+    },
+    {
+      "name": "unclosed · \"ä<think>ö</think>ü\"",
+      "args": [
+        "ä<think>ö</think>ü",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "äü"
+    },
+    {
+      "name": "unclosed · \"x<think>a<think>b</think>y</think>z\"",
+      "args": [
+        "x<think>a<think>b</think>y</think>z",
+        {
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "xy</think>z"
+    },
+    {
+      "name": "both · []",
+      "args": [
+        "",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\"]",
+      "args": [
+        "<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\"]",
+      "args": [
+        "</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\"]",
+      "args": [
+        "a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"<think>\",\"<think>\"]",
+      "args": [
+        "<think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"</think>\"]",
+      "args": [
+        "<think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"a\"]",
+      "args": [
+        "<think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"<think>\"]",
+      "args": [
+        "</think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"</think>\"]",
+      "args": [
+        "</think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"a\"]",
+      "args": [
+        "</think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"<think>\"]",
+      "args": [
+        "a<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"</think>\"]",
+      "args": [
+        "a</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"a\"]",
+      "args": [
+        "aa",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "both · [\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think><think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think><think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "<think><think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think></think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think></think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "<think></think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "<think>a<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "<think>a</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "<think>aa",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think><think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think><think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "</think><think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think></think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think></think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "</think></think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "</think>a<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "</think>a</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "</think>aa",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "both · [\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "a<think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "a<think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "a<think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "a</think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "a</think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "a</think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "aa<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "both · [\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "aa</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"a\",\"a\"]",
+      "args": [
+        "aaa",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aaa"
+    },
+    {
+      "name": "both · [\"<think>\",\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think><think><think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think><think><think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "<think><think><think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think><think></think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think><think></think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "<think><think></think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"<think>\",\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "<think><think>a<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "<think><think>a</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "<think><think>aa",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think></think><think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think></think><think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "<think></think><think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think></think></think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think></think></think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "<think></think></think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"<think>\",\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "<think></think>a<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"<think>\",\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "<think></think>a</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "<think></think>aa",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "both · [\"<think>\",\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "<think>a<think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "<think>a<think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "<think>a<think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "<think>a</think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "<think>a</think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "<think>a</think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"<think>\",\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "<think>aa<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "<think>aa</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"<think>\",\"a\",\"a\",\"a\"]",
+      "args": [
+        "<think>aaa",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think><think><think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think><think><think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "</think><think><think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think><think></think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think><think></think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "</think><think></think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"</think>\",\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "</think><think>a<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "</think><think>a</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "</think><think>aa",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think></think><think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think></think><think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "</think></think><think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think></think></think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think></think></think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "</think></think></think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"</think>\",\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "</think></think>a<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"</think>\",\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "</think></think>a</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "</think></think>aa",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "both · [\"</think>\",\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "</think>a<think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"</think>\",\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "</think>a<think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"</think>\",\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "</think>a<think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"</think>\",\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "</think>a</think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "</think>a</think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "</think>a</think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"</think>\",\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "</think>aa<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "both · [\"</think>\",\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "</think>aa</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"</think>\",\"a\",\"a\",\"a\"]",
+      "args": [
+        "</think>aaa",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aaa"
+    },
+    {
+      "name": "both · [\"a\",\"<think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "a<think><think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"<think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "a<think><think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"<think>\",\"<think>\",\"a\"]",
+      "args": [
+        "a<think><think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"<think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "a<think></think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"<think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "a<think></think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"<think>\",\"</think>\",\"a\"]",
+      "args": [
+        "a<think></think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "both · [\"a\",\"<think>\",\"a\",\"<think>\"]",
+      "args": [
+        "a<think>a<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"<think>\",\"a\",\"</think>\"]",
+      "args": [
+        "a<think>a</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"<think>\",\"a\",\"a\"]",
+      "args": [
+        "a<think>aa",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"</think>\",\"<think>\",\"<think>\"]",
+      "args": [
+        "a</think><think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"</think>\",\"<think>\",\"</think>\"]",
+      "args": [
+        "a</think><think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"</think>\",\"<think>\",\"a\"]",
+      "args": [
+        "a</think><think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"</think>\",\"</think>\",\"<think>\"]",
+      "args": [
+        "a</think></think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"</think>\",\"</think>\",\"</think>\"]",
+      "args": [
+        "a</think></think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"</think>\",\"</think>\",\"a\"]",
+      "args": [
+        "a</think></think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"</think>\",\"a\",\"<think>\"]",
+      "args": [
+        "a</think>a<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"</think>\",\"a\",\"</think>\"]",
+      "args": [
+        "a</think>a</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"</think>\",\"a\",\"a\"]",
+      "args": [
+        "a</think>aa",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "both · [\"a\",\"a\",\"<think>\",\"<think>\"]",
+      "args": [
+        "aa<think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "both · [\"a\",\"a\",\"<think>\",\"</think>\"]",
+      "args": [
+        "aa<think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "both · [\"a\",\"a\",\"<think>\",\"a\"]",
+      "args": [
+        "aa<think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aa"
+    },
+    {
+      "name": "both · [\"a\",\"a\",\"</think>\",\"<think>\"]",
+      "args": [
+        "aa</think><think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"a\",\"</think>\",\"</think>\"]",
+      "args": [
+        "aa</think></think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"a\",\"</think>\",\"a\"]",
+      "args": [
+        "aa</think>a",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "a"
+    },
+    {
+      "name": "both · [\"a\",\"a\",\"a\",\"<think>\"]",
+      "args": [
+        "aaa<think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aaa"
+    },
+    {
+      "name": "both · [\"a\",\"a\",\"a\",\"</think>\"]",
+      "args": [
+        "aaa</think>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "both · [\"a\",\"a\",\"a\",\"a\"]",
+      "args": [
+        "aaaa",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "aaaa"
+    },
+    {
+      "name": "both · \"kein Tag <think hier\"",
+      "args": [
+        "kein Tag <think hier",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "kein Tag <think hier"
+    },
+    {
+      "name": "both · \"<THINK>a</THINK>\"",
+      "args": [
+        "<THINK>a</THINK>",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "<THINK>a</THINK>"
+    },
+    {
+      "name": "both · \"ä<think>ö</think>ü\"",
+      "args": [
+        "ä<think>ö</think>ü",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "äü"
+    },
+    {
+      "name": "both · \"x<think>a<think>b</think>y</think>z\"",
+      "args": [
+        "x<think>a<think>b</think>y</think>z",
+        {
+          "dropStrayClose": true,
+          "dropUnclosed": true
+        }
+      ],
+      "expected": "z"
+    }
+  ]
+}
