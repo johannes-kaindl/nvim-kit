@@ -24,4 +24,23 @@ function M.load(path, opts)
   return decoded
 end
 
+--- Absolute path of `rel` beside a Lua file, given as its debug source:
+---   data.beside(debug.getinfo(1, 'S').source, 'data/x.json')
+--- A module finds its data this way in the kit and in a vendored copy under lua/<plugin>/kit/
+--- alike, where no lookup by module name could. The caller passes its own source (level 1) on
+--- purpose: a helper that looked one level up itself would see past a tail call
+--- (`return data.beside(…)`) and resolve against the wrong file. Raises for a source that is not
+--- a file (a chunk loaded from a string has no directory).
+function M.beside(source, rel)
+  if type(source) ~= 'string' or source:sub(1, 1) ~= '@' then
+    error(
+      ("nvim-kit data: beside() needs a file source (debug.getinfo(1, 'S').source), got %s"):format(
+        vim.inspect(source)
+      ),
+      2
+    )
+  end
+  return vim.fn.fnamemodify(source:sub(2), ':p:h') .. '/' .. rel
+end
+
 return M
