@@ -209,13 +209,23 @@ end
 
 -- which-key starts on its own when Operator-pending or Visual mode begins (ModeChanged), with no
 -- mapping to cover, and counts the keys it replays twice. Its only switch for one buffer is its
--- filetype list; it may load after the buffer opened, so BufEnter asks again.
-local function which_key_off(filetype)
+-- filetype list; it may load after the buffer opened, so BufEnter asks again. The list is read only
+-- when which-key adds its triggers to a buffer, and it adds them on BufEnter, before apply set the
+-- filetype (<Space> among them, swallowing <Space>p; measured in LazyVim 2026-10-14). So the
+-- triggers already there are cleared; with the filetype listed, which-key adds none again.
+local function which_key_off(buf, filetype)
   local wk = package.loaded['which-key.config']
   local disable = type(wk) == 'table' and type(wk.options) == 'table' and wk.options.disable
   local list = type(disable) == 'table' and disable.ft
-  if filetype and type(list) == 'table' and not vim.tbl_contains(list, filetype) then
+  if not filetype or type(list) ~= 'table' then
+    return
+  end
+  if not vim.tbl_contains(list, filetype) then
     table.insert(list, filetype)
+  end
+  local wb = package.loaded['which-key.buf']
+  if type(wb) == 'table' and type(wb.clear) == 'function' then
+    pcall(wb.clear, { buf = buf })
   end
 end
 
@@ -231,6 +241,12 @@ end
 function M.apply(buf, opts)
   opts = opts or {}
   local desc = opts.desc or 'plain Neovim key'
+  -- mini.clue maps its triggers a tick after BufWinEnter, and once miniclue_disable is set it no
+  -- longer unmaps them: remove them first (before shadow, which may map the same keys).
+  local clue = package.loaded['mini.clue']
+  if type(clue) == 'table' and type(clue.disable_buf_triggers) == 'function' then
+    pcall(clue.disable_buf_triggers, buf)
+  end
   for var, value in pairs(SWITCHES) do
     vim.b[buf][var] = value
   end
@@ -249,7 +265,7 @@ function M.apply(buf, opts)
     window_options(win)
   end
   shadow(buf, desc)
-  which_key_off(opts.filetype)
+  which_key_off(buf, opts.filetype)
   local group = vim.api.nvim_create_augroup(('%s.%d'):format(MOD, buf), { clear = true })
   -- A plugin loaded later may map a Vim key; cover it the next time the buffer is entered.
   vim.api.nvim_create_autocmd('BufEnter', {
@@ -257,7 +273,7 @@ function M.apply(buf, opts)
     buffer = buf,
     callback = function()
       shadow(buf, desc)
-      which_key_off(opts.filetype)
+      which_key_off(buf, opts.filetype)
     end,
   })
   vim.api.nvim_create_autocmd('BufWinEnter', {

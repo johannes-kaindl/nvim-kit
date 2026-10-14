@@ -274,3 +274,91 @@ T.case('counter-check: not isolated leaves which-key as it is', function()
     T.eq(wk.options.disable.ft, { 'help' })
   end)
 end)
+
+-- which-key lays its triggers into the buffer on BufEnter, before apply sets the filetype, and
+-- checks its filetype list only when it adds them (measured in LazyVim 2026-10-14, neurovim.nvim:
+-- 6 triggers, <Space>p swallowed). Clearing them once the filetype is listed keeps them out.
+local function with_which_key_buf(fn)
+  local saved = package.loaded['which-key.buf']
+  local cleared = {}
+  package.loaded['which-key.buf'] = {
+    clear = function(o)
+      cleared[#cleared + 1] = o.buf
+    end,
+  }
+  local ok, err = pcall(fn, cleared)
+  package.loaded['which-key.buf'] = saved
+  if not ok then
+    error(err, 0)
+  end
+end
+
+T.case('isolated: which-key triggers already in the buffer are cleared, and again on BufEnter', function()
+  with_which_key(function()
+    with_which_key_buf(function(cleared)
+      with_setup(function()
+        local buf = open(true)
+        T.eq(cleared, { buf })
+        vim.cmd('enew')
+        vim.api.nvim_set_current_buf(buf)
+        T.eq(cleared, { buf, buf })
+      end)
+    end)
+  end)
+end)
+
+T.case('counter-check: not isolated clears no which-key trigger', function()
+  with_which_key(function()
+    with_which_key_buf(function(cleared)
+      with_setup(function()
+        open(false)
+      end)
+      T.eq(cleared, {})
+    end)
+  end)
+end)
+
+T.case('isolated: without which-key loaded nothing is cleared and nothing fails', function()
+  local saved_buf, saved_cfg = package.loaded['which-key.buf'], package.loaded['which-key.config']
+  package.loaded['which-key.buf'], package.loaded['which-key.config'] = nil, nil
+  local ok, err = pcall(with_setup, function()
+    open(true)
+  end)
+  package.loaded['which-key.buf'], package.loaded['which-key.config'] = saved_buf, saved_cfg
+  assert(ok, err)
+end)
+
+-- mini.clue adds its triggers one tick after BufWinEnter, and its buffer switch only stops new
+-- ones: unmapping returns early once miniclue_disable is set (measured with mini.clue 149236a: an
+-- apply one tick late kept the <Space> trigger). So apply unmaps them before setting the switch.
+T.case('isolated: mini.clue triggers already in the buffer are removed before its switch is set', function()
+  local saved = package.loaded['mini.clue']
+  local calls = {}
+  package.loaded['mini.clue'] = {
+    disable_buf_triggers = function(b)
+      calls[#calls + 1] = { b, vim.b[b].miniclue_disable }
+    end,
+  }
+  local ok, err = pcall(with_setup, function()
+    local buf = open(true)
+    T.eq(calls, { { buf, nil } })
+  end)
+  package.loaded['mini.clue'] = saved
+  assert(ok, err)
+end)
+
+T.case('counter-check: not isolated leaves mini.clue triggers alone', function()
+  local saved = package.loaded['mini.clue']
+  local calls = 0
+  package.loaded['mini.clue'] = {
+    disable_buf_triggers = function()
+      calls = calls + 1
+    end,
+  }
+  local ok, err = pcall(with_setup, function()
+    open(false)
+  end)
+  package.loaded['mini.clue'] = saved
+  assert(ok, err)
+  T.eq(calls, 0)
+end)

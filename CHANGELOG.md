@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Fixed
+- `isolate.apply` removes the triggers which-key had already put into the buffer: which-key adds them on `BufEnter`, before `apply` sets the filetype, and reads its filetype list only when it adds them, so its `<Space>` trigger stayed and swallowed `<Space>` mappings (`<Space>p` pasted). It calls `require('which-key.buf').clear({ buf = buf })` after listing the filetype, and again on `BufEnter`; with the filetype listed, which-key adds none again. Measured with which-key 3aab214: 6 triggers before `apply`, 2 left with 0.7.0, 0 now.
+- `isolate.apply` removes mini.clue's triggers too: mini.clue maps them one tick after `BufWinEnter`, and once `vim.b.miniclue_disable` is set it no longer unmaps them. `apply` calls `MiniClue.disable_buf_triggers(buf)` before setting the switch. Measured with mini.clue 149236a: an `apply` one tick late kept the `<Space>` trigger with 0.7.0, none now.
+
 ## [0.7.0] — 2026-10-14
 
 ### Added
