@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Added
+- `nvim_kit.sampling` — which sampling values, reasoning effort and token reserve to send per model family × mode × backend, a port of code-kit's `sampling-profiles` (0.26.0): `family_from_name`, `thinking_for`, `validate_override`, `sanitize`, `resolve`, `for_call`. The tables are code-kit's export in `lua/nvim_kit/data/sampling-profiles.json`, vendored and never edited; all 265 code-kit vectors pass, plus Lua-only cases (NaN and infinities, family patterns with `-`).
+- `nvim_kit.llm_json` — `strip_think`, `first_json_object`, `candidates` and `is_strict_json`, a port of code-kit's `stripThinkBlocks` and `firstJsonObject` (540 vectors). `vim.json.decode` accepts NaN, Infinity, hex numbers, leading zeros, `+1`, `1.` and raw tabs in strings, `JSON.parse` does not, so a span counts only after the strict check; the repair pass knows every JS whitespace character (U+00A0 included).
+- `nvim_kit.llm` — an OpenAI-compatible model server over `curl`: endpoints in priority order (default Ollama on :11434, then LM Studio on :1234), keys from `api_key_env` or `api_key_cmd` (never in curl's argument list: header and body travel as curl configuration over stdin; `~/.curlrc` is ignored; a key echoed by the server is redacted), backend detection by a reply only that backend gives (Open WebUI, Ollama, LM Studio), `models`, `resolve`, and an asynchronous `chat` with timeout and `cancel()`. Errors are values; callbacks run on the main loop.
+- `nvim_kit.http_stub` — a tiny HTTP/1.1 server on `vim.uv` for tests: fixed responses per route, recorded requests, hanging and raw answers.
+- `nvim_kit.data.beside(source, rel)` — a path beside the calling Lua file, so a module finds its data in the kit and in a vendored copy alike.
+- `make vendor-check` (part of `make check`) checks the vendored code-kit files; `make live` runs one structured chat against a real Ollama or LM Studio (not part of `make check`; exit 2 when nothing was measured).
+
+### Fixed
+- Tests that start a second Neovim use `v:progpath`, so `make test NVIM=<path>` runs them with that Neovim too; they used the `nvim` on `PATH`, and the minimum-version run never reached them.
+
 ## [0.7.0] — 2026-10-14
 
 ### Added

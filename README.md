@@ -6,7 +6,7 @@ Source library for Neovim plugins — vendored into each plugin, never installed
 
 ## What it is
 
-A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, time-zone-free calendar dates, a JSON state store two editors can share, view buffers, a panel above line 1, a buffer-bound winbar, keystroke tracking, a buffer in plain Neovim, and small text pieces. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
+A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, time-zone-free calendar dates, a JSON state store two editors can share, view buffers, a panel above line 1, a buffer-bound winbar, keystroke tracking, a buffer in plain Neovim, small text pieces, health-check building blocks, and the pieces for talking to a language model: request profiles per model family, an OpenAI-compatible client over `curl`, a reader for JSON in a model's answer, and an HTTP server for tests. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
 
 ## How to consume it
 
@@ -18,6 +18,8 @@ lua/<plugin>/kit/VENDOR.json       -- { "source": "nvim-kit", "tag": "0.1.1", "s
 ```
 
 Vendoring instead of a shared dependency is deliberate: Neovim loads one version per module name, so two plugins needing different kit versions would collide silently. Under the plugin's own namespace they cannot.
+
+Some modules bring data: `sampling` reads `data/sampling-profiles.json` beside itself. Vendor that directory with the module (`lua/nvim_kit/data/` → `lua/<plugin>/kit/data/`); `llm` needs `sampling`, `llm_json` and `data` next to it.
 
 ## Modules
 
@@ -55,6 +57,8 @@ local data = require('nvim_kit.data').load(path, { schema = 1 })
 ```
 
 It raises on a missing file, broken JSON, or a different or missing schema. `null` inside objects becomes an absent field.
+
+`data.beside(debug.getinfo(1, 'S').source, 'data/x.json')` gives the path of a file beside the calling module — in the kit and in a vendored copy alike. The caller passes its own source because a helper that looked it up one level higher would see past a tail call.
 
 **`nvim_kit.date`** — calendar dates as `YYYY-MM-DD`, without time zones.
 
@@ -170,12 +174,66 @@ return {
 
 A broken file stays exactly as it is: the check reports it, the plugin decides what to do on its next start.
 
+**`nvim_kit.sampling`** — which sampling values, reasoning effort and token reserve a request sends, per model family × mode × backend; a port of code-kit's `sampling-profiles`, checked against its vectors.
+
+```lua
+local sampling = require('myplugin.kit.sampling')
+local request, dropped = sampling.sanitize(user_config.request) -- report `dropped`; nothing is dropped silently
+local r = sampling.for_call({
+  request = request,
+  mode = 'structured',
+  family = sampling.family_from_name('qwen3.6:27b'),   -- 'qwen3.6'
+  backend = 'lmstudio',
+})
+r.params  -- { temperature = 0.1, top_p = 0.95, top_k = 20, reasoning_effort = 'none' }
+r.explain -- per field: value, state ('sent-effective', 'not-sent-unsupported', …), origin, source
+```
+
+The tables are code-kit's export, vendored into `lua/nvim_kit/data/` and never edited here.
+
+**`nvim_kit.llm`** — talks to an OpenAI-compatible server (Ollama, LM Studio, Open WebUI, a hosted API) over `curl`. Setting up a local server: [uplink.jkaindl.de/llm-setup](https://uplink.jkaindl.de/llm-setup).
+
+```lua
+local llm = require('myplugin.kit.llm')
+llm.resolve({ endpoints = cfg.endpoints, model = saved_model }, function(r)
+  if r.error then -- 'no-model' also carries r.models for a vim.ui.select
+    return vim.notify(r.error .. ': ' .. r.detail, vim.log.levels.WARN)
+  end
+  local h = llm.chat({
+    endpoint = r.endpoint, model = r.model, backend = r.backend,
+    mode = 'structured', request = request, messages = messages,
+  }, function(res)
+    if not res.ok then return report(res.error, res.detail) end
+    local answer = llm.first_json_object(res.content)
+  end)
+  -- h.cancel() stops it and answers { ok = false, error = 'cancelled' }
+end)
+```
+
+An endpoint is `{ url, name?, model?, backend?, api_key_env? or api_key_cmd? }`; the default list is Ollama on `:11434`, then LM Studio on `:1234`, and the first that answers wins. A key comes from an environment variable or a command (`{ 'pass', 'show', 'openai' }`), is read once per session, never appears in curl's argument list or in a message. The backend is detected by a reply only that backend gives, unless the endpoint names it. Errors are values with a `detail`: `unreachable`, `timeout`, `cancelled`, `key-missing`, `http` (the server refused; `status` and its message), `bad-response`, `no-model`, `empty`, `truncated`. Callbacks run on the main loop. Needs `curl` on `PATH`.
+
+**`nvim_kit.llm_json`** — reads a model's answer: `strip_think(text, opts)` removes `<think>` blocks, `first_json_object(text)` returns the first JSON object in it (fenced blocks first), strictly as `JSON.parse` would read it — `vim.json.decode` alone also takes `NaN`, hex numbers and leading zeros. A port of code-kit's `stripThinkBlocks` and `firstJsonObject`; `llm` exposes both too.
+
+**`nvim_kit.http_stub`** — an HTTP/1.1 server for tests, in the test's own Neovim.
+
+```lua
+local srv = require('myplugin.kit.http_stub').start({
+  ['GET /v1/models'] = { body = { data = { { id = 'm' } } } },
+  ['POST /v1/chat/completions'] = function(req) return { status = 500, body = { error = 'nope' } } end,
+  ['POST /slow'] = { hang = true },
+})
+-- … srv.url, srv.requests[1].body … srv.close()
+```
+
+Wait for an answer with `vim.wait`; route functions run in a fast event (no `vim.fn`, no `vim.api`).
+
 ## Development
 
 ```bash
 brew install stylua selene
 make check        # stylua --check, selene, tests in headless Neovim
 make test NVIM=/path/to/nvim-0.10   # the suite with another Neovim (minimum version)
+make live         # one structured chat against a real Ollama/LM Studio (not part of make check)
 ```
 
 New modules start at `0.x` and become stable with their second real user. Every module ships with tests, including a counter-check that shows the test can fail. Contributor rules: [`AGENTS.md`](AGENTS.md); changes: [`CHANGELOG.md`](CHANGELOG.md).

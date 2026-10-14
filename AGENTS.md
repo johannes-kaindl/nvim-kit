@@ -14,7 +14,7 @@
 |---|---|---|
 | `lua/nvim_kit/test.lua` | test runner for headless Neovim (`case`, `eq`, `ok`, `raises`, `deep_equal`, `run_dir`, `main`; `json_eq` since 0.3.0) | 0.1.0 |
 | `lua/nvim_kit/conformance.lua` | runs a port of rules against JSON vectors from the reference implementation | 0.1.0 |
-| `lua/nvim_kit/data.lua` | loads JSON data with a required schema version | 0.1.0 |
+| `lua/nvim_kit/data.lua` | loads JSON data with a required schema version (`load`); a path beside the calling file (`beside`, 0.8.0) | 0.1.0 |
 | `lua/nvim_kit/date.lua` | `YYYY-MM-DD` calendar arithmetic without time zones (`days_from_civil`, `civil_from_days`, `add_days`, `utc_today`) | 0.2.0 |
 | `lua/nvim_kit/store.lua` | JSON state file: exact read, atomic write, re-read before every write, broken file moved aside (`read`, `write`, `update`, `set_aside`) | 0.3.0 |
 | `lua/nvim_kit/scratch.lua` | named view buffer with buffer-local keys (`open`, `find`, `set_lines`) | 0.3.0 |
@@ -24,6 +24,10 @@
 | `lua/nvim_kit/text.lua` | small text pieces (`bar`) | 0.4.0 |
 | `lua/nvim_kit/health.lua` | `:checkhealth` building blocks, read-only (`neovim`, `json`, `writable`, `vendored`) | 0.5.0 |
 | `lua/nvim_kit/isolate.lua` | one buffer in plain Neovim: Vim keys, Neovim's default options, editor helpers off (`apply`, `overrides`, `global_options`) | 0.7.0 |
+| `lua/nvim_kit/sampling.lua` | request profiles per model family × mode × backend, a port of code-kit `sampling-profiles` (`family_from_name`, `thinking_for`, `validate_override`, `sanitize`, `resolve`, `for_call`); tables in `lua/nvim_kit/data/`, vendored from code-kit | 0.8.0 |
+| `lua/nvim_kit/llm_json.lua` | reading a model's answer: `strip_think`, `first_json_object`, `candidates`, `is_strict_json` (port of code-kit `think-splitter`/`llm-json`) | 0.8.0 |
+| `lua/nvim_kit/llm.lua` | OpenAI-compatible server over `curl`: `endpoints`, `models`, `backend`, `resolve`, `chat` (async, timeout, `cancel`); keys from `api_key_env`/`api_key_cmd` | 0.8.0 |
+| `lua/nvim_kit/http_stub.lua` | HTTP/1.1 test server on `vim.uv` (`start`) | 0.8.0 |
 
 All of them are `0.x`: their interface may still change when the second real user arrives. That user may adapt or improve them through the gate; SemVer and the consumers' pins absorb the change.
 
@@ -32,6 +36,8 @@ All of them are `0.x`: their interface may still change when the second real use
 ```bash
 make check     # stylua --check lua tests · selene lua tests · nvim --headless -u NONE -l tests/run.lua
 make test NVIM=/path/to/nvim   # minimum version run, e.g. the Neovim 0.10.4 release tarball
+make vendor-check   # code-kit data and vectors against code-kit@<tag> (needs the nvim-plugins Dach; part of make check)
+make live           # one structured chat against a real Ollama/LM Studio; LLM_LIVE_URL, LLM_LIVE_MODEL; exit 2 = nothing measured
 stylua lua tests   # format
 ```
 
@@ -43,6 +49,7 @@ Tools: `brew install stylua selene`. Neovim ≥ 0.10.
 - **Never edit a vendored copy** in a plugin. Fix it here, tag, re-vendor.
 - **A module here carries no plugin's domain.** If a function needs a plugin's types, tables or vocabulary, it belongs in that plugin (with a `-- domain: <plugin>` header).
 - **Fail loudly.** A missing file, an unknown schema, a vector without an implementation — each raises or counts as a failure; nothing is skipped silently.
+- **Vendored from code-kit:** `lua/nvim_kit/data/sampling-profiles.json` and `tests/conformance/code-kit/` come from code-kit (manifest `vendor/code-kit/VENDOR.json`), written by `../tools/kit/vendor.py`, never edited. A change to a table or a vector is made in code-kit, tagged there, and re-vendored here; `make vendor-check` fails on any drift. The manifest lives outside `lua/` on purpose: a plugin vendors `lua/nvim_kit/data/` with the modules, and a manifest in there would point at nvim-kit paths the plugin does not have.
 
 ## Gotchas
 
@@ -59,6 +66,12 @@ Tools: `brew install stylua selene`. Neovim ≥ 0.10.
 - **`<C-f>` (`'cedit'`) does not open the command-line window from `nvim_feedkeys(…, 'x')`** — Neovim inserts it as a character there; `q:` takes the same path through the events, so tests use `q:`.
 - **`vim.schedule` callbacks queued while `nvim_feedkeys(…, 'x')` runs fire on the next loop turn,** not before `feedkeys` returns — `vim.wait(0)` in a test.
 - **Keys a plugin replays with `nvim_feedkeys(…, 't')` arrive as typed in `vim.on_key`** (which-key: `gg` counts 4) — indistinguishable from the person's keys.
+- **`debug.getinfo(2)` sees past a tail call.** In LuaJIT `return f()` drops the caller's frame, so a helper that looks one level up resolves against the caller's caller (measured 2026-10-14). That is why `data.beside` takes `debug.getinfo(1, 'S').source` from its caller.
+- **`vim.json.decode` is more lenient than JSON:** it accepts `NaN`, `Infinity`, `nan`, `inf`, `0x10`, `01`, `+1`, `1.` and raw control characters in strings; it refuses a lone surrogate escape and nesting deeper than 1000, which `JSON.parse` accepts (measured on 0.12.6). Check with `llm_json.is_strict_json` first where strictness matters.
+- **Lua `%s` is ASCII whitespace only;** JS `\s` also matches U+00A0, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F, U+3000 and U+FEFF (finding M9).
+- **LM Studio answers unknown paths with HTTP 200 and `{"error": …}`** (0.4.x, `/api/version`, `/api/config`). Judge a probe by its body, never by the status alone.
+- **curl:** `-q` must be the first argument or `~/.curlrc` applies. Secrets go in the configuration over stdin (`-K -`), in double quotes with `\` and `"` escaped — never in argv, which `ps` shows. `vim.system`'s `timeout` ends with `code 124`, `kill(15)` with `code 0, signal 15`.
+- **A test that starts another Neovim uses `vim.v.progpath`,** not `'nvim'`: `make test NVIM=…` replaces only the outer one.
 
 ## Memory
 
