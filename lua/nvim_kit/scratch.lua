@@ -59,6 +59,45 @@ function M.open(name, lines, opts)
   return buf
 end
 
+--- Show `buf` at (`row`, `col`) and return the window. Focuses a window of the current tab page
+--- that shows `buf` (the first one `win_findbuf` lists); with none it opens `aboveleft split`,
+--- shows `buf` in it and focuses that. `row` is 1-based and `col` a 0-based byte offset, as
+--- `nvim_win_set_cursor` takes them. Both are clamped to the buffer as it is now (row to
+--- 1..line count, col to 0..last byte of that line), so a buffer that shrank never raises
+--- "Invalid cursor line". Raises when `buf` is not a valid buffer or `row`/`col` are not whole
+--- numbers. (Not called `goto`: that is reserved in LuaJIT.)
+function M.reveal(buf, row, col)
+  if type(buf) ~= 'number' then
+    error('nvim-kit scratch: reveal: buf must be a number', 2)
+  end
+  if type(row) ~= 'number' or row % 1 ~= 0 then
+    error('nvim-kit scratch: reveal: row must be a whole number', 2)
+  end
+  if type(col) ~= 'number' or col % 1 ~= 0 then
+    error('nvim-kit scratch: reveal: col must be a whole number', 2)
+  end
+  if not vim.api.nvim_buf_is_valid(buf) then
+    error('nvim-kit scratch: reveal: buf is not valid', 2)
+  end
+  local win
+  for _, w in ipairs(vim.fn.win_findbuf(buf)) do
+    if vim.api.nvim_win_get_tabpage(w) == vim.api.nvim_get_current_tabpage() then
+      win = w
+      break
+    end
+  end
+  if not win then
+    vim.cmd('aboveleft split')
+    win = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_set_buf(win, buf)
+  end
+  vim.api.nvim_set_current_win(win)
+  local r = math.max(1, math.min(row, vim.api.nvim_buf_line_count(buf)))
+  local line = vim.api.nvim_buf_get_lines(buf, r - 1, r, false)[1] or ''
+  vim.api.nvim_win_set_cursor(win, { r, math.max(0, math.min(col, #line - 1)) })
+  return win
+end
+
 local closing = {}
 
 --- Close every window that shows `buf`, then delete it. A window that cannot be closed (the last
