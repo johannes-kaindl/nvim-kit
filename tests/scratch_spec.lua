@@ -333,3 +333,29 @@ T.case('reveal: invalid arguments raise', function()
     S.reveal(gone, 1, 0)
   end, 'not valid')
 end)
+
+T.case('reveal: a column past a multibyte line lands on a character start', function()
+  lone_window()
+  local buf = lines_buf(1)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { 'äö' })
+  local win = S.reveal(buf, 1, 99)
+  T.eq(vim.api.nvim_win_get_cursor(win), { 1, 2 }) -- the start of ö, not its second byte
+end)
+
+T.case('reveal: a window that cannot be focused does not count', function()
+  lone_window()
+  local buf = lines_buf(3)
+  local float = vim.api.nvim_open_win(buf, false, {
+    relative = 'editor',
+    row = 1,
+    col = 1,
+    width = 10,
+    height = 2,
+    focusable = false,
+  })
+  local win = S.reveal(buf, 2, 0)
+  T.ok(win ~= float)
+  T.eq(vim.api.nvim_get_current_win(), win)
+  T.eq(vim.api.nvim_win_get_buf(win), buf)
+  pcall(vim.api.nvim_win_close, float, true)
+end)

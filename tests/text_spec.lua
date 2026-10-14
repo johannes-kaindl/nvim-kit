@@ -174,8 +174,16 @@ T.case('language_name: C, POSIX, empty and unknown give English', function()
 end)
 
 T.case('language_name: nil reads v:lang', function()
-  T.eq(X.language_name(nil), X.language_name(vim.v.lang))
-  -- v:lang is read-only: a child Neovim under a locale shows the default end to end
+  -- v:lang is read-only: swap the vim.v table for the call
+  local orig = vim.v
+  vim.v = setmetatable({ lang = 'pt_BR.UTF-8' }, { __index = orig })
+  local ok, name = pcall(X.language_name)
+  vim.v = orig
+  T.ok(ok, tostring(name))
+  T.eq(name, 'Portuguese')
+end)
+
+T.case('language_name: end to end in a child Neovim under a German locale', function()
   local root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h')
   local code =
     'vim.opt.rtp:prepend(vim.env.KIT_ROOT) io.write(vim.v.lang, "|", require("nvim_kit.text").language_name())'
@@ -188,10 +196,8 @@ T.case('language_name: nil reads v:lang', function()
     :wait()
   T.eq(r.code, 0, r.stderr)
   local lang, name = r.stdout:match('^(.-)|(.*)$')
-  T.eq(name, X.language_name(lang)) -- whatever locale the machine has, the default follows it
-  if lang:sub(1, 2) == 'de' then
-    T.eq(name, 'German')
-  end
+  T.ok(lang:sub(1, 2) == 'de', 'locale de_DE.UTF-8 is not installed (child v:lang = ' .. lang .. ')')
+  T.eq(name, 'German')
 end)
 
 T.case('language_name: a lang that is neither nil nor a string raises', function()

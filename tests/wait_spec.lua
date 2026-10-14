@@ -46,14 +46,53 @@ T.case('result: a callback answering false gives false, true', function()
   T.eq(answered, true)
 end)
 
-T.case('result: a late answer after the timeout is ignored and harmless', function()
+T.case('result: a callback of an earlier timed-out call does not leak into a later call', function()
   local late
-  local value, answered = W.result(function(cb)
+  local _, answered = W.result(function(cb)
     late = cb
-  end, 30)
+  end, 20)
   T.eq(answered, false)
-  late('too late')
+  local value = W.result(function(cb)
+    late('too late') -- the old callback fires while the new call waits
+    vim.defer_fn(function()
+      cb('fresh')
+    end, 10)
+  end, 2000)
+  T.eq(value, 'fresh')
+end)
+
+T.case('result: only the first callback argument is kept', function()
+  local value, answered = W.result(function(cb)
+    cb(nil, 'an error')
+  end, 100)
   T.eq(value, nil)
+  T.eq(answered, true)
+end)
+
+T.case("result: returns start's return value as a third value", function()
+  local _, answered, handle = W.result(function()
+    return { cancel = true }
+  end, 20)
+  T.eq(answered, false)
+  T.eq(handle, { cancel = true })
+end)
+
+T.case('result: from a fast callback it raises before start runs', function()
+  local started, res = false, nil
+  local timer = vim.uv.new_timer()
+  timer:start(0, 0, function()
+    res = { pcall(W.result, function()
+      started = true
+    end, 10) }
+  end)
+  vim.wait(2000, function()
+    return res ~= nil
+  end, 5)
+  timer:close()
+  T.ok(res, 'the timer did not fire')
+  T.eq(res[1], false)
+  T.ok(tostring(res[2]):find('fast', 1, true), tostring(res[2]))
+  T.eq(started, false)
 end)
 
 T.case('result: invalid arguments raise', function()

@@ -10,6 +10,7 @@ local function await(start, ms)
     calls = calls + 1
     result = v
   end)
+  -- not wait.result: these helpers count the callback calls to catch a double answer
   vim.wait(ms or 5000, function()
     return result ~= nil
   end, 5)

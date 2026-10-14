@@ -60,10 +60,11 @@ function M.open(name, lines, opts)
 end
 
 --- Show `buf` at (`row`, `col`) and return the window. Focuses a window of the current tab page
---- that shows `buf` (the first one `win_findbuf` lists); with none it opens `aboveleft split`,
+--- that shows `buf` and can take focus (the first one `win_findbuf` lists; a float with
+--- `focusable = false` does not count); with none it opens `aboveleft split`,
 --- shows `buf` in it and focuses that. `row` is 1-based and `col` a 0-based byte offset, as
 --- `nvim_win_set_cursor` takes them. Both are clamped to the buffer as it is now (row to
---- 1..line count, col to 0..last byte of that line), so a buffer that shrank never raises
+--- 1..line count, col to >= 0; past the line's end Neovim itself puts the cursor on the last character, never inside a multibyte one), so a buffer that shrank never raises
 --- "Invalid cursor line". Raises when `buf` is not a valid buffer or `row`/`col` are not whole
 --- numbers. (Not called `goto`: that is reserved in LuaJIT.)
 function M.reveal(buf, row, col)
@@ -81,7 +82,10 @@ function M.reveal(buf, row, col)
   end
   local win
   for _, w in ipairs(vim.fn.win_findbuf(buf)) do
-    if vim.api.nvim_win_get_tabpage(w) == vim.api.nvim_get_current_tabpage() then
+    if
+      vim.api.nvim_win_get_tabpage(w) == vim.api.nvim_get_current_tabpage()
+      and vim.api.nvim_win_get_config(w).focusable ~= false
+    then
       win = w
       break
     end
@@ -93,8 +97,7 @@ function M.reveal(buf, row, col)
   end
   vim.api.nvim_set_current_win(win)
   local r = math.max(1, math.min(row, vim.api.nvim_buf_line_count(buf)))
-  local line = vim.api.nvim_buf_get_lines(buf, r - 1, r, false)[1] or ''
-  vim.api.nvim_win_set_cursor(win, { r, math.max(0, math.min(col, #line - 1)) })
+  vim.api.nvim_win_set_cursor(win, { r, math.max(0, col) })
   return win
 end
 
