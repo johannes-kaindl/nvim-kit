@@ -64,7 +64,8 @@ end
 --- `focusable = false` does not count); with none it opens `aboveleft split`,
 --- shows `buf` in it and focuses that. `row` is 1-based and `col` a 0-based byte offset, as
 --- `nvim_win_set_cursor` takes them. Both are clamped to the buffer as it is now (row to
---- 1..line count, col to >= 0; past the line's end Neovim itself puts the cursor on the last character, never inside a multibyte one), so a buffer that shrank never raises
+--- 1..line count, col to >= 0; past the line's end Neovim itself puts the cursor on the last
+--- character, never inside a multibyte one), so a buffer that shrank never raises
 --- "Invalid cursor line". Raises when `buf` is not a valid buffer or `row`/`col` are not whole
 --- numbers. (Not called `goto`: that is reserved in LuaJIT.)
 function M.reveal(buf, row, col)

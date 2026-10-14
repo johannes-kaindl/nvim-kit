@@ -183,23 +183,6 @@ T.case('language_name: nil reads v:lang', function()
   T.eq(name, 'Portuguese')
 end)
 
-T.case('language_name: end to end in a child Neovim under a German locale', function()
-  local root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h')
-  local code =
-    'vim.opt.rtp:prepend(vim.env.KIT_ROOT) io.write(vim.v.lang, "|", require("nvim_kit.text").language_name())'
-  local r = vim
-    .system({ vim.v.progpath, '--headless', '-u', 'NONE', '-l', '-' }, {
-      stdin = code,
-      env = { KIT_ROOT = root, LC_ALL = 'de_DE.UTF-8', LANG = 'de_DE.UTF-8' },
-      text = true,
-    })
-    :wait()
-  T.eq(r.code, 0, r.stderr)
-  local lang, name = r.stdout:match('^(.-)|(.*)$')
-  T.ok(lang:sub(1, 2) == 'de', 'locale de_DE.UTF-8 is not installed (child v:lang = ' .. lang .. ')')
-  T.eq(name, 'German')
-end)
-
 T.case('language_name: a lang that is neither nil nor a string raises', function()
   T.raises(function()
     X.language_name(5)

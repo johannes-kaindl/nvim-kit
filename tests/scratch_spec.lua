@@ -354,8 +354,9 @@ T.case('reveal: a window that cannot be focused does not count', function()
     focusable = false,
   })
   local win = S.reveal(buf, 2, 0)
+  local current, shown = vim.api.nvim_get_current_win(), vim.api.nvim_win_get_buf(win)
+  pcall(vim.api.nvim_win_close, float, true) -- before asserting: a failure must not leak the float
   T.ok(win ~= float)
-  T.eq(vim.api.nvim_get_current_win(), win)
-  T.eq(vim.api.nvim_win_get_buf(win), buf)
-  pcall(vim.api.nvim_win_close, float, true)
+  T.eq(current, win)
+  T.eq(shown, buf)
 end)
