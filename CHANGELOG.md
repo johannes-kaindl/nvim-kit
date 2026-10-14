@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-10-14
+
 ### Added
 - `nvim_kit.sampling` — which sampling values, reasoning effort and token reserve to send per model family × mode × backend, a port of code-kit's `sampling-profiles` (0.26.0): `family_from_name`, `thinking_for`, `validate_override`, `sanitize`, `resolve`, `for_call`. The tables are code-kit's export in `lua/nvim_kit/data/sampling-profiles.json`, vendored and never edited; all 265 code-kit vectors pass, plus Lua-only cases (NaN and infinities, family patterns with `-`).
 - `nvim_kit.llm_json` — `strip_think`, `first_json_object`, `candidates` and `is_strict_json`, a port of code-kit's `stripThinkBlocks` and `firstJsonObject` (540 vectors). `vim.json.decode` accepts NaN, Infinity, hex numbers, leading zeros, `+1`, `1.` and raw tabs in strings, `JSON.parse` does not, so a span counts only after the strict check; the repair pass knows every JS whitespace character (U+00A0 included).
