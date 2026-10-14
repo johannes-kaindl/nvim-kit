@@ -500,6 +500,13 @@ function M.chat(req, cb)
   if type(req.messages) ~= 'table' or #req.messages == 0 then
     error('nvim-kit llm: chat needs req.messages (a non-empty list)', 2)
   end
+  -- Checked here: the text is cleaned inside a callback, where a non-table entry would fail and
+  -- cb would never answer.
+  for i, m in ipairs(req.messages) do
+    if type(m) ~= 'table' then
+      error(('nvim-kit llm: chat: req.messages[%d] is not a table'):format(i), 2)
+    end
+  end
   local mode = req.mode or 'structured'
   -- Checked here, before any key command or probe: later, an unknown id would fail inside a
   -- callback, and cb would never answer.

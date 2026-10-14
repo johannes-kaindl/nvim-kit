@@ -11,7 +11,7 @@ All notable changes to this project are documented here. The format is based on 
 - `text.truncate` — a text cut to `max_chars` characters (not bytes) plus a mark, default `…`. Counted in plain Lua: `vim.fn.strchars` raised E976 on a NUL byte, which buffer text can hold, and cannot run in a fast callback.
 
 ### Fixed
-- `llm.chat` sends message text that is not valid UTF-8 (a buffer in latin1) as U+FFFD; `vim.json.encode` copied the bytes into the body, which is then no valid JSON for the server.
+- `llm.chat` sends message text that is not valid UTF-8 (a buffer in latin1) as U+FFFD; `vim.json.encode` copied the bytes into the body, which is then no valid JSON for the server. A `messages` entry that is not a table raises at once: the cleaning runs inside a callback, where it failed and the callback never answered.
 
 ## [0.8.0] — 2026-10-14
 

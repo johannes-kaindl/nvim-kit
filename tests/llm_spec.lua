@@ -490,6 +490,18 @@ T.case('chat: an unknown mode, backend or family raises at once, also with a key
   end, 'unknown req.family "llama"')
 end)
 
+T.case('chat: a messages entry that is not a table raises at once', function()
+  -- the message text is cleaned inside a callback, where this failed and cb never answered
+  -- (review finding M6)
+  local ep = { url = 'http://127.0.0.1:9', api_key_cmd = { 'sh', '-c', 'printf k' } }
+  T.raises(function()
+    L.chat({ endpoint = ep, model = 'm', messages = { 42 } }, function() end)
+  end, 'req.messages[1]')
+  T.raises(function()
+    L.chat({ endpoint = ep, model = 'm', messages = { msgs()[1], 'hi' } }, function() end)
+  end, 'req.messages[2]')
+end)
+
 T.case('resolve: an endpoint that answers with an error ends the search, the next is not asked', function()
   L.reset()
   local bad = stub.start({ ['GET /v1/models'] = { status = 401, body = { error = 'invalid key' } } })
