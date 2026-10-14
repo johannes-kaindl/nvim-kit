@@ -87,6 +87,33 @@ T.case('search: a NUL byte is text, not a line break (rg would convert it as bin
   T.eq(got, { { 0, 1 }, { 6, 2 }, { 8, 3 } })
 end)
 
+T.case('search: a byte order mark is text, offsets count its bytes (--encoding=none)', function()
+  -- rg would strip a UTF-8 BOM and transcode UTF-16, shifting every offset (review finding I1)
+  local r = search('\239\187\191abc\n', { pattern = 'b', replacement = 'B' })
+  T.eq(r.hits, { { start = 4, stop = 5, match = 'b', replacement = 'B', line = 1 } })
+  r = search('\255\254a\0b\0\n', { pattern = 'b' })
+  T.eq(r.hits, { { start = 4, stop = 5, match = 'b', line = 1 } })
+end)
+
+T.case('search: 20000 hits on one long line come back fast, with their lines', function()
+  -- Measured 2026-10-14 on an M5 (Neovim 0.12.6): about 60 ms counting lines on from hit to hit,
+  -- about 8.7 s counting each hit's line from the start of its line block (review finding I2).
+  local text = ('x' .. ('.'):rep(10)):rep(20000) .. '\nx\n'
+  local t0 = vim.uv.hrtime()
+  local r
+  R.search(text, { pattern = 'x', timeout_ms = 30000 }, function(v)
+    r = v
+  end)
+  vim.wait(30000, function()
+    return r ~= nil
+  end, 5)
+  local ms = (vim.uv.hrtime() - t0) / 1e6
+  T.eq({ r.ok, #r.hits }, { true, 20001 })
+  T.eq({ r.hits[20000].start, r.hits[20000].line }, { 219989, 1 })
+  T.eq({ r.hits[20001].start, r.hits[20001].line }, { 220001, 2 })
+  T.ok(ms < 1500, ('20000 hits took %d ms'):format(ms))
+end)
+
 T.case('search: max_hits cuts the list and says so', function()
   local r = search('x x x\n', { pattern = 'x', max_hits = 2 })
   T.eq({ #r.hits, r.truncated }, { 2, true })
@@ -97,6 +124,19 @@ end)
 T.case('search: a replacement that starts with - is a replacement, not an option', function()
   local r = search('ab\n', { pattern = 'a', replacement = '-x' })
   T.eq(r.hits[1].replacement, '-x')
+end)
+
+T.case('search: a NUL byte in pattern or replacement is rg-error, never cut off', function()
+  -- an argument ends at a NUL: 'a\0b' would search for 'a' (review finding M7)
+  local r, calls = search('a\0b a\n', { pattern = 'a\0b' })
+  T.eq({ r.ok, r.error, calls }, { false, 'rg-error', 1 })
+  T.ok(r.detail:find('pattern contains a NUL byte', 1, true), r.detail)
+  r = search('ab\n', { pattern = 'a', replacement = 'x\0y' })
+  T.eq({ r.ok, r.error }, { false, 'rg-error' })
+  T.ok(r.detail:find('replacement contains a NUL byte', 1, true), r.detail)
+  -- written as an escape, a NUL is found
+  r = search('a\0b a\n', { pattern = [[a\x00b]] })
+  T.eq(r.hits, { { start = 0, stop = 3, match = 'a\0b', line = 1 } })
 end)
 
 T.case('search: the user ripgrep config does not apply', function()
@@ -114,6 +154,7 @@ T.case('search: rg missing or too old is rg-missing, without starting a search',
   local r = search('x\n', { pattern = 'x', exe = vim.fn.tempname() })
   T.eq({ r.ok, r.error }, { false, 'rg-missing' })
   T.ok(r.detail:find('not found', 1, true), r.detail)
+  T.ok(r.detail:find('ENOENT', 1, true), r.detail) -- the system's own words, too
   local old = fake_rg('ripgrep 14.1.0', 'echo should-not-run >&2; exit 2')
   r = search('x\n', { pattern = 'x', exe = old })
   T.eq(r.error, 'rg-missing')
@@ -174,6 +215,26 @@ T.case('search: invalid arguments raise', function()
   T.raises(function()
     R.search('x', { pattern = 'x', replacement = 1 }, function() end)
   end, 'replacement must be a string')
+end)
+
+T.case('version: a failed lookup says why and is not cached', function()
+  -- From a fast callback vim.system():wait() is forbidden: no ripgrep is missing here, and the
+  -- next lookup on the main loop must find it (review finding I5).
+  R.reset()
+  local fast
+  local timer = vim.uv.new_timer()
+  timer:start(0, 0, function()
+    fast = { R.version() }
+    timer:close()
+  end)
+  vim.wait(2000, function()
+    return fast ~= nil
+  end, 5)
+  T.eq(fast[1], nil)
+  T.ok(fast[2]:find('E5560', 1, true), fast[2])
+  local v = R.version()
+  T.ok(v and v:match('^%d+%.%d+%.%d+$'), v)
+  R.reset()
 end)
 
 T.case('version: reads the installed ripgrep', function()

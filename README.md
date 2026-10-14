@@ -237,9 +237,11 @@ rg.search(text, { pattern = [[(\d{2})\.(\d{4})]], replacement = '$2-$1', multili
 end)
 ```
 
-`start`/`stop` are 0-based byte offsets, `stop` exclusive; `line` is the 1-based line of `start`. With a replacement, ripgrep computes each hit's replaced text (`--replace` with `--json` needs ripgrep 15.0.0; `check()` says `rg-missing` for an older one). The user's ripgrep config is ignored and a NUL byte is text, not a sign of binary. Returns a handle with `cancel()`; the callback runs on the main loop.
+`start`/`stop` are 0-based byte offsets, `stop` exclusive; `line` is the 1-based line of `start`. With a replacement, ripgrep computes each hit's replaced text (`--replace` with `--json` needs ripgrep 15.0.0; `check()` says `rg-missing` for an older one). The user's ripgrep config is ignored and a NUL byte is text, not a sign of binary. The text is searched as raw bytes (`--encoding=none`): a byte order mark stays in it and counts in the offsets, UTF-16 is not transcoded. A NUL byte in `pattern` or `replacement` cannot travel as an argument and reports `rg-error` (write `\x00` in the pattern). `opts.exe` names the ripgrep executable (default `'rg'`). Returns a handle with `cancel()`; the callback runs on the main loop.
 
-`rg.MIN_VERSION` (`'15.0.0'`) and `rg.TIMEOUT_MS` (`5000`, the default search timeout; `opts.timeout_ms` overrides it) are public fields. `version()` asks `rg --version` once per executable and caches the answer; `rg.reset()` forgets the cache (tests, or after the user installed another ripgrep). A ripgrep killed by a signal reports `rg-error` ("ripgrep was killed by signal N").
+Lines end at `\n` only (no `--crlf`): in text with `\r\n`, `$` does not match before the `\r` and `.` matches it, so `^(.*)$` → `[$1]` turns `abc\r` into `[abc\r]`. Buffer text with `fileformat=dos` is not affected, since Neovim keeps the `\r` out of the lines.
+
+`rg.MIN_VERSION` (`'15.0.0'`) and `rg.TIMEOUT_MS` (`5000`, the default search timeout; `opts.timeout_ms` overrides it) are public fields. `version()` asks `rg --version` once per executable and caches a found version; a failed lookup is not cached, and its detail carries the system's error text. `rg.reset()` forgets the cache (tests, or after the user installed another ripgrep). A ripgrep killed by a signal reports `rg-error` ("ripgrep was killed by signal N").
 
 **`nvim_kit.edits`** — byte offsets into a range of lines, and replacements written back to them.
 

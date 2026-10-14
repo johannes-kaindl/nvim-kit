@@ -3,16 +3,19 @@
 -- each hit's replaced text itself, so a plugin needs no replacement logic of its own; --replace
 -- together with --json needs ripgrep 15.0.0 (CHANGELOG, FEATURE #1872). The user's ripgrep config
 -- is ignored (--no-config), because options such as --max-columns or --smart-case would change
--- the output or the matches; --text keeps a NUL byte from ending the search as "binary".
+-- the output or the matches; --text keeps a NUL byte from ending the search as "binary", and
+-- --encoding=none keeps rg from stripping a byte order mark or transcoding UTF-16, either of which
+-- would shift the byte offsets against the text.
 -- Errors are values ({ ok = false, error = kind, detail }); a call with invalid arguments raises.
 -- Error kinds: rg-missing (not on PATH, or older than MIN_VERSION), rg-error (rg refused, e.g.
--- the pattern), timeout, cancelled.
+-- the pattern; or a NUL byte in pattern or replacement, which an argument cannot carry),
+-- timeout, cancelled.
 local M = {}
 
 M.MIN_VERSION = '15.0.0'
 M.TIMEOUT_MS = 5000
 
-local versions = {} -- exe -> { version = '15.2.0' } | { error = detail }
+local versions = {} -- exe -> '15.2.0'; only successful lookups
 
 local function at_least(v, min)
   local a, b = vim.split(v, '.', { plain = true }), vim.split(min, '.', { plain = true })
@@ -25,26 +28,34 @@ local function at_least(v, min)
   return true
 end
 
---- The installed ripgrep's version ("15.2.0"), or nil and why not. Asked once per executable and
---- session (a synchronous `rg --version`, a few milliseconds).
+--- The installed ripgrep's version ("15.2.0"), or nil and why not. A found version is cached per
+--- executable for the session (a synchronous `rg --version`, a few milliseconds); a failure is
+--- not, so the next call asks again (it may have come from a fast callback, where waiting for a
+--- process is forbidden, or the user may install ripgrep meanwhile).
 function M.version(exe)
   exe = exe or 'rg'
-  local cached = versions[exe]
-  if not cached then
-    local ok, res = pcall(function()
-      return vim.system({ exe, '--version' }, { text = true }):wait(M.TIMEOUT_MS)
-    end)
-    if not ok then
-      cached = { error = ('%s not found on PATH'):format(exe) }
-    elseif res.code ~= 0 then
-      cached = { error = ('%s --version failed (exit %d)'):format(exe, res.code) }
-    else
-      local v = (res.stdout or ''):match('^ripgrep (%d+%.%d+%.%d+)')
-      cached = v and { version = v } or { error = ('%s --version: unexpected output'):format(exe) }
-    end
-    versions[exe] = cached
+  if versions[exe] then
+    return versions[exe], nil
   end
-  return cached.version, cached.error
+  local ok, res = pcall(function()
+    return vim.system({ exe, '--version' }, { text = true }):wait(M.TIMEOUT_MS)
+  end)
+  if not ok then
+    local why = tostring(res):gsub('^.-:%d+: ', '')
+    if why:find('ENOENT', 1, true) then
+      return nil, ('%s not found on PATH (%s)'):format(exe, why)
+    end
+    return nil, ('%s could not be run: %s'):format(exe, why)
+  end
+  if res.code ~= 0 then
+    return nil, ('%s --version failed (exit %d)'):format(exe, res.code)
+  end
+  local v = (res.stdout or ''):match('^ripgrep (%d+%.%d+%.%d+)')
+  if not v then
+    return nil, ('%s --version: unexpected output'):format(exe)
+  end
+  versions[exe] = v
+  return v, nil
 end
 
 --- Forget the cached versions (tests; after the user installed another ripgrep).
@@ -81,8 +92,13 @@ local function data(d)
   return nil
 end
 
-local function count_newlines(s)
-  local _, n = s:gsub('\n', '')
+-- The number of "\n" in s at the 0-based byte offsets from..to-1, found without copying s.
+local function count_newlines(s, from, to)
+  local n, i = 0, s:find('\n', from + 1, true)
+  while i and i <= to do
+    n = n + 1
+    i = s:find('\n', i + 1, true)
+  end
   return n
 end
 
@@ -95,17 +111,23 @@ local function parse(stdout, max_hits)
       if ok and type(msg) == 'table' and msg.type == 'match' then
         local d = msg.data
         local lines = data(d.lines) or ''
+        -- Lines are counted on from the previous submatch (rg sends them in ascending order):
+        -- counting from the block's start for each one is quadratic, and a long line with many
+        -- hits would block Neovim for seconds (review finding I2).
+        local at, lnum = 0, d.line_number
         for _, sm in ipairs(d.submatches or {}) do
           if max_hits and #hits >= max_hits then
             truncated = true
             return hits, truncated
           end
+          lnum = lnum + count_newlines(lines, at, sm.start)
+          at = sm.start
           hits[#hits + 1] = {
             start = d.absolute_offset + sm.start,
             stop = d.absolute_offset + sm['end'],
             match = data(sm.match) or '',
             replacement = data(sm.replacement),
-            line = d.line_number + count_newlines(lines:sub(1, sm.start)),
+            line = lnum,
           }
         end
       end
@@ -143,6 +165,17 @@ function M.search(text, opts, cb)
     end)
   end
   local handle = { cancel = function() end }
+  -- An argument ends at a NUL byte: 'a\0b' would silently search for 'a'.
+  for _, f in ipairs({ 'pattern', 'replacement' }) do
+    if opts[f] and opts[f]:find('\0', 1, true) then
+      finish({
+        ok = false,
+        error = 'rg-error',
+        detail = ('%s contains a NUL byte (write \\x00)'):format(f),
+      })
+      return handle
+    end
+  end
   local exe = opts.exe or 'rg'
   local missing = M.check(exe)
   if missing then
@@ -150,7 +183,7 @@ function M.search(text, opts, cb)
     finish(missing)
     return handle
   end
-  local args = { exe, '--no-config', '--json', '--text' }
+  local args = { exe, '--no-config', '--json', '--text', '--encoding=none' }
   if opts.multiline then
     args[#args + 1] = '--multiline'
   end
