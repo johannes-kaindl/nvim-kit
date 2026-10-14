@@ -6,7 +6,7 @@ Source library for Neovim plugins — vendored into each plugin, never installed
 
 ## What it is
 
-A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, time-zone-free calendar dates, a JSON state store two editors can share, view buffers, a panel above line 1, a buffer-bound winbar, keystroke tracking, a buffer in plain Neovim, small text pieces, health-check building blocks, and the pieces for talking to a language model: request profiles per model family, an OpenAI-compatible client over `curl`, a reader for JSON in a model's answer, and an HTTP server for tests. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
+A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, time-zone-free calendar dates, a JSON state store two editors can share, view buffers, a panel above line 1, a buffer-bound winbar, keystroke tracking, a buffer in plain Neovim, small text pieces, health-check building blocks, searching a text with ripgrep and writing byte spans back in one undo step, and the pieces for talking to a language model: request profiles per model family, an OpenAI-compatible client over `curl`, a reader for JSON in a model's answer, and an HTTP server for tests. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
 
 ## How to consume it
 
@@ -152,7 +152,7 @@ vim.cmd('redrawstatus!')   -- after the text changed
 
 It is set window-locally wherever the buffer is shown; another buffer in the same window has no winbar. The text is shown literally.
 
-**`nvim_kit.text`** — `require('nvim_kit.text').bar(28, 20)` → `[██████░░░░░░░░░░░░░░]`.
+**`nvim_kit.text`** — `require('nvim_kit.text').bar(28, 20)` → `[██████░░░░░░░░░░░░░░]`; `clean_utf8(s)` replaces every byte that is not valid UTF-8 with U+FFFD (`vim.json.encode` copies such bytes into its output; `llm.chat` cleans message text with it); `truncate(s, max_chars, mark)` returns `s` when it has at most `max_chars` characters, else its first `max_chars` characters followed by `mark` (default `…`) — it counts characters, never bytes, so it does not cut inside a multibyte character, and it raises on invalid arguments.
 
 **`nvim_kit.health`** — building blocks for `:checkhealth <plugin>`; they only read.
 
@@ -226,6 +226,31 @@ local srv = require('myplugin.kit.http_stub').start({
 ```
 
 Wait for an answer with `vim.wait`; route functions run in a fast event (no `vim.fn`, no `vim.api`).
+
+**`nvim_kit.rg`** — searches a text, not files, with ripgrep: the text goes in over stdin, hits come back with byte offsets into it.
+
+```lua
+local rg = require('myplugin.kit.rg')
+rg.search(text, { pattern = [[(\d{2})\.(\d{4})]], replacement = '$2-$1', multiline = false, max_hits = 500 }, function(r)
+  -- r = { ok = true, hits = { { start, stop, match, replacement, line } }, truncated }
+  --   | { ok = false, error = 'rg-missing'|'rg-error'|'timeout'|'cancelled', detail }
+end)
+```
+
+`start`/`stop` are 0-based byte offsets, `stop` exclusive; `line` is the 1-based line of `start`. With a replacement, ripgrep computes each hit's replaced text (`--replace` with `--json` needs ripgrep 15.0.0; `check()` says `rg-missing` for an older one). The user's ripgrep config is ignored and a NUL byte is text, not a sign of binary. Returns a handle with `cancel()`; the callback runs on the main loop.
+
+`rg.MIN_VERSION` (`'15.0.0'`) and `rg.TIMEOUT_MS` (`5000`, the default search timeout; `opts.timeout_ms` overrides it) are public fields. `version()` asks `rg --version` once per executable and caches the answer; `rg.reset()` forgets the cache (tests, or after the user installed another ripgrep). A ripgrep killed by a signal reports `rg-error` ("ripgrep was killed by signal N").
+
+**`nvim_kit.edits`** — byte offsets into a range of lines, and replacements written back to them.
+
+```lua
+local edits = require('myplugin.kit.edits')
+local text = edits.text(lines)            -- lines joined with "\n", plus a final "\n": what rg searched
+local ok, n = edits.apply(buf, first, lines, { { start = 9, stop = 19, text = '2026-10-13' } })
+-- ok == false, 'changed' when buf's lines first.. are no longer `lines`: nothing is written
+```
+
+`apply` writes back to front, so earlier offsets stay valid, all in one undo step — it closes the buffer's open undo block first, since Vim closes it on a keystroke only in the current buffer. An edit that reaches into the range's final "\n" ends at the end of the last line, so the line after the range is never joined in. `locate` gives each edit its `row`, `col`, `end_row`, `end_col` (0-based, bytes).
 
 ## Development
 

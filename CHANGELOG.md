@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Added
+- `nvim_kit.rg` — searching a text, not files, with ripgrep over stdin: hits with 0-based byte offsets, the match, ripgrep's replaced text and the line (`search`, async, with timeout, `max_hits` and `cancel()`); `check`, `version` and `reset` (the version cache), the fields `MIN_VERSION` and `TIMEOUT_MS` (ripgrep ≥ 15.0.0, the first with `--replace` and `--json` together). The user's ripgrep config is ignored (`--no-config`), and a NUL byte stays text (`--text`; without it ripgrep converts NUL to a line break and the line numbers after it shift, measured with 15.2.0). Text that is not UTF-8 comes back as base64 from ripgrep and is decoded. A ripgrep killed by a signal reports `rg-error`.
+- `nvim_kit.edits` — byte offsets into a range of lines as positions, and replacements written back to front in one undo step (`text`, `line_starts`, `position`, `locate`, `apply`). `apply` writes nothing when the lines changed, raises on overlapping edits, and closes the buffer's open undo block first: Vim closes it on a keystroke only in the current buffer, so an edit typed there before would otherwise join the replacements, and one `u` take back both (measured 2026-10-14).
+- `text.clean_utf8` — every byte that is not valid UTF-8 becomes U+FFFD.
+- `text.truncate` — a text cut to `max_chars` characters (not bytes) plus a mark, default `…`.
+
+### Fixed
+- `llm.chat` sends message text that is not valid UTF-8 (a buffer in latin1) as U+FFFD; `vim.json.encode` copied the bytes into the body, which is then no valid JSON for the server.
+
 ## [0.8.0] — 2026-10-14
 
 ### Added
