@@ -439,3 +439,126 @@ T.case('chat refuses invalid arguments and an unsanitized request loudly', funct
   T.eq(r.ok, true)
   T.eq(r.params.temperature, 0.3)
 end)
+
+-- Review findings 2026-10-14 (0.8.0 branch review): redaction before cutting, arguments checked
+-- before any key or probe, resolve stops at an endpoint that answered, a cancelled key command
+-- caches nothing, a malformed probe body does not hang detection.
+
+T.case('a key straddling the cut of a long error body is redacted whole', function()
+  L.reset()
+  local key = 'sk-ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  vim.env.NVIM_KIT_TEST_KEY = key
+  local srv = stub.start({
+    ['GET /v1/models'] = { status = 401, body = ('x'):rep(280) .. ' key=' .. key .. ' rest' },
+  })
+  local r = await(function(cb)
+    L.models({ url = srv.url, api_key_env = 'NVIM_KIT_TEST_KEY' }, cb)
+  end)
+  srv.close()
+  T.eq(r.error, 'http')
+  T.eq(r.detail:find('sk-', 1, true), nil, r.detail)
+  T.ok(r.detail:find('key=***', 1, true), r.detail)
+end)
+
+T.case('chat: a bad-response detail that echoes the key is redacted', function()
+  L.reset()
+  vim.env.NVIM_KIT_TEST_KEY = 'sk-echo-43'
+  local srv = stub.start({ ['POST /v1/chat/completions'] = { body = { msg = 'hello sk-echo-43' } } })
+  local r = await(function(cb)
+    L.chat({
+      endpoint = { url = srv.url, api_key_env = 'NVIM_KIT_TEST_KEY' },
+      model = 'm',
+      messages = msgs(),
+      backend = 'unknown',
+    }, cb)
+  end)
+  srv.close()
+  T.eq(r.error, 'bad-response')
+  T.eq(r.detail:find('sk-echo-43', 1, true), nil, r.detail)
+end)
+
+T.case('chat: an unknown mode, backend or family raises at once, also with a key command', function()
+  local ep = { url = 'http://127.0.0.1:9', api_key_cmd = { 'sh', '-c', 'printf k' } }
+  T.raises(function()
+    L.chat({ endpoint = ep, model = 'm', messages = msgs(), mode = 'Structured' }, function() end)
+  end, 'unknown req.mode "Structured"')
+  T.raises(function()
+    L.chat({ endpoint = ep, model = 'm', messages = msgs(), backend = 'lm-studio' }, function() end)
+  end, 'unknown req.backend "lm-studio"')
+  T.raises(function()
+    L.chat({ endpoint = ep, model = 'm', messages = msgs(), family = 'llama' }, function() end)
+  end, 'unknown req.family "llama"')
+end)
+
+T.case('resolve: an endpoint that answers with an error ends the search, the next is not asked', function()
+  L.reset()
+  local bad = stub.start({ ['GET /v1/models'] = { status = 401, body = { error = 'invalid key' } } })
+  local good = stub.start({ ['GET /v1/models'] = MODELS })
+  local r = await(function(cb)
+    L.resolve({ endpoints = { { url = bad.url }, { url = good.url, backend = 'ollama' } } }, cb)
+  end)
+  vim.env.NVIM_KIT_TEST_UNSET = nil
+  local k = await(function(cb)
+    L.resolve({
+      endpoints = {
+        { url = bad.url, api_key_env = 'NVIM_KIT_TEST_UNSET' },
+        { url = good.url, backend = 'ollama' },
+      },
+    }, cb)
+  end)
+  bad.close()
+  good.close()
+  T.eq(r.error, 'http')
+  T.eq(r.status, 401)
+  T.ok(r.detail:find(bad.url, 1, true) and r.detail:find('invalid key', 1, true), r.detail)
+  T.eq(r.endpoint.url, bad.url)
+  T.eq(k.error, 'key-missing')
+  T.eq(#good.requests, 0)
+end)
+
+T.case('api_key_cmd: a command stopped by cancel leaves no key behind', function()
+  L.reset()
+  local srv = stub.start({ ['GET /v1/models'] = MODELS })
+  -- The first run prints half a key and is stopped; `exec` so the kill reaches the process that
+  -- holds the pipe (a shell's child would keep it open). A second run prints the whole key.
+  local mark = vim.fn.tempname()
+  local script = ('if [ -f %s ]; then printf sk-full; else touch %s; printf sk-par; exec sleep 2; fi'):format(
+    mark,
+    mark
+  )
+  local ep = { url = srv.url, api_key_cmd = { 'sh', '-c', script } }
+  local first
+  local h = L.models(ep, function(v)
+    first = v
+  end)
+  vim.wait(300)
+  h.cancel()
+  vim.wait(500) -- the killed command reports back (code 0, signal 15)
+  local r = await(function(cb)
+    L.models(ep, cb)
+  end, 5000)
+  srv.close()
+  T.eq(first.error, 'cancelled')
+  T.eq(r, { 'qwen3.6:27b' })
+  T.eq(srv.requests[1].headers.authorization, 'Bearer sk-full')
+end)
+
+T.case('backend detection answers unknown for a malformed probe body instead of hanging', function()
+  L.reset()
+  local srv = stub.start({
+    ['GET /api/v0/models'] = { body = { data = { 1 } } },
+  })
+  local srv2 = stub.start({
+    ['GET /api/v0/models'] = { raw = 'HTTP/1.1 200 OK\r\nContent-Length: 15\r\n\r\n{"data":[null]}' },
+  })
+  local b1 = await(function(cb)
+    L.backend({ url = srv.url }, cb)
+  end)
+  local b2 = await(function(cb)
+    L.backend({ url = srv2.url }, cb)
+  end)
+  srv.close()
+  srv2.close()
+  T.eq(b1, 'unknown')
+  T.eq(b2, 'unknown')
+end)

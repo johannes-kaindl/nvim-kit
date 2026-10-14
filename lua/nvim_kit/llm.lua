@@ -155,7 +155,8 @@ local function get_key(ep, cb)
     { text = true, timeout = M.KEY_CMD_TIMEOUT_MS },
     function(r)
       vim.schedule(function()
-        local v = r.code == 0 and vim.trim(r.stdout or '') or ''
+        -- A command stopped by a signal (cancel) may have printed half a key: never take it.
+        local v = r.code == 0 and r.signal == 0 and vim.trim(r.stdout or '') or ''
         if v ~= '' then
           keys[id] = v
           cb(v)
@@ -267,7 +268,8 @@ end
 local function http_error(res, key)
   local j = decode(res.body)
   if res.status ~= 200 or (j and j.error ~= nil) then
-    local msg = error_message(j) or vim.trim(res.body):sub(1, 300)
+    -- Redact before cutting: a key across the cut would otherwise leave its first part behind.
+    local msg = error_message(j) or vim.trim(redact(res.body, key)):sub(1, 300)
     return {
       error = 'http',
       status = res.status,
@@ -352,7 +354,9 @@ local PROBES = {
     path = '/api/v0/models',
     backend = 'lmstudio',
     test = function(j)
-      return type(j.data) == 'table' and (j.data[1] == nil or type(j.data[1].state) == 'string')
+      local first = type(j.data) == 'table' and j.data[1]
+      return type(j.data) == 'table'
+        and (first == nil or type(first) == 'table' and type(first.state) == 'string')
     end,
   },
 }
@@ -373,7 +377,9 @@ local function detect(ep, key, cb)
     end
     http(ep, key, 'GET', probe.path, nil, M.PING_TIMEOUT_MS, function(res)
       local j = res.body and decode(res.body)
-      if j and probe.test(j) then
+      -- A probe that cannot read a body is a miss, never an error that would leave cb waiting.
+      local ok, matched = pcall(probe.test, j or {})
+      if j and ok and matched then
         backends[ep.url] = { backend = probe.backend, at = vim.uv.now() }
         return cb(probe.backend)
       end
@@ -395,7 +401,10 @@ function M.backend(endpoint, cb)
   end)
 end
 
---- The first reachable endpoint, its model, backend and model family.
+--- The first reachable endpoint, its model, backend and model family. Only an endpoint that cannot
+--- be reached (or does not answer in time) passes the search on; one that answers with an error,
+--- or whose key is missing, ends it with that error (`endpoint` set), so a wrong key never falls
+--- back to the next server.
 --- opts = { endpoints = <list|nil>, model = <the plugin's remembered choice|nil> }
 --- cb({ endpoint, model, backend, family, models })
 ---   | cb({ error = 'no-model', detail, endpoint, models })  -- several models, none chosen
@@ -408,11 +417,6 @@ function M.resolve(opts, cb)
   cb = once(cb)
   local tried = {}
   local function finish_failed()
-    for _, t in ipairs(tried) do
-      if t.err.error ~= 'unreachable' and t.err.error ~= 'timeout' then
-        return cb(t.err)
-      end
-    end
     local parts = {}
     for _, t in ipairs(tried) do
       parts[#parts + 1] = ('%s (%s)'):format(t.url, t.err.detail)
@@ -425,9 +429,16 @@ function M.resolve(opts, cb)
       return finish_failed()
     end
     M.models(ep, function(list)
-      if list.error then
+      if list.error == 'unreachable' or list.error == 'timeout' then
         tried[#tried + 1] = { url = ep.url, err = list }
         return try(i + 1)
+      end
+      -- It answered (or its key is missing): a wrong key or a refusal must not send the text to
+      -- the next server in the list.
+      if list.error then
+        list.detail = ('%s: %s'):format(ep.url, list.detail)
+        list.endpoint = ep
+        return cb(list)
       end
       local model = ep.model
       if not model and opts.model and vim.tbl_contains(list, opts.model) then
@@ -477,6 +488,17 @@ function M.chat(req, cb)
     error('nvim-kit llm: chat needs req.messages (a non-empty list)', 2)
   end
   local mode = req.mode or 'structured'
+  -- Checked here, before any key command or probe: later, an unknown id would fail inside a
+  -- callback, and cb would never answer.
+  for _, f in ipairs({
+    { 'mode', mode, 'modes' },
+    { 'backend', req.backend, 'backends' },
+    { 'family', req.family, 'families' },
+  }) do
+    if f[2] ~= nil and not sampling.data[f[3]][f[2]] then
+      error(('nvim-kit llm: unknown req.%s %q'):format(f[1], tostring(f[2])), 2)
+    end
+  end
   if req.request ~= nil then
     local _, dropped = sampling.sanitize(req.request)
     if #dropped > 0 then
@@ -532,7 +554,7 @@ function M.chat(req, cb)
         if type(msg) ~= 'table' then
           return fail({
             error = 'bad-response',
-            detail = 'no choices[1].message: ' .. vim.trim(res.body):sub(1, 200),
+            detail = 'no choices[1].message: ' .. vim.trim(redact(res.body, key)):sub(1, 200),
           })
         end
         local content = type(msg.content) == 'string' and msg.content or ''
