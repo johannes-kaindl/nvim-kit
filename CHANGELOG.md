@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Added
+- `rg.needs_multiline(pattern)` — whether a ripgrep (Rust regex) pattern needs `--multiline`: it holds a literal newline or an `n` after an odd number of backslashes (`\n`; `\\n` is a backslash and an "n", `\\\n` a backslash and `\n`). A `\n` in a character class counts too. Raises when `pattern` is not a string.
+
+### Changed
+- `rg.search` derives `multiline` from the pattern with `needs_multiline` when `opts.multiline` is `nil`; `false` stays an explicit off (ripgrep then refuses a pattern with `\n` as `rg-error`, measured), `true` an explicit on. Before, an omitted `multiline` meant off, so a pattern with `\n` answered `rg-error`.
+
 ## [0.9.0] — 2026-10-14
 
 ### Added

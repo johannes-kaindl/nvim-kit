@@ -231,13 +231,13 @@ Wait for an answer with `vim.wait`; route functions run in a fast event (no `vim
 
 ```lua
 local rg = require('myplugin.kit.rg')
-rg.search(text, { pattern = [[(\d{2})\.(\d{4})]], replacement = '$2-$1', multiline = false, max_hits = 500 }, function(r)
+rg.search(text, { pattern = [[(\d{2})\.(\d{4})]], replacement = '$2-$1', max_hits = 500 }, function(r)
   -- r = { ok = true, hits = { { start, stop, match, replacement, line } }, truncated }
   --   | { ok = false, error = 'rg-missing'|'rg-error'|'timeout'|'cancelled', detail }
 end)
 ```
 
-`start`/`stop` are 0-based byte offsets, `stop` exclusive; `line` is the 1-based line of `start`. With a replacement, ripgrep computes each hit's replaced text (`--replace` with `--json` needs ripgrep 15.0.0; `check()` says `rg-missing` for an older one). The user's ripgrep config is ignored and a NUL byte is text, not a sign of binary. The text is searched as raw bytes (`--encoding=none`): a byte order mark stays in it and counts in the offsets, UTF-16 is not transcoded. A NUL byte in `pattern` or `replacement` cannot travel as an argument and reports `rg-error` (write `\x00` in the pattern). `opts.exe` names the ripgrep executable (default `'rg'`). Returns a handle with `cancel()`; the callback runs on the main loop.
+`start`/`stop` are 0-based byte offsets, `stop` exclusive; `line` is the 1-based line of `start`. With a replacement, ripgrep computes each hit's replaced text (`--replace` with `--json` needs ripgrep 15.0.0; `check()` says `rg-missing` for an older one). The user's ripgrep config is ignored and a NUL byte is text, not a sign of binary. The text is searched as raw bytes (`--encoding=none`): a byte order mark stays in it and counts in the offsets, UTF-16 is not transcoded. A NUL byte in `pattern` or `replacement` cannot travel as an argument and reports `rg-error` (write `\x00` in the pattern). `opts.multiline` (`--multiline`) is derived from the pattern when omitted: `rg.needs_multiline(pattern)` is true for a literal newline or a `\n` escape (an `n` after an odd number of backslashes, also inside a character class; `\\n` is a backslash and an "n"), and raises when `pattern` is not a string. `multiline = false` forces it off (ripgrep then refuses a pattern with `\n` as `rg-error`), `true` forces it on. `opts.exe` names the ripgrep executable (default `'rg'`). Returns a handle with `cancel()`; the callback runs on the main loop.
 
 Lines end at `\n` only (no `--crlf`): in text with `\r\n`, `$` does not match before the `\r` and `.` matches it, so `^(.*)$` → `[$1]` turns `abc\r` into `[abc\r]`. Buffer text with `fileformat=dos` is not affected, since Neovim keeps the `\r` out of the lines.
 

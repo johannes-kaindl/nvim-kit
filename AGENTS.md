@@ -28,7 +28,7 @@
 | `lua/nvim_kit/llm_json.lua` | reading a model's answer: `strip_think`, `first_json_object`, `candidates`, `is_strict_json` (port of code-kit `think-splitter`/`llm-json`) | 0.8.0 |
 | `lua/nvim_kit/llm.lua` | OpenAI-compatible server over `curl`: `endpoints`, `models`, `backend`, `resolve`, `chat` (async, timeout, `cancel`); keys from `api_key_env`/`api_key_cmd` | 0.8.0 |
 | `lua/nvim_kit/http_stub.lua` | HTTP/1.1 test server on `vim.uv` (`start`) | 0.8.0 |
-| `lua/nvim_kit/rg.lua` | searching a text with ripgrep over stdin: hits with byte offsets and rg's replaced text (`search`, `check`, `version`, `reset`, `MIN_VERSION`, `TIMEOUT_MS`; ripgrep ≥ 15.0.0) | 0.9.0 |
+| `lua/nvim_kit/rg.lua` | searching a text with ripgrep over stdin: hits with byte offsets and rg's replaced text (`search`, `needs_multiline`, `check`, `version`, `reset`, `MIN_VERSION`, `TIMEOUT_MS`; ripgrep ≥ 15.0.0) | 0.9.0 |
 | `lua/nvim_kit/edits.lua` | byte offsets into a range of lines as positions, and replacements written back to front in one undo step (`text`, `line_starts`, `position`, `locate`, `apply`) | 0.9.0 |
 
 All of them are `0.x`: their interface may still change when the second real user arrives. That user may adapt or improve them through the gate; SemVer and the consumers' pins absorb the change.
