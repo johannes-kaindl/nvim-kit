@@ -11,6 +11,7 @@ local M = {}
 local prefix = (...):gsub('llm$', '')
 local sampling = require(prefix .. 'sampling')
 local J = require(prefix .. 'llm_json')
+local text = require(prefix .. 'text')
 
 M.first_json_object = J.first_json_object
 M.strip_think = J.strip_think
@@ -188,6 +189,18 @@ end
 -- curl exit codes that mean "nobody to talk to": proxy, host, connect, TLS handshake, certificate.
 -- Any other failure after the connection (18 cut off, 52 empty reply, 56 receive) is a bad response.
 local UNREACHABLE = { [5] = true, [6] = true, [7] = true, [35] = true, [60] = true }
+
+-- Message text goes into the JSON body as it is: invalid UTF-8 (a buffer in latin1) would make the
+-- body invalid JSON, and the server refuses it. Such bytes become U+FFFD.
+local function clean_messages(list)
+  local out = {}
+  for i, m in ipairs(list) do
+    out[i] = type(m.content) == 'string'
+        and vim.tbl_extend('force', m, { content = text.clean_utf8(m.content) })
+      or m
+  end
+  return out
+end
 
 -- One HTTP call. cb({ status, body }) or cb({ error = kind, detail }), on the main loop.
 -- Returns a function that kills curl.
@@ -539,8 +552,11 @@ function M.chat(req, cb)
         backend = backend,
         max_tokens = req.max_tokens,
       }).params
-      local body =
-        vim.tbl_extend('force', params, { model = req.model, messages = req.messages, stream = false })
+      local body = vim.tbl_extend(
+        'force',
+        params,
+        { model = req.model, messages = clean_messages(req.messages), stream = false }
+      )
       handle.stop = http(ep, key, 'POST', '/v1/chat/completions', body, timeout_ms, function(res)
         if res.error then
           return fail(res)

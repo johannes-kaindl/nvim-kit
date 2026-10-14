@@ -562,3 +562,20 @@ T.case('backend detection answers unknown for a malformed probe body instead of 
   T.eq(b1, 'unknown')
   T.eq(b2, 'unknown')
 end)
+
+T.case('chat: message text that is not UTF-8 is sent as U+FFFD, so the body stays JSON', function()
+  local srv = stub.start({ ['POST /v1/chat/completions'] = chat_ok('{"a":1}') })
+  local r = await(function(cb)
+    L.chat({
+      endpoint = { url = srv.url },
+      model = 'qwen3.6:27b',
+      backend = 'ollama',
+      messages = { { role = 'user', content = 'caf\233 \255' } },
+    }, cb)
+  end)
+  srv.close()
+  T.eq(r.ok, true)
+  local body = srv.requests[1].body
+  T.ok(require('nvim_kit.llm_json').is_strict_json(body), body)
+  T.eq(vim.json.decode(body).messages[1].content, 'caf\239\191\189 \239\191\189')
+end)
