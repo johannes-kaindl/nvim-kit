@@ -91,7 +91,10 @@ local buf = require('nvim_kit.scratch').open('myplugin://list', lines, {
   filetype = 'markdown',              -- optional; modifiable = false, bufhidden = 'wipe' by default
   keys = { ['<CR>'] = open_item, q = close },
 })
+require('nvim_kit.scratch').close(buf, source_buf)  -- closes its windows, deletes it
 ```
+
+`close(buf, fallback)` closes every window that shows `buf` and deletes it. The last window of the instance cannot close; it shows `fallback` instead, or a new empty unlisted scratch buffer when `fallback` is nil or no longer valid. A `buf` that is already wiped is a no-op.
 
 **`nvim_kit.panel`** — virtual lines above line 1 that stay visible.
 

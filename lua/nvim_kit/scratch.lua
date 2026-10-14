@@ -59,4 +59,35 @@ function M.open(name, lines, opts)
   return buf
 end
 
+--- Close every window that shows `buf`, then delete it. A window that cannot be closed (the last
+--- one of the instance, E444) shows `fallback` instead; without a valid `fallback` it gets a new
+--- empty unlisted scratch buffer, so `buf` is never left visible. A `buf` that is already gone
+--- (bufhidden=wipe) is a no-op.
+function M.close(buf, fallback)
+  if type(buf) ~= 'number' then
+    error('nvim-kit scratch: buf must be a number', 2)
+  end
+  if fallback ~= nil and type(fallback) ~= 'number' then
+    error('nvim-kit scratch: fallback must be a buffer number or nil', 2)
+  end
+  if not vim.api.nvim_buf_is_valid(buf) then
+    return
+  end
+  for _, win in ipairs(vim.fn.win_findbuf(buf)) do
+    -- closing one window can take others with it (a tab page); skip what is gone or moved on
+    if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == buf then
+      if not pcall(vim.api.nvim_win_close, win, true) then
+        local show = fallback
+        if not (show and show ~= buf and vim.api.nvim_buf_is_valid(show)) then
+          show = vim.api.nvim_create_buf(false, true)
+        end
+        vim.api.nvim_win_set_buf(win, show)
+      end
+    end
+  end
+  if vim.api.nvim_buf_is_valid(buf) then
+    vim.api.nvim_buf_delete(buf, { force = true })
+  end
+end
+
 return M
