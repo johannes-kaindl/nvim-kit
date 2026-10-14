@@ -121,3 +121,84 @@ T.case('truncate: invalid arguments raise', function()
     X.truncate('abc', 1, 5)
   end, 'mark')
 end)
+
+T.case('language_name: language codes, with and without region and encoding', function()
+  T.eq(X.language_name('de'), 'German')
+  T.eq(X.language_name('de_DE.UTF-8'), 'German')
+  T.eq(X.language_name('pt_BR'), 'Portuguese')
+  T.eq(X.language_name('zh_CN.UTF-8'), 'Chinese')
+  T.eq(X.language_name('sr@latin'), 'English') -- unknown code
+  T.eq(X.language_name('nb_NO@euro'), 'Norwegian')
+  T.eq(X.language_name('FR_fr'), 'French')
+end)
+
+T.case('language_name: all twenty codes', function()
+  local want = {
+    cs = 'Czech',
+    da = 'Danish',
+    de = 'German',
+    en = 'English',
+    es = 'Spanish',
+    fi = 'Finnish',
+    fr = 'French',
+    it = 'Italian',
+    ja = 'Japanese',
+    ko = 'Korean',
+    nb = 'Norwegian',
+    nl = 'Dutch',
+    no = 'Norwegian',
+    pl = 'Polish',
+    pt = 'Portuguese',
+    ru = 'Russian',
+    sv = 'Swedish',
+    tr = 'Turkish',
+    uk = 'Ukrainian',
+    zh = 'Chinese',
+  }
+  local n = 0
+  for code, name in pairs(want) do
+    T.eq(X.language_name(code), name)
+    T.eq(X.language_name(code .. '_XX.UTF-8'), name)
+    n = n + 1
+  end
+  T.eq(n, 20)
+end)
+
+T.case('language_name: C, POSIX, empty and unknown give English', function()
+  T.eq(X.language_name('C'), 'English')
+  T.eq(X.language_name('C.UTF-8'), 'English')
+  T.eq(X.language_name('POSIX'), 'English')
+  T.eq(X.language_name(''), 'English')
+  T.eq(X.language_name('xx_YY'), 'English')
+  T.eq(X.language_name('deu'), 'English')
+end)
+
+T.case('language_name: nil reads v:lang', function()
+  T.eq(X.language_name(nil), X.language_name(vim.v.lang))
+  -- v:lang is read-only: a child Neovim under a locale shows the default end to end
+  local root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h')
+  local code =
+    'vim.opt.rtp:prepend(vim.env.KIT_ROOT) io.write(vim.v.lang, "|", require("nvim_kit.text").language_name())'
+  local r = vim
+    .system({ vim.v.progpath, '--headless', '-u', 'NONE', '-l', '-' }, {
+      stdin = code,
+      env = { KIT_ROOT = root, LC_ALL = 'de_DE.UTF-8', LANG = 'de_DE.UTF-8' },
+      text = true,
+    })
+    :wait()
+  T.eq(r.code, 0, r.stderr)
+  local lang, name = r.stdout:match('^(.-)|(.*)$')
+  T.eq(name, X.language_name(lang)) -- whatever locale the machine has, the default follows it
+  if lang:sub(1, 2) == 'de' then
+    T.eq(name, 'German')
+  end
+end)
+
+T.case('language_name: a lang that is neither nil nor a string raises', function()
+  T.raises(function()
+    X.language_name(5)
+  end, 'language_name')
+  T.raises(function()
+    X.language_name({})
+  end, 'lang')
+end)

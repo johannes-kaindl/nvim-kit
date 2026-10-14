@@ -114,4 +114,45 @@ function M.truncate(s, max_chars, mark)
   return s
 end
 
+-- Language code (lower case, two letters) → the name a model understands; a code alone is too quiet a hint.
+local LANGUAGES = {
+  cs = 'Czech',
+  da = 'Danish',
+  de = 'German',
+  en = 'English',
+  es = 'Spanish',
+  fi = 'Finnish',
+  fr = 'French',
+  it = 'Italian',
+  ja = 'Japanese',
+  ko = 'Korean',
+  nb = 'Norwegian',
+  nl = 'Dutch',
+  no = 'Norwegian',
+  pl = 'Polish',
+  pt = 'Portuguese',
+  ru = 'Russian',
+  sv = 'Swedish',
+  tr = 'Turkish',
+  uk = 'Ukrainian',
+  zh = 'Chinese',
+}
+
+--- The English name of the language in a locale or language code: `'de_DE.UTF-8'`, `'de'` and
+--- `'pt_BR'` give `'German'`, `'German'`, `'Portuguese'`. A code is two letters, alone or followed
+--- by `_`, `.`, `-` or `@` and anything (region, encoding, modifier), in either case. `lang` nil
+--- reads `vim.v.lang`. `'C'`, `'POSIX'`, an empty string and every code outside the 20 known
+--- ones (cs da de en es fi fr it ja ko nb nl no pl pt ru sv tr uk zh) give `'English'`. Raises
+--- when `lang` is neither nil nor a string. Which option or variable to read is the caller's.
+function M.language_name(lang)
+  if lang == nil then
+    lang = vim.v.lang
+  end
+  if type(lang) ~= 'string' then
+    error('nvim-kit text: language_name: lang must be a string or nil', 2)
+  end
+  local code = lang:match('^(%a%a)[_.%-@]') or lang:match('^(%a%a)$')
+  return LANGUAGES[(code or ''):lower()] or 'English'
+end
+
 return M
