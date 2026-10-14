@@ -70,24 +70,62 @@ end
 --- Replace the edits' spans of buf, whose lines first..first+#lines-1 (0-based first) must still
 --- be exactly lines: else nothing is written and the result is false, 'changed'. Edits are
 --- { start, stop, text } as for M.locate; they go in back to front, so earlier offsets stay
---- valid, and all of them form one undo step. Raises on overlapping edits. Returns true, count.
+--- valid, and all of them form one undo step; insertions at one offset keep their order in list.
+--- Raises on invalid arguments (first a whole number >= 0, lines a list of strings, each edit
+--- whole numbers 0 <= start <= stop and a string text, edits over an empty lines) and on
+--- overlapping edits, always before anything is read or written. Returns true, count.
 function M.apply(buf, first, lines, list)
+  if type(first) ~= 'number' or first < 0 or first % 1 ~= 0 then
+    error('nvim-kit edits: apply needs first (a whole number >= 0, the 0-based first line)', 2)
+  end
+  if type(lines) ~= 'table' then
+    error('nvim-kit edits: apply needs lines (a list of strings)', 2)
+  end
+  for i, l in ipairs(lines) do
+    if type(l) ~= 'string' then
+      error(('nvim-kit edits: apply needs lines (a list of strings), line %d is not'):format(i), 2)
+    end
+  end
+  if type(list) ~= 'table' then
+    error('nvim-kit edits: apply needs list (a list of edits)', 2)
+  end
+  for i, e in ipairs(list) do
+    if
+      type(e) ~= 'table'
+      or type(e.start) ~= 'number'
+      or type(e.stop) ~= 'number'
+      or e.start % 1 ~= 0
+      or e.stop % 1 ~= 0
+      or e.start < 0
+      or e.stop < e.start
+      or type(e.text) ~= 'string'
+    then
+      local why = 'nvim-kit edits: apply: edit %d needs whole numbers 0 <= start <= stop and text'
+      error(why:format(i) .. ' (a string)', 2)
+    end
+  end
+  if #lines == 0 and #list > 0 then
+    error('nvim-kit edits: apply: edits over empty lines (nothing to edit)', 2)
+  end
   local now = vim.api.nvim_buf_get_lines(buf, first, first + #lines, false)
   if not vim.deep_equal(now, lines) then
     return false, 'changed'
   end
   local located = M.locate(lines, list)
-  -- Close the buffer's open undo block first. Vim closes it on a keystroke only in the current
-  -- buffer: an edit typed in buf before switching away would otherwise join these edits, and one
-  -- `u` would take back both (measured 2026-10-14).
-  vim.api.nvim_buf_call(buf, function()
-    vim.cmd('let &g:undolevels = &g:undolevels')
-  end)
+  local index = {}
+  for i, e in ipairs(located) do
+    index[e] = i
+  end
+  -- Back to front. Insertions at one offset: the one written last lands in front, so the later
+  -- one in list goes first.
   table.sort(located, function(a, b)
     if a.start ~= b.start then
       return a.start > b.start
     end
-    return a.stop > b.stop
+    if a.stop ~= b.stop then
+      return a.stop > b.stop
+    end
+    return index[a] > index[b]
   end)
   for i = 2, #located do
     if located[i].stop > located[i - 1].start then
@@ -102,6 +140,12 @@ function M.apply(buf, first, lines, list)
       )
     end
   end
+  -- Close the buffer's open undo block first. Vim closes it on a keystroke only in the current
+  -- buffer: an edit typed in buf before switching away would otherwise join these edits, and one
+  -- `u` would take back both (measured 2026-10-14).
+  vim.api.nvim_buf_call(buf, function()
+    vim.cmd('let &g:undolevels = &g:undolevels')
+  end)
   for _, e in ipairs(located) do
     vim.api.nvim_buf_set_text(
       buf,

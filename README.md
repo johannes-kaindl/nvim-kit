@@ -249,10 +249,11 @@ Lines end at `\n` only (no `--crlf`): in text with `\r\n`, `$` does not match be
 local edits = require('myplugin.kit.edits')
 local text = edits.text(lines)            -- lines joined with "\n", plus a final "\n": what rg searched
 local ok, n = edits.apply(buf, first, lines, { { start = 9, stop = 19, text = '2026-10-13' } })
+-- first is 0-based, like nvim_buf_get_lines: the range is buf's lines first .. first + #lines - 1
 -- ok == false, 'changed' when buf's lines first.. are no longer `lines`: nothing is written
 ```
 
-`apply` writes back to front, so earlier offsets stay valid, all in one undo step — it closes the buffer's open undo block first, since Vim closes it on a keystroke only in the current buffer. An edit that reaches into the range's final "\n" ends at the end of the last line, so the line after the range is never joined in. `locate` gives each edit its `row`, `col`, `end_row`, `end_col` (0-based, bytes).
+`apply` writes back to front, so earlier offsets stay valid, all in one undo step — it closes the buffer's open undo block first, since Vim closes it on a keystroke only in the current buffer. Insertions at one offset keep their order in the list. An edit that reaches into the range's final "\n" ends at the end of the last line, so the line after the range is never joined in. Invalid arguments raise before anything is read or written: `first` must be a whole number ≥ 0, `lines` a list of strings, each edit whole numbers `0 <= start <= stop` with a string `text`, and a non-empty list of edits needs non-empty `lines`; overlapping edits raise too. `locate` gives each edit its `row`, `col`, `end_row`, `end_col` (0-based, bytes).
 
 ## Development
 

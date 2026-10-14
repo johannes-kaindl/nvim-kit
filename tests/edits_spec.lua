@@ -118,6 +118,51 @@ T.case('apply: overlapping edits raise before anything is written', function()
   T.eq(get(buf), { 'abcd' })
 end)
 
+T.case('apply: invalid arguments raise before anything is read or written', function()
+  -- review finding I4: first = -2 compared 'ccc' but wrote into 'bbb'; an empty lines list
+  -- inserted into the next line; stop < start raised only after an earlier edit was written
+  local buf = buffer({ 'aaa', 'bbb', 'ccc' })
+  local one = { { start = 0, stop = 1, text = 'x' } }
+  local function raises(first, lines, list, what)
+    T.raises(function()
+      E.apply(buf, first, lines, list)
+    end, what)
+    T.eq(get(buf), { 'aaa', 'bbb', 'ccc' }, what)
+  end
+  raises(-2, { 'ccc' }, one, 'first')
+  raises(0.5, { 'aaa' }, one, 'first')
+  raises('0', { 'aaa' }, one, 'first')
+  raises(0, 'aaa', one, 'lines')
+  raises(0, { 'aaa', 1 }, one, 'lines')
+  raises(1, {}, one, 'empty lines')
+  raises(0, { 'aaa' }, 'x', 'list')
+  raises(0, { 'aaa' }, { 'x' }, 'edit 1')
+  raises(0, { 'aaa' }, { { start = -1, stop = 1, text = 'x' } }, 'edit 1')
+  raises(0, { 'aaa' }, { { start = 0.5, stop = 1, text = 'x' } }, 'edit 1')
+  raises(0, { 'aaa' }, { { start = 0, stop = '1', text = 'x' } }, 'edit 1')
+  raises(0, { 'aaa' }, { { start = 0, stop = 1, text = 5 } }, 'edit 1')
+  raises(
+    0,
+    { 'aaa', 'bbb' },
+    { { start = 4, stop = 5, text = 'X' }, { start = 2, stop = 1, text = 'Y' } },
+    'edit 2'
+  )
+  -- counter-check: the same buffer takes valid arguments, and empty lines with no edits are fine
+  T.eq({ E.apply(buf, 1, {}, {}) }, { true, 0 })
+  T.eq({ E.apply(buf, 2, { 'ccc' }, one) }, { true, 1 })
+  T.eq(get(buf), { 'aaa', 'bbb', 'xcc' })
+end)
+
+T.case('apply: insertions at one offset keep their order in the list', function()
+  local buf = buffer({ 'ab' })
+  E.apply(buf, 0, { 'ab' }, {
+    { start = 1, stop = 1, text = 'X' },
+    { start = 1, stop = 1, text = 'Y' },
+    { start = 1, stop = 1, text = 'Z' },
+  })
+  T.eq(get(buf), { 'aXYZb' })
+end)
+
 T.case('apply: an insertion at the start of a replaced span stays in front of it', function()
   local buf = buffer({ 'ab' })
   E.apply(buf, 0, { 'ab' }, { { start = 0, stop = 0, text = '>' }, { start = 0, stop = 1, text = 'A' } })
