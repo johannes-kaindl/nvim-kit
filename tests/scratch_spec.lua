@@ -171,3 +171,75 @@ T.case('close: a bufhidden=wipe buffer wiped by its last window closing is not d
   T.eq(vim.api.nvim_buf_is_valid(buf), false)
   T.eq(#vim.api.nvim_tabpage_list_wins(0), 1)
 end)
+
+T.case('close: a modified buffer in the last window does not raise and is gone', function()
+  local win = lone_window()
+  local buf = S.open('kitprobe://close8', { 'x' }) -- bufhidden=wipe
+  vim.bo[buf].buftype = 'acwrite'
+  S.set_lines(buf, { 'changed' })
+  vim.bo[buf].modified = true
+  S.close(buf, vim.api.nvim_create_buf(false, true))
+  T.eq(vim.api.nvim_buf_is_valid(buf), false)
+  T.ok(vim.api.nvim_win_get_buf(win) ~= buf)
+end)
+
+T.case('close: the placeholder buffer is wiped when left, nothing piles up', function()
+  local win = lone_window()
+  local before = #vim.api.nvim_list_bufs()
+  for i = 1, 2 do
+    local buf = S.open('kitprobe://close9' .. i, { 'x' }, { bufhidden = 'hide' })
+    S.close(buf)
+  end
+  local placeholder = vim.api.nvim_win_get_buf(win)
+  T.eq(vim.bo[placeholder].bufhidden, 'wipe')
+  local elsewhere = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_win_set_buf(win, elsewhere)
+  T.eq(vim.api.nvim_buf_is_valid(placeholder), false)
+  T.eq(#vim.api.nvim_list_bufs(), before + 1) -- `elsewhere`, no leftovers
+end)
+
+T.case('close: a failing WinClosed autocmd does not stop the deletion', function()
+  lone_window()
+  vim.cmd('vsplit')
+  local buf = S.open('kitprobe://close10', { 'x' }, { bufhidden = 'hide' })
+  local id = vim.api.nvim_create_autocmd('WinClosed', {
+    callback = function()
+      error('third-party failure')
+    end,
+  })
+  local ok, err = pcall(S.close, buf, vim.api.nvim_create_buf(false, true))
+  vim.api.nvim_del_autocmd(id)
+  T.ok(ok, tostring(err))
+  T.eq(vim.api.nvim_buf_is_valid(buf), false)
+end)
+
+T.case('close: a winfixbuf last window still gets the fallback', function()
+  local win = lone_window()
+  local buf = S.open('kitprobe://close11', { 'x' }, { bufhidden = 'hide' })
+  vim.wo[win].winfixbuf = true
+  local keep = vim.api.nvim_create_buf(false, true)
+  S.close(buf, keep)
+  T.eq(vim.api.nvim_buf_is_valid(buf), false)
+  T.eq(vim.api.nvim_win_get_buf(win), keep)
+  vim.wo[win].winfixbuf = false
+end)
+
+T.case('close: calling close again from its own BufUnload/BufWipeout is a no-op', function()
+  lone_window()
+  local buf = S.open('kitprobe://close12', { 'x' }) -- bufhidden=wipe, in the last window
+  local inner
+  local id = vim.api.nvim_create_autocmd({ 'BufDelete', 'BufUnload', 'BufWipeout' }, {
+    buffer = buf,
+    callback = function()
+      local r = { pcall(S.close, buf) }
+      if inner == nil or inner[1] then
+        inner = r
+      end
+    end,
+  })
+  local ok, err = pcall(S.close, buf, vim.api.nvim_create_buf(false, true))
+  pcall(vim.api.nvim_del_autocmd, id)
+  T.ok(ok, tostring(err))
+  T.ok(inner and inner[1], inner and tostring(inner[2]))
+  T.eq(vim.api.nvim_buf_is_valid(buf), false)
+end)

@@ -59,10 +59,15 @@ function M.open(name, lines, opts)
   return buf
 end
 
+local closing = {}
+
 --- Close every window that shows `buf`, then delete it. A window that cannot be closed (the last
---- one of the instance, E444) shows `fallback` instead; without a valid `fallback` it gets a new
---- empty unlisted scratch buffer, so `buf` is never left visible. A `buf` that is already gone
---- (bufhidden=wipe) is a no-op.
+--- one of the instance, E444) shows `fallback` instead; without a valid `fallback` (nil, wiped,
+--- or `buf` itself) it gets a new empty unlisted buffer that is wiped once the user leaves it
+--- (text typed into it is lost then), so `buf` is never left visible. The last window of a tab
+--- page closes with its tab page while other tab pages exist. `buf` is deleted even when
+--- modified. A `buf` that is already gone (bufhidden=wipe) is a no-op, and so is a call from
+--- `buf`'s own BufWipeout.
 function M.close(buf, fallback)
   if type(buf) ~= 'number' then
     error('nvim-kit scratch: buf must be a number', 2)
@@ -70,23 +75,39 @@ function M.close(buf, fallback)
   if fallback ~= nil and type(fallback) ~= 'number' then
     error('nvim-kit scratch: fallback must be a buffer number or nil', 2)
   end
-  if not vim.api.nvim_buf_is_valid(buf) then
+  if closing[buf] or not vim.api.nvim_buf_is_valid(buf) then
     return
   end
-  for _, win in ipairs(vim.fn.win_findbuf(buf)) do
-    -- closing one window can take others with it (a tab page); skip what is gone or moved on
-    if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == buf then
-      if not pcall(vim.api.nvim_win_close, win, true) then
-        local show = fallback
-        if not (show and show ~= buf and vim.api.nvim_buf_is_valid(show)) then
-          show = vim.api.nvim_create_buf(false, true)
+  closing[buf] = true
+  -- It is deleted anyway; a modified buffer would make the swap in the last window fail.
+  vim.bo[buf].modified = false
+  local ok, err = pcall(function()
+    for _, win in ipairs(vim.fn.win_findbuf(buf)) do
+      -- closing one window can take others with it (a tab page); skip what is gone or moved on
+      if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == buf then
+        if not pcall(vim.api.nvim_win_close, win, true) then
+          -- not every failure is E444: an erroring WinClosed autocmd closes the window anyway
+          if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == buf then
+            local show = fallback
+            if not (show and show ~= buf and vim.api.nvim_buf_is_valid(show)) then
+              show = vim.api.nvim_create_buf(false, true)
+              vim.bo[show].bufhidden = 'wipe'
+            end
+            pcall(function()
+              vim.wo[win].winfixbuf = false -- Neovim >= 0.10
+            end)
+            vim.api.nvim_win_set_buf(win, show)
+          end
         end
-        vim.api.nvim_win_set_buf(win, show)
       end
     end
-  end
-  if vim.api.nvim_buf_is_valid(buf) then
-    vim.api.nvim_buf_delete(buf, { force = true })
+    if vim.api.nvim_buf_is_valid(buf) then
+      vim.api.nvim_buf_delete(buf, { force = true })
+    end
+  end)
+  closing[buf] = nil
+  if not ok then
+    error(err, 0)
   end
 end
 
