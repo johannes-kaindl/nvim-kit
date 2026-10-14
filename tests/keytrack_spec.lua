@@ -252,3 +252,146 @@ T.case('a nested command line (:q in a command-line window) does not end the ope
   T.eq(t.keys(), 1)
   t.stop()
 end)
+
+-- With the x flag Neovim runs the keys before feedkeys returns; vim.schedule callbacks (free_if_left)
+-- run on the next loop turn.
+local function settle()
+  vim.wait(0)
+end
+
+T.case('B6: free_if_left — a command that leaves the buffer unchanged and not current is free', function()
+  local buf = buffer({ 'x x' })
+  local t = K.start(buf, { free_if_left = true })
+  keys(':enew<CR>')
+  settle()
+  T.eq(t.keys(), 0)
+  vim.api.nvim_set_current_buf(buf)
+  keys(':%s/x/y/g|enew<CR>')
+  settle()
+  T.eq(t.keys(), #':%s/x/y/g|enew' + 1, 'the buffer changed: every key counts')
+  vim.api.nvim_set_current_buf(buf)
+  keys(':help<CR>')
+  settle()
+  T.eq(t.keys(), 15, ':help is free')
+  vim.cmd('helpclose')
+  vim.api.nvim_set_current_buf(buf)
+  keys(':s/y/z/<CR>')
+  settle()
+  T.eq(t.keys(), 15 + 8, 'a command that stays in the buffer counts')
+  t.stop()
+end)
+
+T.case('counter-check B6: without free_if_left :enew counts', function()
+  local buf = buffer()
+  local t = K.start(buf)
+  keys(':enew<CR>')
+  settle()
+  T.eq(t.keys(), 6)
+  t.stop()
+end)
+
+T.case('B7: pause_outside — time stops while the buffer is not current', function()
+  local clock = 0
+  local buf = buffer()
+  local opts = {
+    pause_outside = true,
+    now = function()
+      return clock
+    end,
+  }
+  local t = K.start(buf, opts)
+  keys('x')
+  clock = 1000
+  vim.cmd('enew')
+  clock = 5000
+  vim.api.nvim_set_current_buf(buf)
+  clock = 6000
+  T.eq(t.elapsed_ms(), 2000)
+  clock = 7000
+  vim.cmd('enew')
+  clock = 9000
+  t.stop()
+  T.eq(t.elapsed_ms(), 3000, 'stopped while away: the time away does not count')
+end)
+
+T.case('counter-check B7: without pause_outside the time away counts', function()
+  local clock = 0
+  local buf = buffer()
+  local t = K.start(buf, {
+    now = function()
+      return clock
+    end,
+  })
+  keys('x')
+  clock = 1000
+  vim.cmd('enew')
+  clock = 5000
+  vim.api.nvim_set_current_buf(buf)
+  clock = 6000
+  T.eq(t.elapsed_ms(), 6000)
+  t.stop()
+end)
+
+T.case('B7: leaving and coming back before the first key changes nothing', function()
+  local clock = 0
+  local buf = buffer()
+  local t = K.start(buf, {
+    pause_outside = true,
+    now = function()
+      return clock
+    end,
+  })
+  clock = 1000
+  vim.cmd('enew')
+  clock = 5000
+  vim.api.nvim_set_current_buf(buf)
+  clock = 6000
+  keys('x')
+  clock = 7000
+  T.eq(t.elapsed_ms(), 1000)
+  t.stop()
+end)
+
+T.case('B7: a command-line window opened from the buffer is not time away', function()
+  local clock = 0
+  local buf = buffer()
+  local t = K.start(buf, {
+    pause_outside = true,
+    now = function()
+      return clock
+    end,
+  })
+  keys('x')
+  clock = 1000
+  -- after keytrack's own CmdwinEnter: five seconds pass in the window
+  vim.api.nvim_create_autocmd('CmdwinEnter', {
+    once = true,
+    callback = function()
+      clock = clock + 5000
+    end,
+  })
+  keys('q:iecho<CR>')
+  T.eq(t.elapsed_ms(), 6000)
+  t.stop()
+end)
+
+T.case('B7: on_tick rests while the buffer is not current', function()
+  local ticks = 0
+  local buf = buffer()
+  local t = K.start(buf, {
+    pause_outside = true,
+    on_tick = function()
+      ticks = ticks + 1
+    end,
+  })
+  keys('x')
+  vim.cmd('enew')
+  vim.wait(1300)
+  T.eq(ticks, 0)
+  vim.api.nvim_set_current_buf(buf)
+  vim.wait(1500, function()
+    return ticks >= 1
+  end)
+  T.ok(ticks >= 1, 'ticks again after coming back')
+  t.stop()
+end)

@@ -33,10 +33,14 @@ end
 
 --- Start counting keys typed in buf. opts:
 ---   now             clock in ms (tests)
----   on_tick         called every second after the first key
+---   on_tick         called every second after the first key (not while paused)
 ---   exclude_cmdline Lua pattern or function(cmdline) → boolean: a ':' command line it matches
 ---                   costs nothing, also when it was abandoned. Only a typed ':' is part of the
 ---                   command; a mapping that opened the command line keeps its keys.
+---   free_if_left    a ':' command after which buf is no longer current and unchanged costs
+---                   nothing (:enew, :help)
+---   pause_outside   time stops while buf is not the current buffer (a command-line window
+---                   opened from it counts as buf)
 function M.start(buf, opts)
   opts = opts or {}
   local now = opts.now or function()
@@ -44,7 +48,7 @@ function M.start(buf, opts)
   end
   local exclude = opts.exclude_cmdline
   local count, first, stopped_at, stopped = 0, nil, nil, false
-  local cmd_start, last_key, cmdwin = nil, nil, false
+  local cmd_start, last_key, cmdwin, left_at, paused = nil, nil, false, nil, 0
   local timer, key_ns
   local group = vim.api.nvim_create_augroup(('%s.%d'):format(MOD, buf), { clear = true })
 
@@ -91,7 +95,7 @@ function M.start(buf, opts)
           1000,
           1000,
           vim.schedule_wrap(function()
-            if not stopped then
+            if not stopped and not left_at then
               opts.on_tick()
             end
           end)
@@ -108,6 +112,9 @@ function M.start(buf, opts)
     callback = function()
       local from = vim.fn.win_getid(vim.fn.winnr('#'))
       cmdwin = from ~= 0 and vim.api.nvim_win_get_buf(from) == buf
+      if cmdwin then
+        left_at = nil -- BufLeave came first; typing in the window is part of the run
+      end
     end,
   })
   vim.api.nvim_create_autocmd('CmdwinLeave', {
@@ -117,7 +124,7 @@ function M.start(buf, opts)
     end,
   })
 
-  if exclude then
+  if exclude or opts.free_if_left then
     -- q: and q/ open their window from a command line of the same type, so the ':' lines run
     -- from a command-line window come through here as well (measured).
     vim.api.nvim_create_autocmd('CmdlineEnter', {
@@ -137,13 +144,50 @@ function M.start(buf, opts)
         end
         local start = cmd_start
         cmd_start = nil
-        if excluded(vim.fn.getcmdline()) then
+        if exclude and excluded(vim.fn.getcmdline()) then
           count = start
+          return
+        end
+        if opts.free_if_left and not vim.v.event.abort then
+          -- The command runs after CmdlineLeave. Its cost is taken back afterwards, not the count
+          -- reset: keys typed in the meantime stay counted.
+          local cost, tick = count - start, vim.api.nvim_buf_get_changedtick(buf)
+          vim.schedule(function()
+            if
+              not stopped
+              and vim.api.nvim_buf_is_valid(buf)
+              and vim.api.nvim_get_current_buf() ~= buf
+              and vim.api.nvim_buf_get_changedtick(buf) == tick
+            then
+              count = count - cost
+            end
+          end)
         end
       end,
     })
   end
 
+  if opts.pause_outside then
+    vim.api.nvim_create_autocmd('BufLeave', {
+      group = group,
+      buffer = buf,
+      callback = function()
+        if first and not stopped and not left_at then
+          left_at = now()
+        end
+      end,
+    })
+    vim.api.nvim_create_autocmd('BufEnter', {
+      group = group,
+      buffer = buf,
+      callback = function()
+        if left_at then
+          paused = paused + (now() - left_at)
+          left_at = nil
+        end
+      end,
+    })
+  end
   -- :bdelete unloads without wiping; either way the text is gone and the run is over.
   vim.api.nvim_create_autocmd({ 'BufUnload', 'BufWipeout' }, { group = group, buffer = buf, callback = stop })
 
@@ -158,7 +202,9 @@ function M.start(buf, opts)
       if not first then
         return 0
       end
-      return math.floor((stopped_at or now()) - first)
+      local t = stopped_at or now()
+      local idle = paused + (left_at and (t - left_at) or 0)
+      return math.floor(t - first - idle)
     end,
     stop = stop,
   }
