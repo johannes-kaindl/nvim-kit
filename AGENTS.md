@@ -17,11 +17,11 @@
 | `lua/nvim_kit/data.lua` | loads JSON data with a required schema version (`load`); a path beside the calling file (`beside`, 0.8.0) | 0.1.0 |
 | `lua/nvim_kit/date.lua` | `YYYY-MM-DD` calendar arithmetic without time zones (`days_from_civil`, `civil_from_days`, `add_days`, `utc_today`) | 0.2.0 |
 | `lua/nvim_kit/store.lua` | JSON state file: exact read, atomic write, re-read before every write, broken file moved aside (`read`, `write`, `update`, `set_aside`) | 0.3.0 |
-| `lua/nvim_kit/scratch.lua` | named view buffer with buffer-local keys (`open`, `find`, `set_lines`, `close`) | 0.3.0 |
+| `lua/nvim_kit/scratch.lua` | named view buffer with buffer-local keys (`open`, `find`, `set_lines`, `close`; `reveal`, 0.12.0) | 0.3.0 |
 | `lua/nvim_kit/panel.lua` | virtual lines above line 1 kept visible (`set`, `wrap`) | 0.3.0 |
 | `lua/nvim_kit/keytrack.lua` | typed keys and time in one buffer, own commands excluded (`start`, `format_clock`); a mapping costs its lhs, the command-line window counts, `exclude_cmdline` as a function, `free_if_left`, `pause_outside` (0.7.0) | 0.3.0 |
 | `lua/nvim_kit/winbar.lua` | winbar bound to one buffer (`attach`, `render`) | 0.4.0 |
-| `lua/nvim_kit/text.lua` | small text pieces (`bar`; `clean_utf8`, `truncate`, 0.9.0) | 0.4.0 |
+| `lua/nvim_kit/text.lua` | small text pieces (`bar`; `clean_utf8`, `truncate`, 0.9.0; `language_name`, 0.12.0) | 0.4.0 |
 | `lua/nvim_kit/health.lua` | `:checkhealth` building blocks, read-only (`neovim`, `json`, `writable`, `vendored`) | 0.5.0 |
 | `lua/nvim_kit/isolate.lua` | one buffer in plain Neovim: Vim keys, Neovim's default options, editor helpers off (`apply`, `overrides`, `global_options`) | 0.7.0 |
 | `lua/nvim_kit/sampling.lua` | request profiles per model family × mode × backend, a port of code-kit `sampling-profiles` (`family_from_name`, `thinking_for`, `validate_override`, `sanitize`, `resolve`, `for_call`); tables in `lua/nvim_kit/data/`, vendored from code-kit | 0.8.0 |
@@ -30,6 +30,7 @@
 | `lua/nvim_kit/http_stub.lua` | HTTP/1.1 test server on `vim.uv` (`start`) | 0.8.0 |
 | `lua/nvim_kit/rg.lua` | searching a text with ripgrep over stdin: hits with byte offsets and rg's replaced text (`search`, `needs_multiline`, `check`, `version`, `reset`, `MIN_VERSION`, `TIMEOUT_MS`; ripgrep ≥ 15.0.0) | 0.9.0 |
 | `lua/nvim_kit/edits.lua` | byte offsets into a range of lines as positions, and replacements written back to front in one undo step (`text`, `line_starts`, `position`, `locate`, `apply`) | 0.9.0 |
+| `lua/nvim_kit/wait.lua` | blocking on an asynchronous answer with `vim.wait` (`result`: value and an answered flag, `nil, false` on timeout) | 0.12.0 |
 
 All of them are `0.x`: their interface may still change when the second real user arrives. That user may adapt or improve them through the gate; SemVer and the consumers' pins absorb the change.
 

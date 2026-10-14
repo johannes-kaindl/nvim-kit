@@ -4,6 +4,11 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Added
+- `text.language_name(lang)` — the English name of the language in a locale or language code (`'de_DE.UTF-8'`, `'de'`, `'pt_BR'` → `'German'`, `'German'`, `'Portuguese'`) for 20 codes (cs da de en es fi fr it ja ko nb nl no pl pt ru sv tr uk zh). `lang` nil reads `vim.v.lang`; `'C'`, `'POSIX'`, an empty string and unknown codes give `'English'`. Raises when `lang` is neither nil nor a string.
+- `scratch.reveal(buf, row, col)` — focuses a window of the current tab page that shows `buf`, or opens an `aboveleft split` showing it, and puts the cursor at `row` (1-based) and `col` (0-based byte), both clamped to the buffer as it is now, so a buffer that shrank never raises "Invalid cursor line". Returns the window. Raises on invalid arguments and on an invalid `buf`.
+- `nvim_kit.wait` — `result(start, timeout_ms)` calls `start(cb)` and blocks with `vim.wait` until `cb` is called or the time is up; returns `value, true`, or `nil, false` on timeout (so an answer of `nil` is `nil, true`). Not for fast callbacks.
+
 ## [0.11.0] — 2026-10-14
 
 ### Added

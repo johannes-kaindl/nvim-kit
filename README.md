@@ -6,7 +6,7 @@ Source library for Neovim plugins — vendored into each plugin, never installed
 
 ## What it is
 
-A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, time-zone-free calendar dates, a JSON state store two editors can share, view buffers, a panel above line 1, a buffer-bound winbar, keystroke tracking, a buffer in plain Neovim, small text pieces, health-check building blocks, searching a text with ripgrep and writing byte spans back in one undo step, and the pieces for talking to a language model: request profiles per model family, an OpenAI-compatible client over `curl`, a reader for JSON in a model's answer, and an HTTP server for tests. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
+A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, time-zone-free calendar dates, a JSON state store two editors can share, view buffers, a panel above line 1, a buffer-bound winbar, keystroke tracking, a buffer in plain Neovim, small text pieces, a blocking wait for one asynchronous answer, health-check building blocks, searching a text with ripgrep and writing byte spans back in one undo step, and the pieces for talking to a language model: request profiles per model family, an OpenAI-compatible client over `curl`, a reader for JSON in a model's answer, and an HTTP server for tests. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
 
 ## How to consume it
 
@@ -94,6 +94,8 @@ local buf = require('nvim_kit.scratch').open('myplugin://list', lines, {
 require('nvim_kit.scratch').close(buf, source_buf)  -- closes its windows, deletes it
 ```
 
+`reveal(buf, row, col)` shows `buf` at a position and returns the window: it focuses a window of the current tab page that shows `buf`, or opens an `aboveleft split` showing it. `row` is 1-based and `col` a 0-based byte offset, the way `nvim_win_set_cursor` takes them; both are clamped to the buffer as it is now (row to 1 .. line count, col to 0 .. last byte of that line), so a buffer that shrank since the position was computed never raises "Invalid cursor line". Invalid arguments and an invalid `buf` raise.
+
 `close(buf, fallback)` closes every window that shows `buf` and deletes it. The last window of the instance cannot close; it shows `fallback` instead, or a new empty unlisted scratch buffer when `fallback` is nil, no longer valid or `buf` itself (that placeholder is wiped once the user leaves it, so text typed into it is lost). When `buf` is the only window of a tab page and other tab pages exist, that tab page closes; only the instance's last window gets the fallback. `buf` is deleted even when modified. A `buf` that is already wiped is a no-op, and so is a call from a BufUnload or BufWipeout that `close` itself triggered. Do not call `close(buf)` from `buf`'s own BufUnload/BufWipeout autocmds: when the user or another plugin wipes `buf` (`:bwipeout!`), it raises and the wipe fails with E937.
 
 **`nvim_kit.panel`** — virtual lines above line 1 that stay visible.
@@ -156,6 +158,14 @@ vim.cmd('redrawstatus!')   -- after the text changed
 It is set window-locally wherever the buffer is shown; another buffer in the same window has no winbar. The text is shown literally.
 
 **`nvim_kit.text`** — `require('nvim_kit.text').bar(28, 20)` → `[██████░░░░░░░░░░░░░░]`; `clean_utf8(s)` replaces every byte that is not valid UTF-8 with U+FFFD (`vim.json.encode` copies such bytes into its output; `llm.chat` cleans message text with it); `truncate(s, max_chars, mark)` returns `s` when it has at most `max_chars` characters, else its first `max_chars` characters followed by `mark` (default `…`) — it counts characters (UTF-8 code points), never bytes, so it does not cut inside a multibyte character, and it raises on invalid arguments. It counts in plain Lua, without `vim.fn`, the way `vim.fn.strchars` counts: a lead byte followed by all the continuation bytes it announces is one character (2 to 6 bytes, as Vim reads them), and every other byte is one character of its own, so a run of stray continuation bytes counts byte by byte and the cut stays bounded on text that is not UTF-8. A NUL byte is a character too, and it works in a fast callback.
+
+`language_name(lang)` gives the English name of the language in a locale or language code, for a model prompt: `language_name('de_DE.UTF-8')` → `'German'`, `'pt_BR'` → `'Portuguese'`. A code is two letters, alone or followed by `_`, `.`, `-` or `@` and anything, in either case; 20 are known (cs da de en es fi fr it ja ko nb nl no pl pt ru sv tr uk zh). `lang` nil reads `vim.v.lang`. `'C'`, `'POSIX'`, an empty string and every other code give `'English'`. It raises when `lang` is neither nil nor a string. Choosing between an option and `v:lang` stays with the caller.
+
+**`nvim_kit.wait`** — `local value, answered = require('nvim_kit.wait').result(start, timeout_ms)` calls `start(cb)` and blocks with `vim.wait` until `cb` has been called or `timeout_ms` has passed. It returns the value given to `cb` and `true`, or `nil, false` on timeout; the second result tells an answer of `nil` (`nil, true`) from no answer. A later call of `cb` is ignored. Events and callbacks run while it waits. Do not call it from a fast callback (`vim.uv` handlers, `vim.system` callbacks): `vim.wait` raises there. It raises when `start` is not a function or `timeout_ms` is not a number ≥ 0; an error in `start` propagates.
+
+```lua
+local r, ok = require('nvim_kit.wait').result(function(cb) llm.models(endpoint, cb) end, 3000)
+```
 
 **`nvim_kit.health`** — building blocks for `:checkhealth <plugin>`; they only read.
 
