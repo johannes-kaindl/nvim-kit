@@ -6,7 +6,7 @@ Source library for Neovim plugins — vendored into each plugin, never installed
 
 ## What it is
 
-A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, time-zone-free calendar dates, a JSON state store two editors can share, view buffers, a panel above line 1, a buffer-bound winbar, keystroke tracking, and small text pieces. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
+A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, time-zone-free calendar dates, a JSON state store two editors can share, view buffers, a panel above line 1, a buffer-bound winbar, keystroke tracking, a buffer in plain Neovim, and small text pieces. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
 
 ## How to consume it
 
@@ -115,13 +115,29 @@ end)
 
 ```lua
 local t = require('nvim_kit.keytrack').start(buf, {
-  exclude_cmdline = '^%s*MyPlugin',   -- the plugin's own commands do not count
+  exclude_cmdline = function(line)    -- or a Lua pattern ('^%s*MyPlugin'); free also when abandoned
+    local ok, cmd = pcall(vim.api.nvim_parse_cmd, line, {})
+    return ok and cmd.cmd == 'MyPlugin'   -- :MyPl check is recognised too
+  end,
+  free_if_left = true,    -- :enew, :help — leaving the buffer unchanged costs nothing
+  pause_outside = true,   -- the clock stops while the buffer is not current
   on_tick = function() vim.cmd('redrawstatus!') end,
 })
 t.keys(); t.elapsed_ms(); t.stop()
 ```
 
-Time runs from the first key. Only typed keys count: a macro replay counts the keys that started it, not the ones it replays. Mouse clicks and the scroll wheel do not count, a terminal paste costs nothing, and `:bdelete` ends the tracking.
+Time runs from the first key. Only typed keys count: a macro replay counts the keys that started it, not the ones it replays, and a mapping costs the keys of its lhs. Keys typed in a command-line window opened from the buffer (`q:`, `q/`) count. Only a typed `:` belongs to an excluded command; a mapping that opens it keeps its keys. Mouse clicks and the scroll wheel do not count, a terminal paste costs nothing, and `:bdelete` ends the tracking.
+
+**`nvim_kit.isolate`** — one buffer in plain Neovim, whatever the user's setup does.
+
+```lua
+local isolate = require('myplugin.kit.isolate')
+isolate.apply(buf, { filetype = 'myplugin-exercise', desc = 'plain Neovim key' })
+isolate.overrides()       -- the user's global mappings that change a Vim key: { { mode, lhs, desc } }
+isolate.global_options()  -- global options that differ from Neovim's default: { 'ignorecase=true' }
+```
+
+Every Vim key in Normal, Visual and Operator-pending mode, and every global mapping that starts with one, maps to itself in this buffer — non-recursively and with the exact lhs, because with keys already waiting Neovim takes the longest match. Neovim's own default mappings (`Y`, `gcc`, matchit's `%`), `<Leader>` mappings, function and window keys stay as they are. The options that change text are set to Neovim's default, `opts.filetype` replaces the filetype so that rendering and snippet plugins leave the buffer alone, and blink.cmp, copilot, minuet, mini.* and which-key are switched off by their own buffer switches, diagnostics too. A global option cannot have a buffer value; `global_options()` names those for a `:checkhealth`.
 
 **`nvim_kit.winbar`** — a winbar that belongs to one buffer.
 

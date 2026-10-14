@@ -19,10 +19,11 @@
 | `lua/nvim_kit/store.lua` | JSON state file: exact read, atomic write, re-read before every write, broken file moved aside (`read`, `write`, `update`, `set_aside`) | 0.3.0 |
 | `lua/nvim_kit/scratch.lua` | named view buffer with buffer-local keys (`open`, `find`, `set_lines`) | 0.3.0 |
 | `lua/nvim_kit/panel.lua` | virtual lines above line 1 kept visible (`set`, `wrap`) | 0.3.0 |
-| `lua/nvim_kit/keytrack.lua` | typed keys and time in one buffer, own commands excluded (`start`, `format_clock`) | 0.3.0 |
+| `lua/nvim_kit/keytrack.lua` | typed keys and time in one buffer, own commands excluded (`start`, `format_clock`); a mapping costs its lhs, the command-line window counts, `exclude_cmdline` as a function, `free_if_left`, `pause_outside` (0.7.0) | 0.3.0 |
 | `lua/nvim_kit/winbar.lua` | winbar bound to one buffer (`attach`, `render`) | 0.4.0 |
 | `lua/nvim_kit/text.lua` | small text pieces (`bar`) | 0.4.0 |
 | `lua/nvim_kit/health.lua` | `:checkhealth` building blocks, read-only (`neovim`, `json`, `writable`, `vendored`) | 0.5.0 |
+| `lua/nvim_kit/isolate.lua` | one buffer in plain Neovim: Vim keys, Neovim's default options, editor helpers off (`apply`, `overrides`, `global_options`) | 0.7.0 |
 
 All of them are `0.x`: their interface may still change when the second real user arrives. That user may adapt or improve them through the gate; SemVer and the consumers' pins absorb the change.
 
@@ -53,6 +54,11 @@ Tools: `brew install stylua selene`. Neovim ≥ 0.10.
 - **Headless `nvim -l` never fires `CursorMoved`,** and the view's `topline` stays stale until a redraw (`line('w0')` is current). Tests raise `CursorMoved` themselves with `nvim_exec_autocmds`.
 - **`vim.on_key`: returning `''` discards the key** (0.11+) — a counting callback returns nothing.
 - **`:enew` reuses an unnamed, empty buffer** instead of switching away from it — no `BufWinLeave`, window options unchanged. Test buffers that must be left get a name and a line of text (measured 2026-10-09, it faked a winbar bug).
+- **`vim.on_key` reports a mapping's whole lhs in one call** (`typed` = `iw`, `<Space>p`) at its first rhs key — count the keys in it, not the calls (measured on 0.10.4 and 0.12.6).
+- **`q:` and `q/` open their window from a command line:** `CmdlineEnter` fires in the original buffer first, the keys in the window go to the window's own buffer, and `CmdlineLeave` with the executed line fires back in the original buffer. A `:` typed inside the window is a nested command line there.
+- **`<C-f>` (`'cedit'`) does not open the command-line window from `nvim_feedkeys(…, 'x')`** — Neovim inserts it as a character there; `q:` takes the same path through the events, so tests use `q:`.
+- **`vim.schedule` callbacks queued while `nvim_feedkeys(…, 'x')` runs fire on the next loop turn,** not before `feedkeys` returns — `vim.wait(0)` in a test.
+- **Keys a plugin replays with `nvim_feedkeys(…, 't')` arrive as typed in `vim.on_key`** (which-key: `gg` counts 4) — indistinguishable from the person's keys.
 
 ## Memory
 

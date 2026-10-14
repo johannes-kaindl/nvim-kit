@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Added
+- `nvim_kit.isolate` — puts one buffer into plain Neovim, so it behaves the same with every user setup: `apply(buf, { filetype, desc })` maps every Vim key in Normal, Visual and Operator-pending mode, and every global mapping that starts with one, to itself (non-recursive, buffer-local, with the exact lhs); keeps Neovim's own default mappings, `<Leader>` mappings, function and window keys; sets the options that change text to Neovim's default; switches off blink.cmp, copilot, minuet, mini.* and which-key by their own buffer switches, and diagnostics. `overrides()` and `global_options()` report what a user's setup changes, for `:checkhealth`. Moved from neurovim.nvim (`1e4c619`), where it was measured against LazyVim: 16 of 16 cases as in `nvim --clean`.
+- `nvim_kit.keytrack.start` options: `exclude_cmdline` may be a function `fn(cmdline) → boolean` (an abbreviated command, through `nvim_parse_cmd`); `free_if_left` — a `:` command after which the buffer is no longer current and unchanged costs nothing (`:enew`, `:help`); `pause_outside` — time and `on_tick` stop while the buffer is not current.
+
+### Changed
+- `keytrack` counts the keys of a mapping's lhs instead of one per mapping (`<Space>p` costs 2): Neovim reports the whole lhs in one `vim.on_key` call. A command line that a mapping opens keeps the mapping's keys even when its command is excluded; only a typed `:` belongs to an excluded command.
+- An excluded command line costs nothing also when it is abandoned with `<Esc>`.
+
+### Fixed
+- Keys typed in a command-line window opened from the tracked buffer (`q:`, `q/`) count; they cost nothing before.
+- A nested command line (a `:` typed inside the command-line window, `<C-r>=`) no longer ends the open command, so an excluded command run from the window stays free.
+
 ## [0.6.0] — 2026-10-13
 
 ### Changed
