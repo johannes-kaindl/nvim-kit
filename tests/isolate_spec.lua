@@ -509,10 +509,11 @@ local function neurovim_like(isolated)
 end
 
 local function with_leader(fn)
-  local leader = vim.g.mapleader
+  local leader, reg = vim.g.mapleader, vim.fn.getreginfo('"')
   vim.g.mapleader = ' '
   local ok, err = pcall(fn)
   vim.g.mapleader = leader
+  vim.fn.setreg('"', reg)
   pcall(vim.keymap.del, 'n', '<Plug>(kit-reveal)')
   pcall(vim.api.nvim_del_user_command, 'KitHit')
   if not ok then

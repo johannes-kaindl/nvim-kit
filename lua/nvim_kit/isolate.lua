@@ -209,9 +209,9 @@ end
 
 -- which-key starts on its own when Operator-pending or Visual mode begins (ModeChanged), with no
 -- mapping to cover, and counts the keys it replays twice. Its only switch for one buffer is its
--- filetype list; it may load after the buffer opened, so BufEnter asks again. The list is read only
--- when which-key builds a buffer's modes, and it builds them on BufEnter, before apply sets the
--- filetype. Their triggers (<Space> among them, swallowing <Space>p) are not mapped there but by a
+-- filetype list; it may load after the buffer opened, so BufEnter asks again. A listed filetype
+-- keeps which-key from building new modes for the buffer, but the modes it built on BufEnter, before
+-- apply set the filetype, stay. Their triggers (<Space> among them, swallowing <Space>p) are not mapped there but by a
 -- 0 ms timer: applied in the same tick, `clear` would find nothing mapped and drop the modes, and
 -- the timer would map the triggers anyway. So the triggers each waiting mode holds are emptied
 -- first, then `clear` unmaps whatever is mapped already; with the filetype listed, which-key builds
@@ -256,9 +256,13 @@ end
 
 --- Put buf into plain Neovim. opts.filetype replaces the buffer's filetype (one plugins do not
 --- know, so Markdown rendering, linting and snippets leave it alone); opts.desc names the key
---- mappings in :map. Without opts.filetype which-key stays on: its only switch for one buffer is
---- its filetype list. Call apply before mapping the buffer's own keys: removing mini.clue's
---- triggers deletes any buffer-local mapping on a trigger's lhs (<Leader> itself, <C-w>).
+--- mappings in :map. Limits:
+---   - Without opts.filetype which-key stays on: its only switch for one buffer is its filetype list.
+---   - which-key set up after apply (LazyVim loads it on VeryLazy, so `nvim +Cmd` opening the buffer
+---     at startup) adds its triggers while the buffer stays current; they go on the next BufEnter.
+---   - The buffer's own keys belong on <Leader>, <LocalLeader> or <Plug>: apply maps every Vim key
+---     to itself, also on each BufEnter, and removing mini.clue's triggers deletes any buffer-local
+---     mapping on a trigger's lhs (<Leader> itself, <C-w>). Map them after apply.
 function M.apply(buf, opts)
   opts = opts or {}
   local desc = opts.desc or 'plain Neovim key'
