@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.12.0] — 2026-10-14
+
 ### Added
 - `text.language_name(lang)` — the English name of the language in a locale or language code (`'de_DE.UTF-8'`, `'de'`, `'pt_BR'` → `'German'`, `'German'`, `'Portuguese'`) for 20 codes (cs da de en es fi fr it ja ko nb nl no pl pt ru sv tr uk zh). `lang` nil reads `vim.v.lang`; `'C'`, `'POSIX'`, an empty string and unknown codes give `'English'`. Raises when `lang` is neither nil nor a string.
 - `scratch.reveal(buf, row, col)` — focuses a window of the current tab page that shows `buf` and can take focus (not a `focusable = false` float), or opens an `aboveleft split` showing it, and puts the cursor at `row` (1-based) and `col` (0-based byte), row clamped to the buffer and col to ≥ 0 (Neovim puts the cursor on the last character of a shorter line, never inside a multibyte one), so a buffer that shrank never raises "Invalid cursor line". Returns the window. Raises on invalid arguments and on an invalid `buf`.
