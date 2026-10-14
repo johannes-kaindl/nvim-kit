@@ -15,6 +15,18 @@ All notable changes to this project are documented here. The format is based on 
 ### Fixed
 - Tests that start a second Neovim use `v:progpath`, so `make test NVIM=<path>` runs them with that Neovim too; they used the `nvim` on `PATH`, and the minimum-version run never reached them.
 
+## [0.7.2] — 2026-10-14
+
+### Fixed
+- `isolate.apply` keeps which-key's triggers out also when it runs in the same tick as the buffer's `BufEnter`, as a plugin does right after opening its buffer (`scratch.open`, then `apply`). which-key maps the triggers of a buffer's modes from a 0 ms timer, not on `BufEnter` itself; 0.7.1's `clear` came before that timer, dropped the modes, and the timer mapped the triggers anyway (`<Space>` among them, so `<Space>p` still pasted). `apply` now empties the triggers each waiting mode holds before `clear`, on every `BufEnter` too. These are which-key internals (`bufs`, `modes`, `triggers`, each checked by type); measured with which-key 3aab214: 5 triggers left in the same tick with 0.7.1, 0 now, also after `:enew` and back. Not covered: which-key set up only after `apply` (or set up again with its own `disable.ft`) while the buffer stays current maps its triggers until the next `BufEnter`; documented as a limit of `apply`. A path through the public `clear` alone, called after which-key's timer, measured 0 as well but depends on the order of two timers, which a macro (100 ms) or a restarted which-key timer reverses.
+- `isolate.apply` no longer sets which-key up early: reading `options` from which-key's config module ran its `setup()` with defaults when the user's had not run yet (measured); it reads the field with `rawget` now.
+
+## [0.7.1] — 2026-10-14
+
+### Fixed
+- `isolate.apply` removes the triggers which-key had already put into the buffer: which-key adds them on `BufEnter`, before `apply` sets the filetype, and reads its filetype list only when it adds them, so its `<Space>` trigger stayed and swallowed `<Space>` mappings (`<Space>p` pasted). It calls `require('which-key.buf').clear({ buf = buf })` after listing the filetype, and again on `BufEnter`; with the filetype listed, which-key adds none again. Measured with which-key 3aab214: 6 triggers before `apply`, 2 left with 0.7.0, 0 now.
+- `isolate.apply` removes mini.clue's triggers too: mini.clue maps them one tick after `BufWinEnter`, and once `vim.b.miniclue_disable` is set it no longer unmaps them. `apply` calls `MiniClue.disable_buf_triggers(buf)` before setting the switch. Measured with mini.clue 149236a: an `apply` one tick late kept the `<Space>` trigger with 0.7.0, none now.
+
 ## [0.7.0] — 2026-10-14
 
 ### Added
