@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Fixed
+- `isolate.apply` keeps which-key's triggers out also when it runs in the same tick as the buffer's `BufEnter`, as a plugin does right after opening its buffer (`scratch.open`, then `apply`). which-key maps the triggers of a buffer's modes from a 0 ms timer, not on `BufEnter` itself; 0.7.1's `clear` came before that timer, dropped the modes, and the timer mapped the triggers anyway (`<Space>` among them, so `<Space>p` still pasted). `apply` now empties the triggers each waiting mode holds before `clear`, on every `BufEnter` too. These are which-key internals (`bufs`, `modes`, `triggers`, each checked by type); measured with which-key 3aab214: 5 triggers left in the same tick with 0.7.1, 0 now, also after `:enew` and back and after a second `setup()`. A path through the public `clear` alone, called after which-key's timer, measured 0 as well but depends on the order of two timers, which a macro (100 ms) or a restarted which-key timer reverses.
+- `isolate.apply` no longer sets which-key up early: reading `options` from which-key's config module ran its `setup()` with defaults when the user's had not run yet (measured); it reads the field with `rawget` now.
+
 ## [0.7.1] — 2026-10-14
 
 ### Fixed
