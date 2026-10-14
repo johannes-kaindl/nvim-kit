@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-10-14
+
 ### Added
 - `nvim_kit.isolate` — puts one buffer into plain Neovim, so it behaves the same with every user setup: `apply(buf, { filetype, desc })` maps every Vim key in Normal, Visual and Operator-pending mode, and every global mapping that starts with one, to itself (non-recursive, buffer-local, with the exact lhs); keeps Neovim's own default mappings, `<Leader>` mappings, function and window keys; sets the options that change text to Neovim's default; switches off blink.cmp, copilot, minuet, mini.* and which-key by their own buffer switches, and diagnostics. `overrides()` and `global_options()` report what a user's setup changes, for `:checkhealth`. Moved from neurovim.nvim (`1e4c619`), where it was measured against LazyVim: 16 of 16 cases as in `nvim --clean`.
 - `nvim_kit.keytrack.start` options: `exclude_cmdline` may be a function `fn(cmdline) → boolean` (an abbreviated command, through `nvim_parse_cmd`); `free_if_left` — a `:` command after which the buffer is no longer current and unchanged costs nothing (`:enew`, `:help`); `pause_outside` — time and `on_tick` stop while the buffer is not current.
