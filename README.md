@@ -94,7 +94,7 @@ local buf = require('nvim_kit.scratch').open('myplugin://list', lines, {
 require('nvim_kit.scratch').close(buf, source_buf)  -- closes its windows, deletes it
 ```
 
-`close(buf, fallback)` closes every window that shows `buf` and deletes it. The last window of the instance cannot close; it shows `fallback` instead, or a new empty unlisted scratch buffer when `fallback` is nil, no longer valid or `buf` itself (that placeholder is wiped once the user leaves it, so text typed into it is lost). When `buf` is the only window of a tab page and other tab pages exist, that tab page closes; only the instance's last window gets the fallback. `buf` is deleted even when modified. A `buf` that is already wiped is a no-op, and so is a call from `buf`'s own BufUnload or BufWipeout.
+`close(buf, fallback)` closes every window that shows `buf` and deletes it. The last window of the instance cannot close; it shows `fallback` instead, or a new empty unlisted scratch buffer when `fallback` is nil, no longer valid or `buf` itself (that placeholder is wiped once the user leaves it, so text typed into it is lost). When `buf` is the only window of a tab page and other tab pages exist, that tab page closes; only the instance's last window gets the fallback. `buf` is deleted even when modified. A `buf` that is already wiped is a no-op, and so is a call from a BufUnload or BufWipeout that `close` itself triggered. Do not call `close(buf)` from `buf`'s own BufUnload/BufWipeout autocmds: when the user or another plugin wipes `buf` (`:bwipeout!`), it raises and the wipe fails with E937.
 
 **`nvim_kit.panel`** — virtual lines above line 1 that stay visible.
 

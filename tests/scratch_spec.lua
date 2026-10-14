@@ -77,6 +77,9 @@ end)
 -- close: a fresh single-window state; `keep` is a normal buffer to fall back to
 local function lone_window()
   vim.cmd('silent! tabonly | silent! only')
+  pcall(function()
+    vim.wo.winfixbuf = false -- a failed winfixbuf case must not leak into later specs
+  end)
   vim.cmd('enew')
   return vim.api.nvim_get_current_win()
 end

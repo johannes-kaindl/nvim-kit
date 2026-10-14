@@ -66,8 +66,9 @@ local closing = {}
 --- or `buf` itself) it gets a new empty unlisted buffer that is wiped once the user leaves it
 --- (text typed into it is lost then), so `buf` is never left visible. The last window of a tab
 --- page closes with its tab page while other tab pages exist. `buf` is deleted even when
---- modified. A `buf` that is already gone (bufhidden=wipe) is a no-op, and so is a call from
---- `buf`'s own BufWipeout.
+--- modified. A `buf` that is already gone (bufhidden=wipe) is a no-op, and so is a call from a
+--- BufUnload/BufWipeout that `close` itself triggered. Do not call `close(buf)` from `buf`'s own
+--- wipe autocmds otherwise: when something else wipes `buf` (`:bwipeout!`), it raises.
 function M.close(buf, fallback)
   if type(buf) ~= 'number' then
     error('nvim-kit scratch: buf must be a number', 2)
