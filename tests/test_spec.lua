@@ -15,7 +15,7 @@ local function run_specs(files)
     ('vim.opt.rtp:prepend(%q)'):format(root),
     ('require("nvim_kit.test").main(%q)'):format(dir),
   }, runner)
-  return vim.system({ 'nvim', '--headless', '-u', 'NONE', '-l', runner }):wait().code
+  return vim.system({ vim.v.progpath, '--headless', '-u', 'NONE', '-l', runner }):wait().code
 end
 
 T.case('deep_equal treats vim.NIL as nil and ignores metatables', function()

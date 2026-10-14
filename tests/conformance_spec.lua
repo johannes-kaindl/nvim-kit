@@ -108,7 +108,7 @@ T.case('works when vendored under another namespace, without nvim_kit on the run
     ),
     'os.exit(#r.failures == 0 and 0 or 2)',
   }, script)
-  T.eq(vim.system({ 'nvim', '--headless', '-u', 'NONE', '-l', script }):wait().code, 0)
+  T.eq(vim.system({ vim.v.progpath, '--headless', '-u', 'NONE', '-l', script }):wait().code, 0)
 end)
 
 T.case('a vector file with no cases is an error, not a pass', function()
