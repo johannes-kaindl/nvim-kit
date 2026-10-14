@@ -67,4 +67,22 @@ function M.clean_utf8(s)
   return table.concat(out)
 end
 
+--- s cut to its first max_chars characters plus mark (default U+2026) when it is longer, else s
+--- itself. Counts characters, not bytes, so it never cuts inside a multibyte character.
+function M.truncate(s, max_chars, mark)
+  if type(s) ~= 'string' then
+    error('nvim-kit text: truncate needs s (a string)', 2)
+  end
+  if type(max_chars) ~= 'number' or max_chars < 0 or max_chars % 1 ~= 0 then
+    error('nvim-kit text: truncate needs max_chars (a non-negative whole number)', 2)
+  end
+  if mark ~= nil and type(mark) ~= 'string' then
+    error('nvim-kit text: truncate: mark must be a string', 2)
+  end
+  if vim.fn.strchars(s) <= max_chars then
+    return s
+  end
+  return vim.fn.strcharpart(s, 0, max_chars) .. (mark == nil and '…' or mark)
+end
+
 return M
