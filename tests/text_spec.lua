@@ -44,6 +44,29 @@ T.case('truncate: counts characters, never cuts inside a multibyte character', f
   T.eq(X.truncate('𝄞𝄞𝄞', 2), '𝄞𝄞…')
 end)
 
+T.case('truncate: a NUL byte is a character, and it works in a fast callback', function()
+  -- buffer text can hold NUL; vim.fn.strchars raised E976 on it (review finding I3)
+  T.eq(X.truncate('a\0bcd', 3), 'a\0b…')
+  T.eq(X.truncate('a\0b', 3), 'a\0b')
+  local fast
+  local timer = vim.uv.new_timer()
+  timer:start(0, 0, function()
+    fast = { pcall(X.truncate, 'äöü', 2) }
+    timer:close()
+  end)
+  vim.wait(2000, function()
+    return fast ~= nil
+  end, 5)
+  T.eq(fast, { true, 'äö…' })
+end)
+
+T.case('truncate: an invalid byte counts as one character, nothing is cut inside a sequence', function()
+  -- a character starts at every byte outside 0x80..0xBF
+  T.eq(X.truncate('\255\255\255', 2), '\255\255…')
+  T.eq(X.truncate('ä\128x', 1), 'ä\128…') -- a stray continuation byte stays with its lead
+  T.eq(X.truncate('\128ab', 0), '…') -- one at the start is a character of its own
+end)
+
 T.case('truncate: max_chars 0 leaves only the mark', function()
   T.eq(X.truncate('abc', 0), '…')
   T.eq(X.truncate('abc', 0, '!'), '!')

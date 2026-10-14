@@ -152,7 +152,7 @@ vim.cmd('redrawstatus!')   -- after the text changed
 
 It is set window-locally wherever the buffer is shown; another buffer in the same window has no winbar. The text is shown literally.
 
-**`nvim_kit.text`** — `require('nvim_kit.text').bar(28, 20)` → `[██████░░░░░░░░░░░░░░]`; `clean_utf8(s)` replaces every byte that is not valid UTF-8 with U+FFFD (`vim.json.encode` copies such bytes into its output; `llm.chat` cleans message text with it); `truncate(s, max_chars, mark)` returns `s` when it has at most `max_chars` characters, else its first `max_chars` characters followed by `mark` (default `…`) — it counts characters, never bytes, so it does not cut inside a multibyte character, and it raises on invalid arguments.
+**`nvim_kit.text`** — `require('nvim_kit.text').bar(28, 20)` → `[██████░░░░░░░░░░░░░░]`; `clean_utf8(s)` replaces every byte that is not valid UTF-8 with U+FFFD (`vim.json.encode` copies such bytes into its output; `llm.chat` cleans message text with it); `truncate(s, max_chars, mark)` returns `s` when it has at most `max_chars` characters, else its first `max_chars` characters followed by `mark` (default `…`) — it counts characters (UTF-8 code points), never bytes, so it does not cut inside a multibyte character, and it raises on invalid arguments. It counts in plain Lua, without `vim.fn`: a NUL byte is a character, an invalid byte counts as one, and it works in a fast callback.
 
 **`nvim_kit.health`** — building blocks for `:checkhealth <plugin>`; they only read.
 

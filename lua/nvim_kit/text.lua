@@ -68,7 +68,10 @@ function M.clean_utf8(s)
 end
 
 --- s cut to its first max_chars characters plus mark (default U+2026) when it is longer, else s
---- itself. Counts characters, not bytes, so it never cuts inside a multibyte character.
+--- itself. Counts characters (UTF-8 code points), not bytes, so it never cuts inside a multibyte
+--- character. Counted in plain Lua: a character starts at the first byte and at every byte
+--- outside 0x80..0xBF, so a NUL byte is a character (vim.fn.strchars raised E976 on it), an
+--- invalid byte counts as one, and it runs in a fast callback too.
 function M.truncate(s, max_chars, mark)
   if type(s) ~= 'string' then
     error('nvim-kit text: truncate needs s (a string)', 2)
@@ -79,10 +82,17 @@ function M.truncate(s, max_chars, mark)
   if mark ~= nil and type(mark) ~= 'string' then
     error('nvim-kit text: truncate: mark must be a string', 2)
   end
-  if vim.fn.strchars(s) <= max_chars then
-    return s
+  local n = 0
+  for i = 1, #s do
+    local b = s:byte(i)
+    if i == 1 or b < 0x80 or b > 0xBF then
+      n = n + 1
+      if n > max_chars then
+        return s:sub(1, i - 1) .. (mark == nil and '…' or mark)
+      end
+    end
   end
-  return vim.fn.strcharpart(s, 0, max_chars) .. (mark == nil and '…' or mark)
+  return s
 end
 
 return M
