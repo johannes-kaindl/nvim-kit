@@ -166,6 +166,14 @@ function M.search(text, opts, cb)
       if res.code == 124 then
         return finish({ ok = false, error = 'timeout', detail = 'ripgrep did not finish in time' })
       end
+      if res.signal and res.signal ~= 0 then
+        -- Killed from outside (OOM, kill -9): its output may be partial, never a result.
+        return finish({
+          ok = false,
+          error = 'rg-error',
+          detail = ('ripgrep was killed by signal %d'):format(res.signal),
+        })
+      end
       if res.code == 0 or res.code == 1 then
         local hits, truncated = parse(res.stdout or '', opts.max_hits)
         return finish({ ok = true, hits = hits, truncated = truncated })

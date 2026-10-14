@@ -129,6 +129,14 @@ T.case('search: a search that runs too long is timeout', function()
   R.reset()
 end)
 
+T.case('search: an rg killed by a signal is rg-error, not an empty result', function()
+  local killed = fake_rg('ripgrep 15.0.0', 'kill -9 $$')
+  local r, calls = search('x\n', { pattern = 'x', exe = killed })
+  T.eq({ r.ok, r.error, calls }, { false, 'rg-error', 1 })
+  T.ok(r.detail:find('killed by signal 9', 1, true), r.detail)
+  R.reset()
+end)
+
 T.case('search: cancel answers cancelled once and stops rg', function()
   local slow = fake_rg('ripgrep 15.0.0', 'sleep 5')
   local result, calls = nil, 0
