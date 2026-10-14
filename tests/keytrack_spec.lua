@@ -395,3 +395,15 @@ T.case('B7: on_tick rests while the buffer is not current', function()
   T.ok(ticks >= 1, 'ticks again after coming back')
   t.stop()
 end)
+
+-- Final review 2026-10-14: leaving the command-line window with :q ends the outer command line
+-- with an empty line and abort; the line the window held is the command that was abandoned.
+T.case('an excluded command abandoned by leaving the command-line window with :q is free', function()
+  local buf = buffer()
+  local t = K.start(buf, { exclude_cmdline = '^%s*KitProbe' })
+  keys('q:iKitProbe<Esc>:q<CR>')
+  T.eq(t.keys(), 1)
+  keys('q:is/a<Esc>:q<CR>')
+  T.eq(t.keys(), 1 + #'q:is/a' + 1 + #':q' + 1, 'another abandoned line counts')
+  t.stop()
+end)

@@ -14,7 +14,7 @@ All notable changes to this project are documented here. The format is based on 
 
 ### Fixed
 - Keys typed in a command-line window opened from the tracked buffer (`q:`, `q/`) count; they cost nothing before.
-- A nested command line (a `:` typed inside the command-line window, `<C-r>=`) no longer ends the open command, so an excluded command run from the window stays free.
+- A nested command line (a `:` typed inside the command-line window, `<C-r>=`) no longer ends the open command, so an excluded command run from the window stays free; abandoned by leaving the window with `:q`, it is free too.
 
 ## [0.6.0] — 2026-10-13
 

@@ -48,7 +48,7 @@ function M.start(buf, opts)
   end
   local exclude = opts.exclude_cmdline
   local count, first, stopped_at, stopped = 0, nil, nil, false
-  local cmd_start, last_key, cmdwin, left_at, paused = nil, nil, false, nil, 0
+  local cmd_start, last_key, cmdwin, cmdwin_line, left_at, paused = nil, nil, false, nil, nil, 0
   local timer, key_ns
   local group = vim.api.nvim_create_augroup(('%s.%d'):format(MOD, buf), { clear = true })
 
@@ -120,6 +120,9 @@ function M.start(buf, opts)
   vim.api.nvim_create_autocmd('CmdwinLeave', {
     group = group,
     callback = function()
+      -- The line the window holds is the command; leaving with :q ends the outer command line
+      -- with an empty line and abort (measured), so CmdlineLeave reads it from here.
+      cmdwin_line = cmdwin and vim.api.nvim_get_current_line() or nil
       cmdwin = false
     end,
   })
@@ -132,6 +135,7 @@ function M.start(buf, opts)
       callback = function()
         if vim.fn.getcmdtype() == ':' and vim.api.nvim_get_current_buf() == buf then
           cmd_start = last_key == ':' and math.max(count - 1, 0) or count
+          cmdwin_line = nil
         end
       end,
     })
@@ -142,9 +146,13 @@ function M.start(buf, opts)
         if not cmd_start or vim.fn.getcmdtype() ~= ':' or vim.api.nvim_get_current_buf() ~= buf then
           return
         end
-        local start = cmd_start
+        local start, line = cmd_start, vim.fn.getcmdline()
         cmd_start = nil
-        if exclude and excluded(vim.fn.getcmdline()) then
+        if line == '' and vim.v.event.abort and cmdwin_line then
+          line = cmdwin_line
+        end
+        cmdwin_line = nil
+        if exclude and excluded(line) then
           count = start
           return
         end
