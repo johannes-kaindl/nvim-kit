@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.11.0] — 2026-10-14
+
 ### Added
 - `scratch.close(buf, fallback)` — the counterpart of `scratch.open`: closes every window that shows `buf` (floating windows and other tab pages included), then deletes `buf`. A window that cannot be closed because it is the last one (E444) shows `fallback` instead; without a valid `fallback` (nil, wiped, or `buf` itself) it gets a new empty unlisted scratch buffer, so `buf` is never left visible. An invalid `buf` (already wiped) is a no-op; a `buf` that is not a number or a `fallback` that is neither nil nor a number raises. The placeholder is wiped once left (text typed into it is lost). The last window of a tab page closes with its tab page while other tab pages exist. A modified `buf` is deleted anyway; a failing `WinClosed` autocmd, a `winfixbuf` window and a call from a `BufUnload`/`BufWipeout` that `close` itself triggered do not break it (a call from those autocmds when something else wipes `buf` raises, as a plain `nvim_buf_delete` does: do not do that). Neovim alone would also keep the window (`nvim_buf_delete` puts a listed buffer in it), but `close` decides which buffer that is.
 
