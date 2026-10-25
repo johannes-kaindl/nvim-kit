@@ -1,4 +1,4 @@
--- The cases of code-kit tests/live-indexer.test.ts (tag 0.31.1), ported: an in-memory map as the
+-- The cases of code-kit tests/live-indexer.test.ts (tag 0.31.1; the cases of later tags are added where they say so), ported: an in-memory map as the
 -- storage, fake embedders that answer at once, and a content-dependent one. A TS case that leans
 -- on promises (a write that waits for the test) is adapted where it says so.
 local T = require('nvim_kit.test')
@@ -980,6 +980,113 @@ T.case('a wish to cancel with no run active evaporates', function()
     return '# a\nInhalt lang genug'
   end)
   T.eq(report.cancelled, false)
+  T.eq(ix:note_count(), 1)
+end)
+
+-- ── reindex_all: cancel, what code-kit 0.37.6 fixed ────────────────────────────────────────
+-- Found by the review of this port (nvim-kit 0.13.0, task 10), fixed in the source and ported.
+
+-- A full stock in memory and on disk, then a run whose third read calls `during` and cancels.
+local function cancelled_run(during, st)
+  st = st or memory()
+  local ix = new_ix(st)
+  ix:mark_fresh()
+  local paths = names(100)
+  reindex(ix, paths, long_body)
+  T.ok(ix:persist('reindex'))
+  local n = 0
+  local report = reindex(ix, paths, function(p)
+    n = n + 1
+    if n == 3 then
+      during(ix)
+      ix:cancel_reindex()
+    end
+    return long_body(p)
+  end)
+  return ix, st, report
+end
+
+local function disk_has(st, path)
+  for _, p in ipairs(decoded(st).paths) do
+    if p == path then
+      return true
+    end
+  end
+  return false
+end
+
+T.case('a note created during the run survives the cancel, in memory and on disk', function()
+  local ix, st, report = cancelled_run(function(i)
+    upd(i, 'NEW.md', long_body('NEW.md'))
+  end)
+  T.eq(report.cancelled, true)
+  T.eq(ix:note_count(), 101)
+  T.ok(ix:build_index().rows['NEW.md'], 'NEW.md is missing in memory')
+  T.ok(disk_has(st, 'NEW.md'), 'NEW.md is missing on disk')
+end)
+
+T.case('a note renamed during the run stands under the new path, not under none', function()
+  -- n5.md is read AFTER the rename and so lands in `fresh`: the old path must still go.
+  local ix, st = cancelled_run(function(i)
+    i:rename('n5.md', 'moved.md')
+  end)
+  local idx = ix:build_index()
+  T.ok(idx.rows['moved.md'], 'moved.md is missing')
+  T.eq(idx.rows['n5.md'], nil)
+  T.eq(ix:note_count(), 100)
+  T.ok(disk_has(st, 'moved.md'))
+  T.ok(not disk_has(st, 'n5.md'))
+end)
+
+T.case('a note removed during the run stays away', function()
+  local ix, st = cancelled_run(function(i)
+    i:remove('n5.md')
+  end)
+  T.eq(ix:build_index().rows['n5.md'], nil)
+  T.eq(ix:note_count(), 99)
+  T.ok(not disk_has(st, 'n5.md'))
+end)
+
+T.case('a cancel while the disk holds another model writes nothing and keeps the stock', function()
+  local st = memory()
+  local old = container_bytes(3, MODEL)
+  st.written[FILE] = old
+  local ix = new_ix(st, 'text-embedding-3-small')
+  local stock = parsed(
+    manifest_of(3),
+    { 'disk-note-0.md', 'disk-note-1.md', 'disk-note-2.md' },
+    string.rep('\0', 3 * DIM)
+  )
+  ix:init(stock)
+  local n = 0
+  local report = reindex(ix, names(100), function(p)
+    n = n + 1
+    if n == 3 then
+      ix:cancel_reindex()
+    end
+    return long_body(p)
+  end)
+  T.eq(report.cancelled, true)
+  -- disk: the same bytes, not a container of one model's vectors under another model's manifest
+  T.ok(st.written[FILE] == old, 'the container on disk was rewritten')
+  -- memory: the old stock, no mix of two vector spaces
+  T.eq(ix:note_count(), 3)
+  -- and the model guard still stands: a live persist does not get through
+  local ok, refusal = ix:persist('live')
+  T.ok(not ok, 'live persist was let through')
+  T.eq(refusal.kind, 'model-mismatch')
+end)
+
+T.case('counter-check: with the matching model the cancel still writes the whole stock', function()
+  local _, st = cancelled_run(function() end)
+  T.eq(#decoded(st).paths, 100)
+end)
+
+T.case('rename onto the same path leaves the note where it is', function()
+  local ix = new_ix()
+  ix:init(one_note_index('a.md'))
+  ix:rename('a.md', 'a.md')
+  T.eq(ix:build_index().rows['a.md'], 1)
   T.eq(ix:note_count(), 1)
 end)
 

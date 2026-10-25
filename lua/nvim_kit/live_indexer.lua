@@ -1,7 +1,7 @@
 -- The live indexer: one vector per note in memory, kept current note by note (`update`, `remove`,
 -- `rename`), rebuilt all at once (`reindex_all`) or only where it is missing (`heal_missing`), and
 -- written as one VRIX container with the guards of `index_guard` in front of every write. A
--- behavioural port of code-kit `live-indexer.ts` (tag 0.31.1, from vault-rag's `LiveIndexer`):
+-- behavioural port of code-kit `live-indexer.ts` (tag 0.37.6, from vault-rag's `LiveIndexer`):
 -- the same steps in the same order, so what it writes is byte for byte what vault-rag writes.
 --
 -- Everything outside is injected: the file store (`storage`), the embedding source (`embedder`)
@@ -23,17 +23,13 @@
 -- on a fraction, so a stamp or a `source_dim` that is no whole number is refused, not rounded);
 -- a refusal text is English and no contract, the caller words its notice from `kind`.
 --
--- Known limits (0.13.0). Two of them are in the source and carried over on purpose, so that the
--- port stays what the conformance vectors check; they get fixed in code-kit and ported again.
--- (1) `cancel_reindex` loses a note that came in through `update` or `rename` during the run: the
--- mix with the stock walks only the paths of the snapshot. (2) A cancel while the index on disk
--- belongs to another embedding model still writes the mix (reason `reindex`, which the model
--- guard lets through), so one container can hold vectors of two models. The other two are ours:
--- (3) an embedder answer that `vectors.to_index_vector` rejects (`{ vim.NIL }`, `{ 42 }`) ends the
--- run with `cb(nil, err)`, where the source counts a row of length 0; `llm.embed` checks its
--- answer, so only a foreign embedder can get there. (4) Paths are ordered by code point, as JS
--- `.sort()` orders by UTF-16 unit: the two differ only for characters outside the BMP, and then
--- the CRC differs from vault-rag's (`text.byte_less`, also used by `probe.order`).
+-- Known limits. (1) An embedder answer that `vectors.to_index_vector` rejects (`{ vim.NIL }`,
+-- `{ 42 }`) ends the run with `cb(nil, err)`, where the source counts a row of length 0 and `added`;
+-- `llm.embed` checks its answer, so only a foreign embedder can get there. (2) Paths are ordered by
+-- code point, as JS `.sort()` orders by UTF-16 unit: the two differ only for characters outside
+-- the BMP (`！.md` U+FF01 against `😀.md`), and then the CRC differs from vault-rag's, so
+-- "byte for byte what vault-rag writes" holds for every path inside the BMP (`text.byte_less`,
+-- also used by `probe.order`).
 local M = {}
 
 -- Relative requires: a vendored copy loads its siblings under the plugin's namespace.
@@ -110,6 +106,12 @@ local function check_stamp(stamp, fn)
       error(('nvim-kit live_indexer: %s: a stamp is { mtime, size }, two whole numbers'):format(fn), 3)
     end
   end
+end
+
+-- Whether a value is a stamp: { mtime, size }, exactly two whole numbers (the test of `check_stamp`
+-- as a question instead of an error, and a pair like the container's own check).
+local function is_stamp(st)
+  return type(st) == 'table' and #st == 2 and whole(st[1], -2 ^ 53) and whole(st[2], -2 ^ 53)
 end
 
 -- Milliseconds since the epoch as JavaScript's `toISOString` writes them.
@@ -282,8 +284,9 @@ local function refusal_text(kind, a, b)
 end
 
 --- Takes over a loaded index (`vectors.parse`, with its container's `manifest` on it as
---- `index.manifest` when `vault` and `source_dim` should be carried over) and, as `stamps`, the
---- list of `{ mtime, size }` that goes with it row for row. Raises `{ kind = 'dim-mismatch',
+--- `index.manifest` when `vault` and `source_dim` should be carried over) and, as `stamps`, either
+--- the list of `{ mtime, size }` that goes with it row for row (any other length is ignored) or a
+--- map by path such as `stamps_snapshot` returns. Raises `{ kind = 'dim-mismatch',
 --- message }` when it has other columns than this indexer (an empty index has no vectors to
 --- damage and is taken as it is). An indexer that has taken an index is ready.
 function Ix:init(index, stamps)
@@ -321,15 +324,39 @@ function Ix:init(index, stamps)
   end
   -- Without taking the stamps over the guard would be blind after every restart: the first live
   -- persist would write the container without them.
-  if stamps and #stamps == #index.paths then
-    for i, path in ipairs(index.paths) do
-      local st = stamps[i]
-      if st and self._vectors[path] then
-        self._stamps[path] = { st[1], st[2] }
+  if type(stamps) == 'table' then
+    if type(next(stamps)) == 'string' then
+      -- A map by path, as `stamps_snapshot` hands it over: an index carries no stamps, so an
+      -- indexer re-seeded from another one's `build_index()` would write `{ 0, 0 }` for every row
+      -- it did not touch itself. Entries that are no stamp are skipped; a row without an entry
+      -- stays unstamped - nothing is stamped that was not.
+      for path in pairs(self._vectors) do
+        local st = stamps[path]
+        if is_stamp(st) then
+          self._stamps[path] = { st[1], st[2] }
+        end
+      end
+    elseif #stamps == #index.paths then
+      for i, path in ipairs(index.paths) do
+        local st = stamps[i]
+        if st and self._vectors[path] then
+          self._stamps[path] = { st[1], st[2] }
+        end
       end
     end
   end
   self._ready = true
+end
+
+--- The stamps this indexer holds, by path, as a copy: hand it to the next indexer's
+--- `init(index, stamps)` when the index is re-seeded (`new:init(old:build_index(),
+--- old:stamps_snapshot())`). Only the stamped rows appear; a row without a stamp has no entry.
+function Ix:stamps_snapshot()
+  local out = {}
+  for path, st in pairs(self._stamps) do
+    out[path] = { st[1], st[2] }
+  end
+  return out
 end
 
 -- The length of the first vector the model returns, for `source_dim`.
@@ -428,6 +455,11 @@ end
 
 --- Moves a note's vector and stamp to its new path.
 function Ix:rename(old, new)
+  -- The same path: nothing to move. Without this the entry is set and deleted again, and the
+  -- note is gone.
+  if old == new then
+    return
+  end
   self:_note_live(old)
   self:_note_live(new)
   local v = self._vectors[old]
@@ -879,20 +911,32 @@ function Ix:reindex_all(paths, read, on_progress, stamp_for, cb)
         self:_persist_checkpoint(fresh, fresh_stamps, paths)
       end
     end
-    -- The vault as it is at the END: what came in during the run wins over the snapshot.
-    self:_apply_live(fresh, fresh_stamps)
     if report.cancelled then
       -- A cancel must cost NOTHING: `fresh` holds only the notes reached so far, and taking it
       -- as the stock would shrink the index from thousands to a handful. The same mix as an
       -- intermediate state is taken over instead.
-      local mixed, mixed_stamps = self:_mix_with_stock(fresh, fresh_stamps, paths)
-      local ok, done, refusal = pcall(self._persist_vectors, self, mixed, 'reindex', nil, mixed_stamps)
-      if not ok then
-        self._warn('the state after the cancel could not be written: ' .. tostring(done))
-      elseif not done then
-        self._warn('the state after the cancel was refused: ' .. tostring(refusal and refusal.message))
+      if checkpoints then
+        local mixed, mixed_stamps = self:_mix_with_stock(fresh, fresh_stamps, paths)
+        -- What came in live goes in AFTER the mix: it walks only the paths of the snapshot, and a
+        -- note created or renamed during the run is not among them.
+        self:_apply_live(mixed, mixed_stamps)
+        local ok, done, refusal = pcall(self._persist_vectors, self, mixed, 'reindex', nil, mixed_stamps)
+        if not ok then
+          self._warn('the state after the cancel could not be written: ' .. tostring(done))
+        elseif not done then
+          self._warn('the state after the cancel was refused: ' .. tostring(refusal and refusal.message))
+        end
+        fresh, fresh_stamps = mixed, mixed_stamps
+      else
+        -- The index on disk belongs to another model (or could not be read): the mix would be one
+        -- container of two vector spaces, and `reindex` lets every model through. Write nothing
+        -- and keep the stock; the rows computed so far are lost, as an intermediate state would
+        -- not have been written for the same reason.
+        fresh, fresh_stamps = self._vectors, self._stamps
       end
-      fresh, fresh_stamps = mixed, mixed_stamps
+    else
+      -- The vault as it is at the END: what came in during the run wins over the snapshot.
+      self:_apply_live(fresh, fresh_stamps)
     end
     cleanup()
     self._vectors, self._stamps = fresh, fresh_stamps

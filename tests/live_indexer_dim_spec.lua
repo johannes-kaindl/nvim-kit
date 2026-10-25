@@ -1,4 +1,4 @@
--- The cases of code-kit tests/live-indexer-dim.test.ts (tag 0.31.1), ported: the dimension as an
+-- The cases of code-kit tests/live-indexer-dim.test.ts (tag 0.31.1; the cases of later tags are added where they say so), ported: the dimension as an
 -- option, `source_dim`, the dimension guard, and the golden index from vault-rag.
 local T = require('nvim_kit.test')
 local L = require('nvim_kit.live_indexer')

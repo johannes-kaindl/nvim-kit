@@ -1,13 +1,13 @@
 {
   "source": "code-kit",
   "source_path": "../libs/code-kit",
-  "tag": "0.31.1",
-  "sha": "f82d0c5cae43b4edea7ea0cb8908a84bec5896f2",
-  "commit": "f82d0c5cae43b4edea7ea0cb8908a84bec5896f2",
-  "version": "0.31.1",
+  "tag": "0.37.6",
+  "sha": "0892e916e5ef0e844e65a79d5c52a17ff0c39354",
+  "commit": "0892e916e5ef0e844e65a79d5c52a17ff0c39354",
+  "version": "0.37.6",
   "license": "AGPL-3.0-or-later",
   "header": false,
-  "vendored": "36 file(s) from code-kit@0.31.1",
+  "vendored": "36 file(s) from code-kit@0.37.6",
   "files": [
     "src/conformance/README.md",
     "src/conformance/assertDimSafeToPersist.json",

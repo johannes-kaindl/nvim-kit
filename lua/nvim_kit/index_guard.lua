@@ -214,4 +214,25 @@ function M.find_stale_vector_paths(paths, stamps, current)
   return stale
 end
 
+--- How many rows carry no usable stamp: the rows stamped `UNKNOWN_STAMP`, `{ 0, 0 }`. The
+--- counterpart of `find_stale_vector_paths`, which skips exactly these rows ("not checked is not
+--- suspect"), so a stale vector under such a row passes unseen; this says how many rows those are.
+--- Only `{ 0, 0 }` counts, both numbers zero: `{ 0, 1 }` and `{ 1, 0 }` are stamps of a real note,
+--- however odd. `stamps` nil (an index from before the guard) gives `0`: the whole index is
+--- unchecked, a different statement from "some rows are", and the caller tells them apart by
+--- `stamps == nil`. A hole or a row that is not a pair is not counted either.
+function M.count_unstamped_rows(stamps)
+  if stamps == nil then
+    return 0
+  end
+  check_list(stamps, 'stamps', 'count_unstamped_rows')
+  local n = 0
+  for _, stamp in ipairs(stamps) do
+    if type(stamp) == 'table' and stamp[1] == M.UNKNOWN_STAMP[1] and stamp[2] == M.UNKNOWN_STAMP[2] then
+      n = n + 1
+    end
+  end
+  return n
+end
+
 return M

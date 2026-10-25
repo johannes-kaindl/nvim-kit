@@ -196,6 +196,37 @@ T.case('split_heal_targets: order of the input, duplicates kept', function()
   )
 end)
 
+-- count_unstamped_rows: the counterpart of find_stale_vector_paths, which skips exactly these rows.
+-- Cases of code-kit tests/index-guard.test.ts (countUnstampedRows).
+
+T.case('count_unstamped_rows counts the rows stamped { 0, 0 }, and only those', function()
+  T.eq(G.count_unstamped_rows({ { 1000, 10 }, { 0, 0 }, { 2000, 20 }, { 0, 0 }, { 0, 0 } }), 3)
+  T.eq(G.count_unstamped_rows({ G.UNKNOWN_STAMP, { 0, 0 } }), 2)
+  -- { 0, 1 }, { 1, 0 } and real times do not count: both numbers must be zero
+  T.eq(G.count_unstamped_rows({ { 0, 1 }, { 1, 0 }, { 1, 1 }, { 1700000000000, 4096 } }), 0)
+  T.eq(G.count_unstamped_rows({}), 0)
+  T.eq(G.count_unstamped_rows({ { 0, 0 }, { 0, 0 } }), 2)
+end)
+
+T.case('count_unstamped_rows: no stamps at all is 0, and no row that is not a pair counts', function()
+  T.eq(G.count_unstamped_rows(nil), 0)
+  T.eq(G.count_unstamped_rows({ { 0, 0 }, vim.NIL, { 0 }, 'ab', { '0', '0' }, { 0, 0 } }), 2)
+end)
+
+T.case('count_unstamped_rows agrees with find_stale_vector_paths on which rows are skipped', function()
+  local paths = { 'a.md', 'b.md', 'c.md' }
+  local stamps = { { 0, 0 }, { 5, 5 }, { 0, 0 } }
+  local now = { ['a.md'] = { 9, 9 }, ['b.md'] = { 9, 9 }, ['c.md'] = { 9, 9 } }
+  T.eq(G.find_stale_vector_paths(paths, stamps, now), { 'b.md' })
+  T.eq(G.count_unstamped_rows(stamps), #paths - 1)
+end)
+
+T.case('count_unstamped_rows: a wrong argument type raises', function()
+  T.raises(function()
+    G.count_unstamped_rows('x')
+  end, 'stamps')
+end)
+
 T.case('wrong argument types raise', function()
   T.raises(function()
     G.assert_safe_to_persist('100', 0, 'live')

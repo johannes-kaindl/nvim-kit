@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Added
+- `live_indexer`: `Ix:stamps_snapshot()` returns the stamps by path as a copy, and `Ix:init(index, stamps)` also takes such a map (next to the list parallel to the rows): an indexer re-seeded from another one's `build_index()` keeps the stamps of the rows nobody touched, where it used to write `{ 0, 0 }` for them on the next persist. A map entry that is no stamp is skipped, a row without an entry stays unstamped, nothing is stamped that was not (code-kit 0.37.3).
+- `index_guard.count_unstamped_rows(stamps)` — how many rows are stamped `{ 0, 0 }`, the rows `find_stale_vector_paths` skips; `0` for no stamps at all (code-kit 0.37.0).
+
+### Fixed
+- `live_indexer`, ported from code-kit 0.37.6 (found by the review of this port, task 10 of 0.13.0): `cancel_reindex` no longer loses a note that came in through `update` or `rename` during the run, in memory and on disk (the live changes are applied after the mix with the stock, as an intermediate state does); a cancel while the index on disk belongs to another embedding model writes nothing and keeps the stock, instead of a container of two vector spaces; `rename(a, a)` leaves the note where it is (it used to delete it).
+
+### Changed
+- The port follows code-kit `live-indexer.ts` at 0.37.6 (was 0.31.1); vendor pin code-kit 0.37.6 (vectors and sampling table unchanged). The file header now lists the two remaining deviations only.
+
 ## [0.13.0] — 2026-10-25
 
 ### Added
