@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "function": "splitHealTargets",
+  "cases": [
+    {
+      "name": "mixed",
+      "args": [
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          "b"
+        ]
+      ],
+      "expected": {
+        "embeddable": [
+          "a",
+          "c"
+        ],
+        "knownEmpty": [
+          "b"
+        ]
+      }
+    },
+    {
+      "name": "all empty",
+      "args": [
+        [
+          "a",
+          "b"
+        ],
+        [
+          "a",
+          "b"
+        ]
+      ],
+      "expected": {
+        "embeddable": [],
+        "knownEmpty": [
+          "a",
+          "b"
+        ]
+      }
+    },
+    {
+      "name": "none empty",
+      "args": [
+        [
+          "a",
+          "b"
+        ],
+        [
+          "z"
+        ]
+      ],
+      "expected": {
+        "embeddable": [
+          "a",
+          "b"
+        ],
+        "knownEmpty": []
+      }
+    }
+  ]
+}

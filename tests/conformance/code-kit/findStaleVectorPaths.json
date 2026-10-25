@@ -1,0 +1,203 @@
+{
+  "schema": 1,
+  "function": "findStaleVectorPaths",
+  "cases": [
+    {
+      "name": "stamps unset",
+      "args": [
+        [
+          "a",
+          "b"
+        ],
+        null,
+        {
+          "a": [
+            1,
+            2
+          ],
+          "b": [
+            3,
+            4
+          ]
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "stamps of the wrong length",
+      "args": [
+        [
+          "a",
+          "b"
+        ],
+        [
+          [
+            1,
+            2
+          ]
+        ],
+        {
+          "a": [
+            9,
+            9
+          ],
+          "b": [
+            9,
+            9
+          ]
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "unknown stamp [0,0] is skipped",
+      "args": [
+        [
+          "a",
+          "b"
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        {
+          "a": [
+            9,
+            9
+          ],
+          "b": [
+            3,
+            4
+          ]
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "mtime differs",
+      "args": [
+        [
+          "a",
+          "b"
+        ],
+        [
+          [
+            1,
+            2
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        {
+          "a": [
+            1,
+            2
+          ],
+          "b": [
+            5,
+            4
+          ]
+        }
+      ],
+      "expected": [
+        "b"
+      ]
+    },
+    {
+      "name": "size differs",
+      "args": [
+        [
+          "a",
+          "b"
+        ],
+        [
+          [
+            1,
+            2
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        {
+          "a": [
+            1,
+            7
+          ],
+          "b": [
+            3,
+            4
+          ]
+        }
+      ],
+      "expected": [
+        "a"
+      ]
+    },
+    {
+      "name": "path missing from current",
+      "args": [
+        [
+          "a",
+          "b"
+        ],
+        [
+          [
+            1,
+            2
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        {
+          "a": [
+            1,
+            2
+          ]
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "everything equal",
+      "args": [
+        [
+          "a",
+          "b"
+        ],
+        [
+          [
+            1,
+            2
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        {
+          "a": [
+            1,
+            2
+          ],
+          "b": [
+            3,
+            4
+          ]
+        }
+      ],
+      "expected": []
+    }
+  ]
+}

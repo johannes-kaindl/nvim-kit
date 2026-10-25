@@ -108,6 +108,90 @@
       "expected": "qwen3.8"
     },
     {
+      "name": "claude-opus-5-5",
+      "args": [
+        "claude-opus-5-5"
+      ],
+      "expected": "claude"
+    },
+    {
+      "name": "anthropic/claude-sonnet-5-5",
+      "args": [
+        "anthropic/claude-sonnet-5-5"
+      ],
+      "expected": "claude"
+    },
+    {
+      "name": "Claude-Haiku-5-5",
+      "args": [
+        "Claude-Haiku-5-5"
+      ],
+      "expected": "claude"
+    },
+    {
+      "name": "claude-3-5-sonnet-latest",
+      "args": [
+        "claude-3-5-sonnet-latest"
+      ],
+      "expected": null
+    },
+    {
+      "name": "claude-opus-4-8",
+      "args": [
+        "claude-opus-4-8"
+      ],
+      "expected": "claude"
+    },
+    {
+      "name": "claude-opus-4-6",
+      "args": [
+        "claude-opus-4-6"
+      ],
+      "expected": null
+    },
+    {
+      "name": "claude-sonnet-4-5",
+      "args": [
+        "claude-sonnet-4-5"
+      ],
+      "expected": null
+    },
+    {
+      "name": "claude-haiku-4-5",
+      "args": [
+        "claude-haiku-4-5"
+      ],
+      "expected": null
+    },
+    {
+      "name": "claude-fable-5-1",
+      "args": [
+        "claude-fable-5-1"
+      ],
+      "expected": "claude"
+    },
+    {
+      "name": "claude-forge",
+      "args": [
+        "claude-forge"
+      ],
+      "expected": null
+    },
+    {
+      "name": "Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled",
+      "args": [
+        "Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled"
+      ],
+      "expected": null
+    },
+    {
+      "name": "qwen3.6-claude-opus-distill",
+      "args": [
+        "qwen3.6-claude-opus-distill"
+      ],
+      "expected": "qwen3.6"
+    },
+    {
       "name": "empty name",
       "args": [
         ""

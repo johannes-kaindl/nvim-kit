@@ -255,25 +255,98 @@ local function candidate(value, origin, sourced, note)
   }
 end
 
+-- An id this table does not hold as a key of its own (a newer manager than this copy).
+local function is_known(map, id)
+  return type(id) == 'string' and map[id] ~= nil
+end
+
+-- An id as text for `unrecognised`, whatever it is: a string as it is, anything else the way
+-- JavaScript's Object.prototype.toString names it.
+local function id_text(v)
+  if type(v) == 'string' then
+    return v
+  end
+  local kind = ({ number = 'Number', boolean = 'Boolean' })[type(v)]
+  if kind == nil then
+    kind = (type(v) == 'table' and vim.islist(v) and next(v) ~= nil) and 'Array' or 'Object'
+  end
+  return '[object ' .. kind .. ']'
+end
+
+local UNKNOWN_SRC = 'family not in this table: generic values'
+local UNKNOWN_EFFORT, UNKNOWN_RESERVE = {}, {}
+for _, level in ipairs(D.thinkingLevels) do
+  UNKNOWN_EFFORT[level] = { value = D.genericEffort[level], source = UNKNOWN_SRC, evidence = 'unmeasured' }
+  UNKNOWN_RESERVE[level] = { value = 0, source = UNKNOWN_SRC, evidence = 'unmeasured' }
+end
+
+--- The thinking table of a family on one backend: the family's own, with what that backend changes
+--- laid over it (gemma 4 on LM Studio: `none` is ignored, so `off` is `low` and `canTurnOff` is
+--- false). `backend` nil = the family as such. Returns `{ effort, canTurnOff, reserve }` per level;
+--- the entries are the tables' own, to be read, not changed. A family this table does not know gets
+--- the generic table, which can be turned off as far as anyone knows.
+function M.family_thinking(family, backend)
+  if not is_known(D.families, family) then
+    return { effort = UNKNOWN_EFFORT, canTurnOff = true, reserve = UNKNOWN_RESERVE }
+  end
+  local fam = D.families[family]
+  local over = (backend ~= nil and is_known(D.backends, backend) and fam.byBackend) and fam.byBackend[backend]
+    or {}
+  local can_turn_off = over.canTurnOff
+  if can_turn_off == nil then
+    can_turn_off = fam.canTurnOff
+  end
+  return {
+    effort = vim.tbl_extend('force', fam.effort, over.effort or {}),
+    canTurnOff = can_turn_off,
+    reserve = vim.tbl_extend('force', fam.reserve, over.reserve or {}),
+  }
+end
+
+local function contains(list, v)
+  for _, x in ipairs(list) do
+    if x == v then
+      return true
+    end
+  end
+  return false
+end
+
 --- The request parameters for one call, and why each field is (not) sent.
 --- input = { family = <id|nil>, mode, backend, thinking, max_tokens = <n|nil>, overrides = <map|nil> }
---- → { params = { field = value }, explain = { { field, value, state, origin, source, evidence, note } } }
+--- → { params = { field = value }, explain = { { field, value, state, origin, source, evidence, note, fallback } },
+---     unrecognised = { backend?, family? } | nil }
 --- `overrides` are the user's values already chosen for this mode × family and validated.
+--- A backend or family this table does not know is no error: the backend counts as "unknown"
+--- (standard fields only), the family as none; `unrecognised` carries the ids as passed and every
+--- explain row `fallback = { 'backend'?, 'family'? }`. A mode or thinking level that does not
+--- exist is a programming error and raises.
 function M.resolve(input)
-  local fam = input.family and D.families[input.family] or nil
-  if input.family and not fam then
-    error(('nvim-kit sampling: unknown family %q'):format(input.family), 2)
+  local unrecognised, fallback = {}, {}
+  local backend_id = input.backend
+  if not is_known(D.backends, backend_id) then
+    unrecognised.backend = id_text(backend_id)
+    fallback[#fallback + 1] = 'backend'
+    backend_id = 'unknown'
+  end
+  local family_id = input.family
+  if family_id == nil or family_id == false or family_id == '' then
+    family_id = nil
+  elseif not is_known(D.families, family_id) then
+    unrecognised.family = id_text(family_id)
+    fallback[#fallback + 1] = 'family'
+    family_id = nil
   end
   local mode = D.modes[input.mode]
   if not mode then
     error(('nvim-kit sampling: unknown mode %q'):format(tostring(input.mode)), 2)
   end
-  if not D.backends[input.backend] then
-    error(('nvim-kit sampling: unknown backend %q'):format(tostring(input.backend)), 2)
-  end
   if not LEVELS[input.thinking] then
     error(('nvim-kit sampling: unknown thinking level %q'):format(tostring(input.thinking)), 2)
   end
+  local backend = D.backends[backend_id]
+  local fam = family_id and D.families[family_id] or nil
+  local think = family_id and M.family_thinking(family_id, backend_id) or nil
   local thinking_on = input.thinking ~= 'off'
   local ov = input.overrides or {}
   local cand = {}
@@ -308,9 +381,9 @@ function M.resolve(input)
   -- 3. reasoning_effort
   if type(ov.reasoning_effort) == 'string' then
     cand.reasoning_effort = candidate(ov.reasoning_effort, 'override')
-  elseif fam then
-    local e = fam.effort[input.thinking]
-    local note = (input.thinking == 'off' and not fam.canTurnOff) and 'off-not-possible' or nil
+  elseif think then
+    local e = think.effort[input.thinking]
+    local note = (input.thinking == 'off' and not think.canTurnOff) and 'off-not-possible' or nil
     cand.reasoning_effort = candidate(e.value, 'family', e, note)
   else
     cand.reasoning_effort = candidate(D.genericEffort[input.thinking], 'mode')
@@ -321,7 +394,7 @@ function M.resolve(input)
   if base == nil then
     cand.max_tokens = 'no-value'
   else
-    local reserve = fam and fam.reserve[input.thinking] or nil
+    local reserve = think and think.reserve[input.thinking] or nil
     if reserve and base < reserve.value then
       cand.max_tokens = candidate(reserve.value, 'reserve', reserve, 'raised-to-reserve')
     else
@@ -333,12 +406,25 @@ function M.resolve(input)
   local params, explain = {}, {}
   for _, field in ipairs(D.fieldOrder) do
     local c = cand[field]
+    local refused = fam and fam.unsupportedFields and fam.unsupportedFields[field] or nil
     if c == nil or c == 'no-value' then
-      explain[#explain + 1] = { field = field, state = 'not-sent-no-value' }
+      -- A field the family refuses is reported as refused even where the table holds no value for it.
+      if refused then
+        explain[#explain + 1] = {
+          field = field,
+          state = 'not-sent-unsupported',
+          source = refused.source,
+          evidence = refused.evidence,
+        }
+      else
+        explain[#explain + 1] = { field = field, state = 'not-sent-no-value' }
+      end
     elseif c == 'unknown-family' then
       explain[#explain + 1] = { field = field, state = 'not-sent-unknown-family' }
     else
-      local s = support(input.backend, field, fam ~= nil)
+      local effort_values = field == 'reasoning_effort' and backend.effortValues or nil
+      local out_of_list = effort_values ~= nil and not contains(effort_values, tostring(c.value))
+      local s = (refused or out_of_list) and 'unsupported' or support(backend_id, field, fam ~= nil)
       local row = {
         field = field,
         value = c.value,
@@ -350,12 +436,22 @@ function M.resolve(input)
       if s == 'ignored' or s == 'unsupported' then
         row.state = s == 'ignored' and 'not-sent-ignored' or 'not-sent-unsupported'
         row.value = nil
+        -- The reason the family refuses the field replaces the source of the value that was not sent.
+        if refused then
+          row.source, row.evidence = refused.source, refused.evidence
+        end
       else
         row.state = s == 'effective' and 'sent-effective' or 'sent-unproven'
-        params[field] = c.value
+        params[field == 'reasoning_effort' and backend.effortParam or field] = c.value
       end
       explain[#explain + 1] = row
     end
+  end
+  if #fallback > 0 then
+    for _, row in ipairs(explain) do
+      row.fallback = fallback
+    end
+    return { params = params, explain = explain, unrecognised = unrecognised }
   end
   return { params = params, explain = explain }
 end

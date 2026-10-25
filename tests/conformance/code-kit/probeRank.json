@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "function": "probeRank",
+  "cases": [
+    {
+      "name": "\"\" seed 20260903",
+      "args": [
+        "",
+        20260903
+      ],
+      "expected": 1966199673
+    },
+    {
+      "name": "\"\" seed 7",
+      "args": [
+        "",
+        7
+      ],
+      "expected": 2514868772
+    },
+    {
+      "name": "\"a\" seed 20260903",
+      "args": [
+        "a",
+        20260903
+      ],
+      "expected": 2507099848
+    },
+    {
+      "name": "\"a\" seed 7",
+      "args": [
+        "a",
+        7
+      ],
+      "expected": 1037474463
+    },
+    {
+      "name": "\"Notes/Vector embeddings.md\" seed 20260903",
+      "args": [
+        "Notes/Vector embeddings.md",
+        20260903
+      ],
+      "expected": 1938550893
+    },
+    {
+      "name": "\"Notes/Vector embeddings.md\" seed 7",
+      "args": [
+        "Notes/Vector embeddings.md",
+        7
+      ],
+      "expected": 3133057028
+    },
+    {
+      "name": "\"Notizen/Übersicht 🙂.md\" seed 20260903",
+      "args": [
+        "Notizen/Übersicht 🙂.md",
+        20260903
+      ],
+      "expected": 2347676685
+    },
+    {
+      "name": "\"Notizen/Übersicht 🙂.md\" seed 7",
+      "args": [
+        "Notizen/Übersicht 🙂.md",
+        7
+      ],
+      "expected": 2517386978
+    }
+  ]
+}

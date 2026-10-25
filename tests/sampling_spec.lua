@@ -50,7 +50,7 @@ local NAMES =
 
 T.case('passes every code-kit sampling vector', function()
   local cases, failures = only(NAMES)
-  T.eq(cases, 265)
+  T.eq(cases, 372)
   T.eq(failures, {})
 end)
 
@@ -134,10 +134,10 @@ T.case('a family pattern outside the subset raises instead of matching something
   end, 'unsupported character')
 end)
 
-T.case('resolve refuses an unknown mode, backend, level or family', function()
+T.case('resolve refuses an unknown mode or thinking level', function()
   local ok = { family = nil, mode = 'structured', backend = 'ollama', thinking = 'off' }
   T.ok(S.resolve(ok).params.temperature)
-  for k, v in pairs({ mode = 'chat', backend = 'vllm', thinking = 'max', family = 'llama' }) do
+  for k, v in pairs({ mode = 'chat', thinking = 'max' }) do
     local bad = vim.deepcopy(ok)
     bad[k] = v
     T.raises(function()
@@ -145,6 +145,84 @@ T.case('resolve refuses an unknown mode, backend, level or family', function()
     end, 'unknown')
   end
 end)
+
+T.case('resolve treats an unknown backend as unknown and an unknown family as none', function()
+  local base = { family = 'qwen3.6', mode = 'structured', backend = 'ollama', thinking = 'low' }
+  local known = S.resolve(base)
+  T.eq(known.unrecognised, nil)
+  T.eq(known.explain[1].fallback, nil)
+
+  local b = vim.deepcopy(base)
+  b.backend = 'vllm'
+  local rb = S.resolve(b)
+  T.eq(rb.unrecognised, { backend = 'vllm' })
+  for _, row in ipairs(rb.explain) do
+    T.eq(row.fallback, { 'backend' }, row.field)
+  end
+  -- "unknown" takes the standard fields: the same params as a known standard-only backend
+  T.eq(rb.params, known.params)
+
+  local f = vim.deepcopy(base)
+  f.family = 'llama'
+  local rf = S.resolve(f)
+  T.eq(rf.unrecognised, { family = 'llama' })
+  T.eq(rf.explain[2].state, 'not-sent-unknown-family', 'no family values')
+  for _, row in ipairs(rf.explain) do
+    T.eq(row.fallback, { 'family' }, row.field)
+  end
+
+  local both = vim.deepcopy(f)
+  both.backend = 'vllm'
+  local rboth = S.resolve(both)
+  T.eq(rboth.unrecognised, { backend = 'vllm', family = 'llama' })
+  T.eq(rboth.explain[1].fallback, { 'backend', 'family' })
+
+  -- not an id at all: reported the way JavaScript names it, no exception
+  local odd = vim.deepcopy(base)
+  odd.backend = 42
+  T.eq(S.resolve(odd).unrecognised, { backend = '[object Number]' })
+end)
+
+T.case(
+  'family_thinking lays the backend over the family; an unknown family gets the generic table',
+  function()
+    local plain = S.family_thinking('gemma4', nil)
+    T.eq(plain.canTurnOff, true)
+    T.eq(plain.effort.off.value, 'none')
+    local lms = S.family_thinking('gemma4', 'lmstudio')
+    T.eq(lms.canTurnOff, false)
+    T.eq(lms.effort.off.value, 'low')
+    T.eq(lms.reserve.off.value, 1024)
+    T.eq(lms.effort.high.value, plain.effort.high.value, "levels not named stay the family's")
+    T.eq(S.family_thinking('gemma4', 'ollama').effort.off.value, 'none', 'another backend changes nothing')
+    T.eq(S.family_thinking('gemma4', 'no-such-backend').canTurnOff, true)
+    local generic = S.family_thinking('llama', 'lmstudio')
+    T.eq(generic.canTurnOff, true)
+    T.eq(generic.effort.off.value, 'none')
+    T.eq(generic.reserve.high.value, 0)
+    -- the data tables are not changed by the overlay
+    T.eq(S.data.families.gemma4.effort.off.value, 'none')
+  end
+)
+
+T.case(
+  "resolve sends the effort under the backend's own key and drops values the backend does not take",
+  function()
+    local r = S.resolve({ family = 'qwen3.8', mode = 'agent', backend = 'anthropic', thinking = 'high' })
+    T.eq(r.params.reasoning_effort, nil)
+    T.eq(r.params.effort, 'xhigh')
+    local row
+    for _, e in ipairs(r.explain) do
+      if e.field == 'reasoning_effort' then
+        row = e
+      end
+    end
+    T.eq(row.state, 'sent-unproven')
+    local off = S.resolve({ family = 'qwen3.8', mode = 'agent', backend = 'anthropic', thinking = 'off' })
+    T.eq(off.params.effort, nil, '"none" is not an effort Anthropic takes')
+    T.eq(off.params.reasoning_effort, nil)
+  end
+)
 
 T.case('for_call picks thinking and overrides for mode × family, "unknown" for an unknown model', function()
   local request = S.sanitize({

@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "function": "assertSafeToPersist",
+  "cases": [
+    {
+      "name": "live, same count",
+      "args": [
+        100,
+        100,
+        "live"
+      ],
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "live, one more",
+      "args": [
+        100,
+        101,
+        "live"
+      ],
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "live, one less",
+      "args": [
+        100,
+        99,
+        "live"
+      ],
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "live, two less is blocked",
+      "args": [
+        100,
+        98,
+        "live"
+      ],
+      "expected": {
+        "allowed": false,
+        "kind": "shrink"
+      }
+    },
+    {
+      "name": "live, 0 of 100 is blocked",
+      "args": [
+        100,
+        0,
+        "live"
+      ],
+      "expected": {
+        "allowed": false,
+        "kind": "shrink"
+      }
+    },
+    {
+      "name": "reindex, 0 of 100",
+      "args": [
+        100,
+        0,
+        "reindex"
+      ],
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "heal, 0 of 100",
+      "args": [
+        100,
+        0,
+        "heal"
+      ],
+      "expected": {
+        "allowed": true
+      }
+    }
+  ]
+}

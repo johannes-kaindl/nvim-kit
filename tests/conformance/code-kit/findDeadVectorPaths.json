@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "function": "findDeadVectorPaths",
+  "cases": [
+    {
+      "name": "none dead",
+      "args": [
+        [
+          "a",
+          "b"
+        ],
+        [
+          1,
+          0,
+          0,
+          2
+        ],
+        2
+      ],
+      "expected": []
+    },
+    {
+      "name": "zero row in the middle",
+      "args": [
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          3
+        ],
+        2
+      ],
+      "expected": [
+        "b"
+      ]
+    },
+    {
+      "name": "all dead",
+      "args": [
+        [
+          "a",
+          "b"
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        2
+      ],
+      "expected": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "name": "dim 1",
+      "args": [
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          5,
+          0,
+          7
+        ],
+        1
+      ],
+      "expected": [
+        "b"
+      ]
+    }
+  ]
+}

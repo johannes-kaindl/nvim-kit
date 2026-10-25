@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "function": "isSuspiciousShrink",
+  "cases": [
+    {
+      "name": "default ratio, 100 to 50",
+      "args": [
+        100,
+        50,
+        null
+      ],
+      "expected": false
+    },
+    {
+      "name": "default ratio, 100 to 49",
+      "args": [
+        100,
+        49,
+        null
+      ],
+      "expected": true
+    },
+    {
+      "name": "default ratio, 100 to 0",
+      "args": [
+        100,
+        0,
+        null
+      ],
+      "expected": true
+    },
+    {
+      "name": "default ratio, 0 to 0",
+      "args": [
+        0,
+        0,
+        null
+      ],
+      "expected": false
+    },
+    {
+      "name": "ratio 0.9, 100 to 89",
+      "args": [
+        100,
+        89,
+        0.9
+      ],
+      "expected": true
+    }
+  ]
+}

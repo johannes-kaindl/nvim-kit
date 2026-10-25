@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "function": "normalizeEndpoint",
+  "cases": [
+    {
+      "name": "\"http://localhost:11434\"",
+      "args": [
+        "http://localhost:11434"
+      ],
+      "expected": "http://localhost:11434"
+    },
+    {
+      "name": "\"http://localhost:11434/\"",
+      "args": [
+        "http://localhost:11434/"
+      ],
+      "expected": "http://localhost:11434"
+    },
+    {
+      "name": "\"http://localhost:11434/v1\"",
+      "args": [
+        "http://localhost:11434/v1"
+      ],
+      "expected": "http://localhost:11434"
+    },
+    {
+      "name": "\"http://localhost:11434/v1/\"",
+      "args": [
+        "http://localhost:11434/v1/"
+      ],
+      "expected": "http://localhost:11434"
+    },
+    {
+      "name": "\" http://m5.local:11434/v1// \"",
+      "args": [
+        " http://m5.local:11434/v1// "
+      ],
+      "expected": "http://m5.local:11434"
+    },
+    {
+      "name": "\"http://h/v1/v1\"",
+      "args": [
+        "http://h/v1/v1"
+      ],
+      "expected": "http://h/v1"
+    },
+    {
+      "name": "\"\"",
+      "args": [
+        ""
+      ],
+      "expected": ""
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "function": "assertDimSafeToPersist",
+  "cases": [
+    {
+      "name": "reindex, different dim",
+      "args": [
+        1024,
+        256,
+        "reindex"
+      ],
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "live, 256 against 1024 is blocked",
+      "args": [
+        1024,
+        256,
+        "live"
+      ],
+      "expected": {
+        "allowed": false,
+        "kind": "dim-mismatch"
+      }
+    },
+    {
+      "name": "heal, different dim is blocked",
+      "args": [
+        1024,
+        256,
+        "heal"
+      ],
+      "expected": {
+        "allowed": false,
+        "kind": "dim-mismatch"
+      }
+    },
+    {
+      "name": "disk dim unset",
+      "args": [
+        null,
+        256,
+        "live"
+      ],
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "disk dim 0",
+      "args": [
+        0,
+        256,
+        "live"
+      ],
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "equal dim",
+      "args": [
+        256,
+        256,
+        "live"
+      ],
+      "expected": {
+        "allowed": true
+      }
+    }
+  ]
+}

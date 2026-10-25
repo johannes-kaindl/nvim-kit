@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "function": "diffIndexVsVault",
+  "cases": [
+    {
+      "name": "same sets",
+      "args": [
+        [
+          "a.md",
+          "b.md"
+        ],
+        [
+          "a.md",
+          "b.md"
+        ]
+      ],
+      "expected": {
+        "missing": [],
+        "stale": []
+      }
+    },
+    {
+      "name": "one missing from the index",
+      "args": [
+        [
+          "a.md"
+        ],
+        [
+          "a.md",
+          "b.md"
+        ]
+      ],
+      "expected": {
+        "missing": [
+          "b.md"
+        ],
+        "stale": []
+      }
+    },
+    {
+      "name": "one missing from the vault",
+      "args": [
+        [
+          "a.md",
+          "b.md"
+        ],
+        [
+          "a.md"
+        ]
+      ],
+      "expected": {
+        "missing": [],
+        "stale": [
+          "b.md"
+        ]
+      }
+    },
+    {
+      "name": "both empty",
+      "args": [
+        [],
+        []
+      ],
+      "expected": {
+        "missing": [],
+        "stale": []
+      }
+    },
+    {
+      "name": "input order swapped",
+      "args": [
+        [
+          "b.md",
+          "a.md"
+        ],
+        [
+          "a.md",
+          "b.md"
+        ]
+      ],
+      "expected": {
+        "missing": [],
+        "stale": []
+      }
+    }
+  ]
+}

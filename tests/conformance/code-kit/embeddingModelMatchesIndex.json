@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "function": "embeddingModelMatchesIndex",
+  "cases": [
+    {
+      "name": "equal",
+      "args": [
+        "qwen3-embedding",
+        "qwen3-embedding"
+      ],
+      "expected": true
+    },
+    {
+      "name": "outer whitespace",
+      "args": [
+        " qwen3-embedding ",
+        "qwen3-embedding\n"
+      ],
+      "expected": true
+    },
+    {
+      "name": "different case",
+      "args": [
+        "Qwen3-Embedding",
+        "qwen3-embedding"
+      ],
+      "expected": false
+    },
+    {
+      "name": "different model",
+      "args": [
+        "qwen3-embedding",
+        "bge-m3"
+      ],
+      "expected": false
+    },
+    {
+      "name": "index model empty",
+      "args": [
+        "qwen3-embedding",
+        ""
+      ],
+      "expected": true
+    },
+    {
+      "name": "index model unset",
+      "args": [
+        "qwen3-embedding",
+        null
+      ],
+      "expected": true
+    },
+    {
+      "name": "index model whitespace only",
+      "args": [
+        "qwen3-embedding",
+        "   "
+      ],
+      "expected": true
+    }
+  ]
+}

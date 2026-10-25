@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "function": "stripFrontmatter",
+  "cases": [
+    {
+      "name": "\"---\\na: 1\\n---\\nBody\"",
+      "args": [
+        "---\na: 1\n---\nBody"
+      ],
+      "expected": "Body"
+    },
+    {
+      "name": "\"---\\n---\\nBody\"",
+      "args": [
+        "---\n---\nBody"
+      ],
+      "expected": "---\n---\nBody"
+    },
+    {
+      "name": "\"---\\n\\n---\\nBody\"",
+      "args": [
+        "---\n\n---\nBody"
+      ],
+      "expected": "Body"
+    },
+    {
+      "name": "\"---  \\n a \\n---\\t\\nBody\"",
+      "args": [
+        "---  \n a \n---\t\nBody"
+      ],
+      "expected": "Body"
+    },
+    {
+      "name": "\"Kein Frontmatter\"",
+      "args": [
+        "Kein Frontmatter"
+      ],
+      "expected": "Kein Frontmatter"
+    },
+    {
+      "name": "\"---\"",
+      "args": [
+        "---"
+      ],
+      "expected": "---"
+    },
+    {
+      "name": "\"--- \\nkein Schluss\"",
+      "args": [
+        "--- \nkein Schluss"
+      ],
+      "expected": "--- \nkein Schluss"
+    },
+    {
+      "name": "\"\\n---\\na\\n---\\nb\"",
+      "args": [
+        "\n---\na\n---\nb"
+      ],
+      "expected": "\n---\na\n---\nb"
+    },
+    {
+      "name": "\"---\\na\\n---\"",
+      "args": [
+        "---\na\n---"
+      ],
+      "expected": "---\na\n---"
+    },
+    {
+      "name": "\"---\\na\\n----\\nb\"",
+      "args": [
+        "---\na\n----\nb"
+      ],
+      "expected": "---\na\n----\nb"
+    },
+    {
+      "name": "\"---\\r\\na\\r\\n---\\r\\nb\"",
+      "args": [
+        "---\r\na\r\n---\r\nb"
+      ],
+      "expected": "b"
+    }
+  ]
+}

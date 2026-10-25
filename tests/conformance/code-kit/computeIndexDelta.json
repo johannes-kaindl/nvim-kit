@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "function": "computeIndexDelta",
+  "cases": [
+    {
+      "name": "nothing missing",
+      "args": [
+        10,
+        [],
+        []
+      ],
+      "expected": {
+        "embedded": 10,
+        "total": 10,
+        "emptyCount": 0
+      }
+    },
+    {
+      "name": "two missing, one of them empty",
+      "args": [
+        10,
+        [
+          "a",
+          "b"
+        ],
+        [
+          "a"
+        ]
+      ],
+      "expected": {
+        "embedded": 8,
+        "total": 9,
+        "emptyCount": 1
+      }
+    },
+    {
+      "name": "all missing are empty",
+      "args": [
+        10,
+        [
+          "a",
+          "b"
+        ],
+        [
+          "a",
+          "b"
+        ]
+      ],
+      "expected": {
+        "embedded": 8,
+        "total": 8,
+        "emptyCount": 2
+      }
+    },
+    {
+      "name": "empty note that is not missing",
+      "args": [
+        10,
+        [
+          "a"
+        ],
+        [
+          "z"
+        ]
+      ],
+      "expected": {
+        "embedded": 9,
+        "total": 10,
+        "emptyCount": 0
+      }
+    }
+  ]
+}

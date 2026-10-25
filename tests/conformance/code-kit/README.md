@@ -9,6 +9,15 @@ Each `<function>.json` holds `{ schema, function, cases: [{ name, args, expected
 | `familyFromName`, `thinkingFor`, `resolveRequestParams`, `validateOverride`, `sanitizeRequestSettings` | `src/ts/pure/sampling-profiles.ts` |
 | `stripThinkBlocks` | `src/ts/pure/think-splitter.ts` |
 | `firstJsonObject` | `src/ts/pure/llm-json.ts` |
+| `chunkMarkdown`, `stripFrontmatter` | `src/ts/pure/chunker.ts` |
+| `toIndexVector`, `quantizeInt8`, `parseIndex`, `retrieverSearch`, `normalizeEndpoint` | `src/ts/pure/embed-vector.ts`, `vector-index.ts`, `endpoint.ts` |
+| `crc32` | `src/ts/pure/crc32.ts` |
+| `decodeContainer`, `encodeContainer` | `src/ts/pure/index-container.ts` |
+| `retrieverRelated`, `containerRetrieve` | `src/ts/pure/vector-index.ts` (`containerRetrieve` also runs `index-container.ts`) |
+| `assertSafeToPersist`, `isSuspiciousShrink`, `embeddingModelMatchesIndex`, `assertModelSafeToPersist`, `assertDimSafeToPersist`, `diffIndexVsVault`, `findDeadVectorPaths`, `findStaleVectorPaths` | `src/ts/pure/index-guard.ts` |
+| `computeIndexDelta`, `splitHealTargets` | `src/ts/pure/index-delta.ts` |
+| `probeRank`, `probeOrder`, `probeQuery`, `compareRuns` | `src/ts/pure/probe-core.ts` |
+| `chunkMarkdownUtf16` | `src/ts/pure/chunker.ts` (same function as `chunkMarkdown`, cases outside the BMP) |
 
 `../data/sampling-profiles.json` holds the tables of `sampling-profiles.ts` (families, modes, backends, family patterns, ranges). Family patterns use only literal characters, `\.`, a character class of literals and `?`, with flag `i`; a port translates them into its own regex engine on that basis, and a test here keeps new patterns inside that subset.
 
@@ -25,3 +34,31 @@ An empty object `{}` and an empty list `[]` are different values in `expected` (
 `dropped` from `sanitizeRequestSettings` is sorted in code-unit order (JS `sort()`); for the ASCII paths here that is byte order. Lua's `<` on strings uses the locale's collation, so a port compares bytes instead.
 
 What JSON cannot carry is in no vector: `NaN`, `Infinity`, `-0`, `undefined`. `validateOverride("temperature", NaN)` is `null` in TS, and a plain range check in another language lets NaN through — a port tests such inputs itself.
+
+`chunkMarkdown`/`stripFrontmatter`: JS counts UTF-16 code units, a Python port counts code points. Every case is BMP-only, where both agree (a test keeps it so); outside the BMP a port documents its own behaviour. Whitespace, trimming and line starts are JavaScript's (`\s`, `trim`, `^` after `\n`, `\r`, U+2028, U+2029). A port that counts UTF-16 code units runs `chunkMarkdownUtf16` for the cases outside the BMP.
+
+`quantizeInt8`: `Math.round` rounds halves toward +∞; Python's `round` rounds half to even. `retrieverSearch` scores are float64 sums over float32 rows; a port that ranks int8 rows directly agrees to well below 1e-6.
+
+Binary data (`Uint8Array`, `ArrayBuffer`) is a lowercase hex string without separators, in `args` and in `expected`; int8 matrices are number lists.
+
+`decodeContainer` returns `{ error: reason }` for a container it rejects, so a port compares the reason too, not only the failure.
+
+`encodeContainer` expects the manifest in this key order, and a port writes exactly that order: `schema_version, vault, embedding_model, source_dim, index_dim, granularity, aggregation, quant, scale, count, source_commit, built_at, paths, stamps` (`stamps` only when given and as long as `paths`). Lua's `vim.json.decode` loses key order, so the port keeps its own list.
+
+The header JSON is `JSON.stringify` output: `"`, `\` and control characters are escaped (`\"`, `\\`, `\t`, `\uXXXX`), `/` and non-ASCII characters stay raw. The case "path with quote, backslash and tab" pins it.
+
+The index guards are projected to `{ allowed, kind? }`; the `message` text is vault-rag's, not a contract.
+
+Every vector with float scores or float vectors (`retrieverSearch`, `retrieverRelated`, `containerRetrieve`, the values of `parseIndex`) is compared with a tolerance of `1e-6` (float64 sums over float32 rows); ranks and paths must match exactly.
+
+`containerRetrieve` is projected to `{ error }` for a container it cannot serve: the reason of a `ContainerError` from the decoder (`truncated`, `magic`, `crc`, `header`, `schema`), and `corrupt` when `parseIndex` throws (`count` differs from the number of paths, or the matrix length is not `count × index_dim`). Both are checks that `vrix.decode` has to make.
+
+`chunkMarkdownUtf16` is only for ports that count UTF-16 code units; a port that counts code points or bytes does not run it.
+
+A hard cut can split a surrogate pair in JavaScript, and a UTF-8 port then keeps the whole pair in the leading chunk; the `chunkMarkdownUtf16` cases avoid that position (a test keeps it so), so a port deviates only there.
+
+`probeRank` hashes UTF-16 code units with `Math.imul`, a 32-bit multiply: in Lua `h * 0x01000193` exceeds 2^53 and loses bits, so a port splits the multiplication (e.g. into 16-bit halves) or uses `bit` / ffi `uint32_t`.
+
+`probeQuery` trims like JavaScript's `trim()`, which strips NBSP (U+00A0), U+FEFF, U+3000, U+2028 and more; `vim.trim` strips ASCII whitespace only (a case pins NBSP and U+3000). `slice(0, 300)` could split a surrogate pair; no case cuts one, and a port keeps the whole pair or documents what it does.
+
+`probeOrder` breaks equal hashes by path; the case "hash tie, code-unit order" has two paths with the same `probeRank`, where code-unit order puts `Z27609.md` before `a209804.md` (a locale-aware comparison would not). `probeOrder` compares paths by UTF-16 code units; Lua's byte comparison differs only between a character outside the BMP and one in U+E000-U+FFFF, and no case contains such a pair (a test in `conformance.test.ts` keeps it so).

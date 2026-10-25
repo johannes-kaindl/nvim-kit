@@ -1,0 +1,694 @@
+{
+  "schema": 1,
+  "function": "chunkMarkdown",
+  "cases": [
+    {
+      "name": "empty",
+      "args": [
+        "",
+        800,
+        150
+      ],
+      "expected": []
+    },
+    {
+      "name": "whitespace only",
+      "args": [
+        "  \n\t ",
+        800,
+        150
+      ],
+      "expected": []
+    },
+    {
+      "name": "short text is one chunk",
+      "args": [
+        "Kurz und gut.",
+        800,
+        150
+      ],
+      "expected": [
+        {
+          "text": "Kurz und gut.",
+          "startOffset": 0,
+          "endOffset": 13
+        }
+      ]
+    },
+    {
+      "name": "exactly maxChars",
+      "args": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        800,
+        150
+      ],
+      "expected": [
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "startOffset": 0,
+          "endOffset": 800
+        }
+      ]
+    },
+    {
+      "name": "one over maxChars, no heading",
+      "args": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        800,
+        150
+      ],
+      "expected": [
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "startOffset": 0,
+          "endOffset": 800
+        },
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "startOffset": 650,
+          "endOffset": 801
+        }
+      ]
+    },
+    {
+      "name": "long prose, hard cuts with overlap",
+      "args": [
+        "Satz 0 mit etwas Text über Lessons, Regeln und Abruf. Satz 1 mit etwas Text über Lessons, Regeln und Abruf. Satz 2 mit etwas Text über Lessons, Regeln und Abruf. Satz 3 mit etwas Text über Lessons, Regeln und Abruf. Satz 4 mit etwas Text über Lessons, Regeln und Abruf. Satz 5 mit etwas Text über Lessons, Regeln und Abruf. Satz 6 mit etwas Text über Lessons, Regeln und Abruf. Satz 7 mit etwas Text über Lessons, Regeln und Abruf. Satz 8 mit etwas Text über Lessons, Regeln und Abruf. Satz 9 mit etwas Text über Lessons, Regeln und Abruf. Satz 10 mit etwas Text über Lessons, Regeln und Abruf. Satz 11 mit etwas Text über Lessons, Regeln und Abruf. Satz 12 mit etwas Text über Lessons, Regeln und Abruf. Satz 13 mit etwas Text über Lessons, Regeln und Abruf. Satz 14 mit etwas Text über Lessons, Regeln und Abruf. Satz 15 mit etwas Text über Lessons, Regeln und Abruf. Satz 16 mit etwas Text über Lessons, Regeln und Abruf. Satz 17 mit etwas Text über Lessons, Regeln und Abruf. Satz 18 mit etwas Text über Lessons, Regeln und Abruf. Satz 19 mit etwas Text über Lessons, Regeln und Abruf. Satz 20 mit etwas Text über Lessons, Regeln und Abruf. Satz 21 mit etwas Text über Lessons, Regeln und Abruf. Satz 22 mit etwas Text über Lessons, Regeln und Abruf. Satz 23 mit etwas Text über Lessons, Regeln und Abruf. Satz 24 mit etwas Text über Lessons, Regeln und Abruf. Satz 25 mit etwas Text über Lessons, Regeln und Abruf. Satz 26 mit etwas Text über Lessons, Regeln und Abruf. Satz 27 mit etwas Text über Lessons, Regeln und Abruf. Satz 28 mit etwas Text über Lessons, Regeln und Abruf. Satz 29 mit etwas Text über Lessons, Regeln und Abruf. Satz 30 mit etwas Text über Lessons, Regeln und Abruf. Satz 31 mit etwas Text über Lessons, Regeln und Abruf. Satz 32 mit etwas Text über Lessons, Regeln und Abruf. Satz 33 mit etwas Text über Lessons, Regeln und Abruf. Satz 34 mit etwas Text über Lessons, Regeln und Abruf. Satz 35 mit etwas Text über Lessons, Regeln und Abruf. Satz 36 mit etwas Text über Lessons, Regeln und Abruf. Satz 37 mit etwas Text über Lessons, Regeln und Abruf. Satz 38 mit etwas Text über Lessons, Regeln und Abruf. Satz 39 mit etwas Text über Lessons, Regeln und Abruf. Satz 40 mit etwas Text über Lessons, Regeln und Abruf. Satz 41 mit etwas Text über Lessons, Regeln und Abruf. Satz 42 mit etwas Text über Lessons, Regeln und Abruf. Satz 43 mit etwas Text über Lessons, Regeln und Abruf. Satz 44 mit etwas Text über Lessons, Regeln und Abruf. Satz 45 mit etwas Text über Lessons, Regeln und Abruf. Satz 46 mit etwas Text über Lessons, Regeln und Abruf. Satz 47 mit etwas Text über Lessons, Regeln und Abruf. Satz 48 mit etwas Text über Lessons, Regeln und Abruf. Satz 49 mit etwas Text über Lessons, Regeln und Abruf. Satz 50 mit etwas Text über Lessons, Regeln und Abruf. Satz 51 mit etwas Text über Lessons, Regeln und Abruf. Satz 52 mit etwas Text über Lessons, Regeln und Abruf. Satz 53 mit etwas Text über Lessons, Regeln und Abruf. Satz 54 mit etwas Text über Lessons, Regeln und Abruf. Satz 55 mit etwas Text über Lessons, Regeln und Abruf. Satz 56 mit etwas Text über Lessons, Regeln und Abruf. Satz 57 mit etwas Text über Lessons, Regeln und Abruf. Satz 58 mit etwas Text über Lessons, Regeln und Abruf. Satz 59 mit etwas Text über Lessons, Regeln und Abruf.",
+        800,
+        150
+      ],
+      "expected": [
+        {
+          "text": "Satz 0 mit etwas Text über Lessons, Regeln und Abruf. Satz 1 mit etwas Text über Lessons, Regeln und Abruf. Satz 2 mit etwas Text über Lessons, Regeln und Abruf. Satz 3 mit etwas Text über Lessons, Regeln und Abruf. Satz 4 mit etwas Text über Lessons, Regeln und Abruf. Satz 5 mit etwas Text über Lessons, Regeln und Abruf. Satz 6 mit etwas Text über Lessons, Regeln und Abruf. Satz 7 mit etwas Text über Lessons, Regeln und Abruf. Satz 8 mit etwas Text über Lessons, Regeln und Abruf. Satz 9 mit etwas Text über Lessons, Regeln und Abruf. Satz 10 mit etwas Text über Lessons, Regeln und Abruf. Satz 11 mit etwas Text über Lessons, Regeln und Abruf. Satz 12 mit etwas Text über Lessons, Regeln und Abruf. Satz 13 mit etwas Text über Lessons, Regeln und Abruf. Satz 14 mit etwas Text über Lessons, Reg",
+          "startOffset": 0,
+          "endOffset": 800
+        },
+        {
+          "text": "Satz 12 mit etwas Text über Lessons, Regeln und Abruf. Satz 13 mit etwas Text über Lessons, Regeln und Abruf. Satz 14 mit etwas Text über Lessons, Regeln und Abruf. Satz 15 mit etwas Text über Lessons, Regeln und Abruf. Satz 16 mit etwas Text über Lessons, Regeln und Abruf. Satz 17 mit etwas Text über Lessons, Regeln und Abruf. Satz 18 mit etwas Text über Lessons, Regeln und Abruf. Satz 19 mit etwas Text über Lessons, Regeln und Abruf. Satz 20 mit etwas Text über Lessons, Regeln und Abruf. Satz 21 mit etwas Text über Lessons, Regeln und Abruf. Satz 22 mit etwas Text über Lessons, Regeln und Abruf. Satz 23 mit etwas Text über Lessons, Regeln und Abruf. Satz 24 mit etwas Text über Lessons, Regeln und Abruf. Satz 25 mit etwas Text über Lessons, Regeln und Abruf. Satz 26 mit etwas Text über Le",
+          "startOffset": 650,
+          "endOffset": 1450
+        },
+        {
+          "text": "nd Abruf. Satz 24 mit etwas Text über Lessons, Regeln und Abruf. Satz 25 mit etwas Text über Lessons, Regeln und Abruf. Satz 26 mit etwas Text über Lessons, Regeln und Abruf. Satz 27 mit etwas Text über Lessons, Regeln und Abruf. Satz 28 mit etwas Text über Lessons, Regeln und Abruf. Satz 29 mit etwas Text über Lessons, Regeln und Abruf. Satz 30 mit etwas Text über Lessons, Regeln und Abruf. Satz 31 mit etwas Text über Lessons, Regeln und Abruf. Satz 32 mit etwas Text über Lessons, Regeln und Abruf. Satz 33 mit etwas Text über Lessons, Regeln und Abruf. Satz 34 mit etwas Text über Lessons, Regeln und Abruf. Satz 35 mit etwas Text über Lessons, Regeln und Abruf. Satz 36 mit etwas Text über Lessons, Regeln und Abruf. Satz 37 mit etwas Text über Lessons, Regeln und Abruf. Satz 38 mit etwas Te",
+          "startOffset": 1300,
+          "endOffset": 2100
+        },
+        {
+          "text": ", Regeln und Abruf. Satz 36 mit etwas Text über Lessons, Regeln und Abruf. Satz 37 mit etwas Text über Lessons, Regeln und Abruf. Satz 38 mit etwas Text über Lessons, Regeln und Abruf. Satz 39 mit etwas Text über Lessons, Regeln und Abruf. Satz 40 mit etwas Text über Lessons, Regeln und Abruf. Satz 41 mit etwas Text über Lessons, Regeln und Abruf. Satz 42 mit etwas Text über Lessons, Regeln und Abruf. Satz 43 mit etwas Text über Lessons, Regeln und Abruf. Satz 44 mit etwas Text über Lessons, Regeln und Abruf. Satz 45 mit etwas Text über Lessons, Regeln und Abruf. Satz 46 mit etwas Text über Lessons, Regeln und Abruf. Satz 47 mit etwas Text über Lessons, Regeln und Abruf. Satz 48 mit etwas Text über Lessons, Regeln und Abruf. Satz 49 mit etwas Text über Lessons, Regeln und Abruf. Satz 50 mi",
+          "startOffset": 1950,
+          "endOffset": 2750
+        },
+        {
+          "text": "er Lessons, Regeln und Abruf. Satz 48 mit etwas Text über Lessons, Regeln und Abruf. Satz 49 mit etwas Text über Lessons, Regeln und Abruf. Satz 50 mit etwas Text über Lessons, Regeln und Abruf. Satz 51 mit etwas Text über Lessons, Regeln und Abruf. Satz 52 mit etwas Text über Lessons, Regeln und Abruf. Satz 53 mit etwas Text über Lessons, Regeln und Abruf. Satz 54 mit etwas Text über Lessons, Regeln und Abruf. Satz 55 mit etwas Text über Lessons, Regeln und Abruf. Satz 56 mit etwas Text über Lessons, Regeln und Abruf. Satz 57 mit etwas Text über Lessons, Regeln und Abruf. Satz 58 mit etwas Text über Lessons, Regeln und Abruf. Satz 59 mit etwas Text über Lessons, Regeln und Abruf.",
+          "startOffset": 2600,
+          "endOffset": 3289
+        }
+      ]
+    },
+    {
+      "name": "headings preferred",
+      "args": [
+        "# Titel\n\nEinleitung xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n## Erster Abschnitt\n\nInhalt eins aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\n### Unterabschnitt\n\nInhalt zwei bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n\n## Zweiter Abschnitt\n\nInhalt drei cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        800,
+        150
+      ],
+      "expected": [
+        {
+          "text": "# Titel\n\nEinleitung xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "startOffset": 0,
+          "endOffset": 322
+        },
+        {
+          "text": "## Erster Abschnitt\n\nInhalt eins aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "startOffset": 322,
+          "endOffset": 857
+        },
+        {
+          "text": "### Unterabschnitt\n\nInhalt zwei bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "startOffset": 857,
+          "endOffset": 1591
+        },
+        {
+          "text": "## Zweiter Abschnitt\n\nInhalt drei cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "startOffset": 1591,
+          "endOffset": 2391
+        },
+        {
+          "text": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "startOffset": 2241,
+          "endOffset": 2525
+        }
+      ]
+    },
+    {
+      "name": "frontmatter is removed",
+      "args": [
+        "---\ntitel: x\n---\n# K\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+        800,
+        150
+      ],
+      "expected": [
+        {
+          "text": "# K\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+          "startOffset": 0,
+          "endOffset": 800
+        },
+        {
+          "text": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+          "startOffset": 650,
+          "endOffset": 905
+        }
+      ]
+    },
+    {
+      "name": "seven hashes are no heading",
+      "args": [
+        "####### nein\nzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+        800,
+        150
+      ],
+      "expected": [
+        {
+          "text": "####### nein\nzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+          "startOffset": 0,
+          "endOffset": 800
+        },
+        {
+          "text": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+          "startOffset": 650,
+          "endOffset": 913
+        }
+      ]
+    },
+    {
+      "name": "heading needs whitespace",
+      "args": [
+        "#nein\nzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\n# ja\nwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
+        800,
+        150
+      ],
+      "expected": [
+        {
+          "text": "#nein\nzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+          "startOffset": 0,
+          "endOffset": 800
+        },
+        {
+          "text": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\n# ja\nwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
+          "startOffset": 650,
+          "endOffset": 1212
+        }
+      ]
+    },
+    {
+      "name": "small maxChars",
+      "args": [
+        "# Titel\n\nEinleitung xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n## Erster Abschnitt\n\nInhalt eins aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\n### Unterabschnitt\n\nInhalt zwei bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n\n## Zweiter Abschnitt\n\nInhalt drei cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        200,
+        50
+      ],
+      "expected": [
+        {
+          "text": "# Titel\n\nEinleitung xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "startOffset": 0,
+          "endOffset": 200
+        },
+        {
+          "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "startOffset": 150,
+          "endOffset": 322
+        },
+        {
+          "text": "## Erster Abschnitt\n\nInhalt eins aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "startOffset": 322,
+          "endOffset": 522
+        },
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "startOffset": 472,
+          "endOffset": 672
+        },
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "startOffset": 622,
+          "endOffset": 822
+        },
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "startOffset": 772,
+          "endOffset": 857
+        },
+        {
+          "text": "### Unterabschnitt\n\nInhalt zwei bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "startOffset": 857,
+          "endOffset": 1057
+        },
+        {
+          "text": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "startOffset": 1007,
+          "endOffset": 1207
+        },
+        {
+          "text": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "startOffset": 1157,
+          "endOffset": 1357
+        },
+        {
+          "text": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "startOffset": 1307,
+          "endOffset": 1507
+        },
+        {
+          "text": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "startOffset": 1457,
+          "endOffset": 1591
+        },
+        {
+          "text": "## Zweiter Abschnitt\n\nInhalt drei cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "startOffset": 1591,
+          "endOffset": 1791
+        },
+        {
+          "text": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "startOffset": 1741,
+          "endOffset": 1941
+        },
+        {
+          "text": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "startOffset": 1891,
+          "endOffset": 2091
+        },
+        {
+          "text": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "startOffset": 2041,
+          "endOffset": 2241
+        },
+        {
+          "text": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "startOffset": 2191,
+          "endOffset": 2391
+        },
+        {
+          "text": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "startOffset": 2341,
+          "endOffset": 2525
+        }
+      ]
+    },
+    {
+      "name": "overlap larger than half of maxChars",
+      "args": [
+        "Satz 0 mit etwas Text über Lessons, Regeln und Abruf. Satz 1 mit etwas Text über Lessons, Regeln und Abruf. Satz 2 mit etwas Text über Lessons, Regeln und Abruf. Satz 3 mit etwas Text über Lessons, Regeln und Abruf. Satz 4 mit etwas Text über Lessons, Regeln und Abruf. Satz 5 mit etwas Text über Lessons, Regeln und Abruf. Satz 6 mit etwas Text über Lessons, Regeln und Abruf. Satz 7 mit etwas Text über Lessons, Regeln und Abruf. Satz 8 mit etwas Text über Lessons, Regeln und Abruf. Satz 9 mit etwas Text über Lessons, Regeln und Abruf. Satz 10 mit etwas Text über Lessons, Regeln und Abruf. Satz 11 mit etwas Text über Lessons, Regeln und Abruf. Satz 12 mit etwas Text über Lessons, Regeln und Abruf. Satz 13 mit etwas Text über Lessons, Regeln und Abruf. Satz 14 mit etwas Text über Lessons, Regeln und Abruf. Satz 15 mit etwas Text über Lessons, Regeln und Abruf. Satz 16 mit etwas Text über Lessons, Regeln und Abruf. Satz 17 mit etwas Text über Lessons, Regeln und Abruf. Satz 18 mit etwas Text über Lessons, Regeln und Abruf. Satz 19 mit etwas Text über Lessons, Regeln und Abruf. Satz 20 mit etwas Text über Lessons, Regeln und Abruf. Satz 21 mit etwas Text über Lessons, Regeln und Abruf. Satz 22 mit etwas Text über Lessons, Regeln und Abruf. Satz 23 mit etwas Text über Lessons, Regeln und Abruf. Satz 24 mit etwas Text über Lessons, Regeln und Abruf. Satz 25 mit etwas Text über Lessons, Regeln und Abruf. Satz 26 mit etwas Text über Lessons, Regeln und Abruf. Satz 27 mit etwas Text über Lessons, Regeln und Abruf. Satz 28 mit etwas Text über Lessons, Regeln und Abruf. Satz 29 mit etwas Text über Lessons, Regeln und Abruf. Satz 30 mit etwas Text über Lessons, Regeln und Abruf. Satz 31 mit etwas Text über Lessons, Regeln und Abruf. Satz 32 mit etwas Text über Lessons, Regeln und Abruf. Satz 33 mit etwas Text über Lessons, Regeln und Abruf. Satz 34 mit etwas Text über Lessons, Regeln und Abruf. Satz 35 mit etwas Text über Lessons, Regeln und Abruf. Satz 36 mit etwas Text über Lessons, Regeln und Abruf. Satz 37 mit etwas Text über Lessons, Regeln und Abruf. Satz 38 mit etwas Text über Lessons, Regeln und Abruf. Satz 39 mit etwas Text über Lessons, Regeln und Abruf. Satz 40 mit etwas Text über Lessons, Regeln und Abruf. Satz 41 mit etwas Text über Lessons, Regeln und Abruf. Satz 42 mit etwas Text über Lessons, Regeln und Abruf. Satz 43 mit etwas Text über Lessons, Regeln und Abruf. Satz 44 mit etwas Text über Lessons, Regeln und Abruf. Satz 45 mit etwas Text über Lessons, Regeln und Abruf. Satz 46 mit etwas Text über Lessons, Regeln und Abruf. Satz 47 mit etwas Text über Lessons, Regeln und Abruf. Satz 48 mit etwas Text über Lessons, Regeln und Abruf. Satz 49 mit etwas Text über Lessons, Regeln und Abruf. Satz 50 mit etwas Text über Lessons, Regeln und Abruf. Satz 51 mit etwas Text über Lessons, Regeln und Abruf. Satz 52 mit etwas Text über Lessons, Regeln und Abruf. Satz 53 mit etwas Text über Lessons, Regeln und Abruf. Satz 54 mit etwas Text über Lessons, Regeln und Abruf. Satz 55 mit etwas Text über Lessons, Regeln und Abruf. Satz 56 mit etwas Text über Lessons, Regeln und Abruf. Satz 57 mit etwas Text über Lessons, Regeln und Abruf. Satz 58 mit etwas Text über Lessons, Regeln und Abruf. Satz 59 mit etwas Text über Lessons, Regeln und Abruf.",
+        100,
+        80
+      ],
+      "expected": [
+        {
+          "text": "Satz 0 mit etwas Text über Lessons, Regeln und Abruf. Satz 1 mit etwas Text über Lessons, Regeln und",
+          "startOffset": 0,
+          "endOffset": 100
+        },
+        {
+          "text": "uf. Satz 1 mit etwas Text über Lessons, Regeln und Abruf. Satz 2 mit etwas Text über Lessons, Regeln",
+          "startOffset": 50,
+          "endOffset": 150
+        },
+        {
+          "text": "Abruf. Satz 2 mit etwas Text über Lessons, Regeln und Abruf. Satz 3 mit etwas Text über Lessons, Re",
+          "startOffset": 100,
+          "endOffset": 200
+        },
+        {
+          "text": "und Abruf. Satz 3 mit etwas Text über Lessons, Regeln und Abruf. Satz 4 mit etwas Text über Lessons",
+          "startOffset": 150,
+          "endOffset": 250
+        },
+        {
+          "text": "geln und Abruf. Satz 4 mit etwas Text über Lessons, Regeln und Abruf. Satz 5 mit etwas Text über Les",
+          "startOffset": 200,
+          "endOffset": 300
+        },
+        {
+          "text": ", Regeln und Abruf. Satz 5 mit etwas Text über Lessons, Regeln und Abruf. Satz 6 mit etwas Text über",
+          "startOffset": 250,
+          "endOffset": 350
+        },
+        {
+          "text": "sons, Regeln und Abruf. Satz 6 mit etwas Text über Lessons, Regeln und Abruf. Satz 7 mit etwas Text",
+          "startOffset": 300,
+          "endOffset": 400
+        },
+        {
+          "text": "Lessons, Regeln und Abruf. Satz 7 mit etwas Text über Lessons, Regeln und Abruf. Satz 8 mit etwas T",
+          "startOffset": 350,
+          "endOffset": 450
+        },
+        {
+          "text": "über Lessons, Regeln und Abruf. Satz 8 mit etwas Text über Lessons, Regeln und Abruf. Satz 9 mit etw",
+          "startOffset": 400,
+          "endOffset": 500
+        },
+        {
+          "text": "ext über Lessons, Regeln und Abruf. Satz 9 mit etwas Text über Lessons, Regeln und Abruf. Satz 10 mi",
+          "startOffset": 450,
+          "endOffset": 550
+        },
+        {
+          "text": "as Text über Lessons, Regeln und Abruf. Satz 10 mit etwas Text über Lessons, Regeln und Abruf. Satz",
+          "startOffset": 500,
+          "endOffset": 600
+        },
+        {
+          "text": "t etwas Text über Lessons, Regeln und Abruf. Satz 11 mit etwas Text über Lessons, Regeln und Abruf.",
+          "startOffset": 550,
+          "endOffset": 650
+        },
+        {
+          "text": "11 mit etwas Text über Lessons, Regeln und Abruf. Satz 12 mit etwas Text über Lessons, Regeln und Ab",
+          "startOffset": 600,
+          "endOffset": 700
+        },
+        {
+          "text": "Satz 12 mit etwas Text über Lessons, Regeln und Abruf. Satz 13 mit etwas Text über Lessons, Regeln u",
+          "startOffset": 650,
+          "endOffset": 750
+        },
+        {
+          "text": "ruf. Satz 13 mit etwas Text über Lessons, Regeln und Abruf. Satz 14 mit etwas Text über Lessons, Reg",
+          "startOffset": 700,
+          "endOffset": 800
+        },
+        {
+          "text": "nd Abruf. Satz 14 mit etwas Text über Lessons, Regeln und Abruf. Satz 15 mit etwas Text über Lessons",
+          "startOffset": 750,
+          "endOffset": 850
+        },
+        {
+          "text": "eln und Abruf. Satz 15 mit etwas Text über Lessons, Regeln und Abruf. Satz 16 mit etwas Text über Le",
+          "startOffset": 800,
+          "endOffset": 900
+        },
+        {
+          "text": ", Regeln und Abruf. Satz 16 mit etwas Text über Lessons, Regeln und Abruf. Satz 17 mit etwas Text üb",
+          "startOffset": 850,
+          "endOffset": 950
+        },
+        {
+          "text": "ssons, Regeln und Abruf. Satz 17 mit etwas Text über Lessons, Regeln und Abruf. Satz 18 mit etwas Te",
+          "startOffset": 900,
+          "endOffset": 1000
+        },
+        {
+          "text": "er Lessons, Regeln und Abruf. Satz 18 mit etwas Text über Lessons, Regeln und Abruf. Satz 19 mit etw",
+          "startOffset": 950,
+          "endOffset": 1050
+        },
+        {
+          "text": "xt über Lessons, Regeln und Abruf. Satz 19 mit etwas Text über Lessons, Regeln und Abruf. Satz 20 mi",
+          "startOffset": 1000,
+          "endOffset": 1100
+        },
+        {
+          "text": "as Text über Lessons, Regeln und Abruf. Satz 20 mit etwas Text über Lessons, Regeln und Abruf. Satz",
+          "startOffset": 1050,
+          "endOffset": 1150
+        },
+        {
+          "text": "t etwas Text über Lessons, Regeln und Abruf. Satz 21 mit etwas Text über Lessons, Regeln und Abruf.",
+          "startOffset": 1100,
+          "endOffset": 1200
+        },
+        {
+          "text": "21 mit etwas Text über Lessons, Regeln und Abruf. Satz 22 mit etwas Text über Lessons, Regeln und Ab",
+          "startOffset": 1150,
+          "endOffset": 1250
+        },
+        {
+          "text": "Satz 22 mit etwas Text über Lessons, Regeln und Abruf. Satz 23 mit etwas Text über Lessons, Regeln u",
+          "startOffset": 1200,
+          "endOffset": 1300
+        },
+        {
+          "text": "ruf. Satz 23 mit etwas Text über Lessons, Regeln und Abruf. Satz 24 mit etwas Text über Lessons, Reg",
+          "startOffset": 1250,
+          "endOffset": 1350
+        },
+        {
+          "text": "nd Abruf. Satz 24 mit etwas Text über Lessons, Regeln und Abruf. Satz 25 mit etwas Text über Lessons",
+          "startOffset": 1300,
+          "endOffset": 1400
+        },
+        {
+          "text": "eln und Abruf. Satz 25 mit etwas Text über Lessons, Regeln und Abruf. Satz 26 mit etwas Text über Le",
+          "startOffset": 1350,
+          "endOffset": 1450
+        },
+        {
+          "text": ", Regeln und Abruf. Satz 26 mit etwas Text über Lessons, Regeln und Abruf. Satz 27 mit etwas Text üb",
+          "startOffset": 1400,
+          "endOffset": 1500
+        },
+        {
+          "text": "ssons, Regeln und Abruf. Satz 27 mit etwas Text über Lessons, Regeln und Abruf. Satz 28 mit etwas Te",
+          "startOffset": 1450,
+          "endOffset": 1550
+        },
+        {
+          "text": "er Lessons, Regeln und Abruf. Satz 28 mit etwas Text über Lessons, Regeln und Abruf. Satz 29 mit etw",
+          "startOffset": 1500,
+          "endOffset": 1600
+        },
+        {
+          "text": "xt über Lessons, Regeln und Abruf. Satz 29 mit etwas Text über Lessons, Regeln und Abruf. Satz 30 mi",
+          "startOffset": 1550,
+          "endOffset": 1650
+        },
+        {
+          "text": "as Text über Lessons, Regeln und Abruf. Satz 30 mit etwas Text über Lessons, Regeln und Abruf. Satz",
+          "startOffset": 1600,
+          "endOffset": 1700
+        },
+        {
+          "text": "t etwas Text über Lessons, Regeln und Abruf. Satz 31 mit etwas Text über Lessons, Regeln und Abruf.",
+          "startOffset": 1650,
+          "endOffset": 1750
+        },
+        {
+          "text": "31 mit etwas Text über Lessons, Regeln und Abruf. Satz 32 mit etwas Text über Lessons, Regeln und Ab",
+          "startOffset": 1700,
+          "endOffset": 1800
+        },
+        {
+          "text": "Satz 32 mit etwas Text über Lessons, Regeln und Abruf. Satz 33 mit etwas Text über Lessons, Regeln u",
+          "startOffset": 1750,
+          "endOffset": 1850
+        },
+        {
+          "text": "ruf. Satz 33 mit etwas Text über Lessons, Regeln und Abruf. Satz 34 mit etwas Text über Lessons, Reg",
+          "startOffset": 1800,
+          "endOffset": 1900
+        },
+        {
+          "text": "nd Abruf. Satz 34 mit etwas Text über Lessons, Regeln und Abruf. Satz 35 mit etwas Text über Lessons",
+          "startOffset": 1850,
+          "endOffset": 1950
+        },
+        {
+          "text": "eln und Abruf. Satz 35 mit etwas Text über Lessons, Regeln und Abruf. Satz 36 mit etwas Text über Le",
+          "startOffset": 1900,
+          "endOffset": 2000
+        },
+        {
+          "text": ", Regeln und Abruf. Satz 36 mit etwas Text über Lessons, Regeln und Abruf. Satz 37 mit etwas Text üb",
+          "startOffset": 1950,
+          "endOffset": 2050
+        },
+        {
+          "text": "ssons, Regeln und Abruf. Satz 37 mit etwas Text über Lessons, Regeln und Abruf. Satz 38 mit etwas Te",
+          "startOffset": 2000,
+          "endOffset": 2100
+        },
+        {
+          "text": "er Lessons, Regeln und Abruf. Satz 38 mit etwas Text über Lessons, Regeln und Abruf. Satz 39 mit etw",
+          "startOffset": 2050,
+          "endOffset": 2150
+        },
+        {
+          "text": "xt über Lessons, Regeln und Abruf. Satz 39 mit etwas Text über Lessons, Regeln und Abruf. Satz 40 mi",
+          "startOffset": 2100,
+          "endOffset": 2200
+        },
+        {
+          "text": "as Text über Lessons, Regeln und Abruf. Satz 40 mit etwas Text über Lessons, Regeln und Abruf. Satz",
+          "startOffset": 2150,
+          "endOffset": 2250
+        },
+        {
+          "text": "t etwas Text über Lessons, Regeln und Abruf. Satz 41 mit etwas Text über Lessons, Regeln und Abruf.",
+          "startOffset": 2200,
+          "endOffset": 2300
+        },
+        {
+          "text": "41 mit etwas Text über Lessons, Regeln und Abruf. Satz 42 mit etwas Text über Lessons, Regeln und Ab",
+          "startOffset": 2250,
+          "endOffset": 2350
+        },
+        {
+          "text": "Satz 42 mit etwas Text über Lessons, Regeln und Abruf. Satz 43 mit etwas Text über Lessons, Regeln u",
+          "startOffset": 2300,
+          "endOffset": 2400
+        },
+        {
+          "text": "ruf. Satz 43 mit etwas Text über Lessons, Regeln und Abruf. Satz 44 mit etwas Text über Lessons, Reg",
+          "startOffset": 2350,
+          "endOffset": 2450
+        },
+        {
+          "text": "nd Abruf. Satz 44 mit etwas Text über Lessons, Regeln und Abruf. Satz 45 mit etwas Text über Lessons",
+          "startOffset": 2400,
+          "endOffset": 2500
+        },
+        {
+          "text": "eln und Abruf. Satz 45 mit etwas Text über Lessons, Regeln und Abruf. Satz 46 mit etwas Text über Le",
+          "startOffset": 2450,
+          "endOffset": 2550
+        },
+        {
+          "text": ", Regeln und Abruf. Satz 46 mit etwas Text über Lessons, Regeln und Abruf. Satz 47 mit etwas Text üb",
+          "startOffset": 2500,
+          "endOffset": 2600
+        },
+        {
+          "text": "ssons, Regeln und Abruf. Satz 47 mit etwas Text über Lessons, Regeln und Abruf. Satz 48 mit etwas Te",
+          "startOffset": 2550,
+          "endOffset": 2650
+        },
+        {
+          "text": "er Lessons, Regeln und Abruf. Satz 48 mit etwas Text über Lessons, Regeln und Abruf. Satz 49 mit etw",
+          "startOffset": 2600,
+          "endOffset": 2700
+        },
+        {
+          "text": "xt über Lessons, Regeln und Abruf. Satz 49 mit etwas Text über Lessons, Regeln und Abruf. Satz 50 mi",
+          "startOffset": 2650,
+          "endOffset": 2750
+        },
+        {
+          "text": "as Text über Lessons, Regeln und Abruf. Satz 50 mit etwas Text über Lessons, Regeln und Abruf. Satz",
+          "startOffset": 2700,
+          "endOffset": 2800
+        },
+        {
+          "text": "t etwas Text über Lessons, Regeln und Abruf. Satz 51 mit etwas Text über Lessons, Regeln und Abruf.",
+          "startOffset": 2750,
+          "endOffset": 2850
+        },
+        {
+          "text": "51 mit etwas Text über Lessons, Regeln und Abruf. Satz 52 mit etwas Text über Lessons, Regeln und Ab",
+          "startOffset": 2800,
+          "endOffset": 2900
+        },
+        {
+          "text": "Satz 52 mit etwas Text über Lessons, Regeln und Abruf. Satz 53 mit etwas Text über Lessons, Regeln u",
+          "startOffset": 2850,
+          "endOffset": 2950
+        },
+        {
+          "text": "ruf. Satz 53 mit etwas Text über Lessons, Regeln und Abruf. Satz 54 mit etwas Text über Lessons, Reg",
+          "startOffset": 2900,
+          "endOffset": 3000
+        },
+        {
+          "text": "nd Abruf. Satz 54 mit etwas Text über Lessons, Regeln und Abruf. Satz 55 mit etwas Text über Lessons",
+          "startOffset": 2950,
+          "endOffset": 3050
+        },
+        {
+          "text": "eln und Abruf. Satz 55 mit etwas Text über Lessons, Regeln und Abruf. Satz 56 mit etwas Text über Le",
+          "startOffset": 3000,
+          "endOffset": 3100
+        },
+        {
+          "text": ", Regeln und Abruf. Satz 56 mit etwas Text über Lessons, Regeln und Abruf. Satz 57 mit etwas Text üb",
+          "startOffset": 3050,
+          "endOffset": 3150
+        },
+        {
+          "text": "ssons, Regeln und Abruf. Satz 57 mit etwas Text über Lessons, Regeln und Abruf. Satz 58 mit etwas Te",
+          "startOffset": 3100,
+          "endOffset": 3200
+        },
+        {
+          "text": "er Lessons, Regeln und Abruf. Satz 58 mit etwas Text über Lessons, Regeln und Abruf. Satz 59 mit etw",
+          "startOffset": 3150,
+          "endOffset": 3250
+        },
+        {
+          "text": "xt über Lessons, Regeln und Abruf. Satz 59 mit etwas Text über Lessons, Regeln und Abruf.",
+          "startOffset": 3200,
+          "endOffset": 3289
+        }
+      ]
+    },
+    {
+      "name": "crlf line ends",
+      "args": [
+        "# A\r\nqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\r\n# B\r\nrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+        800,
+        150
+      ],
+      "expected": [
+        {
+          "text": "# A\r\nqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+          "startOffset": 0,
+          "endOffset": 507
+        },
+        {
+          "text": "# B\r\nrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+          "startOffset": 507,
+          "endOffset": 1012
+        }
+      ]
+    },
+    {
+      "name": "heading after a lone carriage return",
+      "args": [
+        "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\r# B\ryyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+        800,
+        150
+      ],
+      "expected": [
+        {
+          "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "startOffset": 0,
+          "endOffset": 501
+        },
+        {
+          "text": "# B\ryyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+          "startOffset": 501,
+          "endOffset": 1005
+        }
+      ]
+    },
+    {
+      "name": "umlauts and no-break space",
+      "args": [
+        "# Überschrift mit Umlauten\näöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß ",
+        800,
+        150
+      ],
+      "expected": [
+        {
+          "text": "# Überschrift mit Umlauten\näöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöü",
+          "startOffset": 0,
+          "endOffset": 800
+        },
+        {
+          "text": "ß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß äöüß",
+          "startOffset": 650,
+          "endOffset": 1276
+        }
+      ]
+    }
+  ]
+}

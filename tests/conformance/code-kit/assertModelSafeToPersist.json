@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "function": "assertModelSafeToPersist",
+  "cases": [
+    {
+      "name": "reindex, different model",
+      "args": [
+        "bge-m3",
+        "qwen3-embedding",
+        "reindex"
+      ],
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "live, different model is blocked",
+      "args": [
+        "bge-m3",
+        "qwen3-embedding",
+        "live"
+      ],
+      "expected": {
+        "allowed": false,
+        "kind": "model-mismatch"
+      }
+    },
+    {
+      "name": "heal, different model is blocked",
+      "args": [
+        "bge-m3",
+        "qwen3-embedding",
+        "heal"
+      ],
+      "expected": {
+        "allowed": false,
+        "kind": "model-mismatch"
+      }
+    },
+    {
+      "name": "disk model unset",
+      "args": [
+        null,
+        "qwen3-embedding",
+        "live"
+      ],
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "disk model whitespace only",
+      "args": [
+        "  ",
+        "qwen3-embedding",
+        "live"
+      ],
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "equal after trim",
+      "args": [
+        "  qwen3-embedding ",
+        "qwen3-embedding",
+        "live"
+      ],
+      "expected": {
+        "allowed": true
+      }
+    }
+  ]
+}

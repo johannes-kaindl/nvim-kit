@@ -1,0 +1,270 @@
+{
+  "schema": 1,
+  "function": "retrieverSearch",
+  "cases": [
+    {
+      "name": "ranked by cosine",
+      "args": [
+        {
+          "schema_version": 1,
+          "embedding_model": "m",
+          "index_dim": 2,
+          "scale": 127,
+          "count": 3,
+          "granularity": "note",
+          "quant": "int8"
+        },
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          127,
+          0,
+          0,
+          127,
+          90,
+          90
+        ],
+        [
+          1,
+          0
+        ],
+        {
+          "k": 3,
+          "minSim": -1,
+          "exclude": []
+        }
+      ],
+      "expected": [
+        {
+          "path": "a",
+          "score": 1
+        },
+        {
+          "path": "c",
+          "score": 0.7071068286895752
+        },
+        {
+          "path": "b",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "name": "minSim filters",
+      "args": [
+        {
+          "schema_version": 1,
+          "embedding_model": "m",
+          "index_dim": 2,
+          "scale": 127,
+          "count": 3,
+          "granularity": "note",
+          "quant": "int8"
+        },
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          127,
+          0,
+          0,
+          127,
+          90,
+          90
+        ],
+        [
+          1,
+          0
+        ],
+        {
+          "k": 3,
+          "minSim": 0.5,
+          "exclude": []
+        }
+      ],
+      "expected": [
+        {
+          "path": "a",
+          "score": 1
+        },
+        {
+          "path": "c",
+          "score": 0.7071068286895752
+        }
+      ]
+    },
+    {
+      "name": "k cuts",
+      "args": [
+        {
+          "schema_version": 1,
+          "embedding_model": "m",
+          "index_dim": 2,
+          "scale": 127,
+          "count": 3,
+          "granularity": "note",
+          "quant": "int8"
+        },
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          127,
+          0,
+          0,
+          127,
+          90,
+          90
+        ],
+        [
+          1,
+          0
+        ],
+        {
+          "k": 1,
+          "minSim": -1,
+          "exclude": []
+        }
+      ],
+      "expected": [
+        {
+          "path": "a",
+          "score": 1
+        }
+      ]
+    },
+    {
+      "name": "exclude by prefix",
+      "args": [
+        {
+          "schema_version": 1,
+          "embedding_model": "m",
+          "index_dim": 2,
+          "scale": 127,
+          "count": 3,
+          "granularity": "note",
+          "quant": "int8"
+        },
+        [
+          "x/a",
+          "y/b",
+          "x/c"
+        ],
+        [
+          127,
+          0,
+          0,
+          127,
+          90,
+          90
+        ],
+        [
+          1,
+          0
+        ],
+        {
+          "k": 3,
+          "minSim": -1,
+          "exclude": [
+            "x/"
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "path": "y/b",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "name": "ties keep row order",
+      "args": [
+        {
+          "schema_version": 1,
+          "embedding_model": "m",
+          "index_dim": 2,
+          "scale": 127,
+          "count": 3,
+          "granularity": "note",
+          "quant": "int8"
+        },
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          127,
+          0,
+          127,
+          0,
+          0,
+          127
+        ],
+        [
+          1,
+          0
+        ],
+        {
+          "k": 3,
+          "minSim": -1,
+          "exclude": []
+        }
+      ],
+      "expected": [
+        {
+          "path": "a",
+          "score": 1
+        },
+        {
+          "path": "b",
+          "score": 1
+        },
+        {
+          "path": "c",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "name": "query shorter than dim",
+      "args": [
+        {
+          "schema_version": 1,
+          "embedding_model": "m",
+          "index_dim": 3,
+          "scale": 127,
+          "count": 1,
+          "granularity": "note",
+          "quant": "int8"
+        },
+        [
+          "a"
+        ],
+        [
+          127,
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        {
+          "k": 3,
+          "minSim": -1,
+          "exclude": []
+        }
+      ],
+      "expected": []
+    }
+  ]
+}

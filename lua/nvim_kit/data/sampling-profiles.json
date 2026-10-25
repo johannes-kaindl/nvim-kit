@@ -5,7 +5,8 @@
     "qwen3.8",
     "qwen3.6",
     "gemma4",
-    "gpt-oss"
+    "gpt-oss",
+    "claude"
   ],
   "modeIds": [
     "agent",
@@ -21,6 +22,7 @@
     "openwebui",
     "ollama",
     "openai",
+    "anthropic",
     "unknown"
   ],
   "thinkingLevels": [
@@ -284,6 +286,25 @@
           "source": "unmeasured, conservative",
           "evidence": "unmeasured"
         }
+      },
+      "byBackend": {
+        "lmstudio": {
+          "canTurnOff": false,
+          "effort": {
+            "off": {
+              "value": "low",
+              "source": "kitcc-w22 2026-10-14, google/gemma-4-e4b on LM Studio (one model size): none ignored, thought in content; low/minimal/medium/high/no field think into reasoning_content",
+              "evidence": "measured"
+            }
+          },
+          "reserve": {
+            "off": {
+              "value": 1024,
+              "source": "thinks at the level of low when off (kitcc-w22 2026-10-14, google/gemma-4-e4b on LM Studio (one model size): none ignored, thought in content; low/minimal/medium/high/no field think into reasoning_content); reserve of low",
+              "evidence": "unmeasured"
+            }
+          }
+        }
       }
     },
     "gpt-oss": {
@@ -344,6 +365,83 @@
         "high": {
           "value": 8192,
           "source": "unmeasured",
+          "evidence": "unmeasured"
+        }
+      }
+    },
+    "claude": {
+      "label": "Claude",
+      "thinking": {},
+      "noThinking": {},
+      "effort": {
+        "off": {
+          "value": "low",
+          "source": "Anthropic docs (claude-api skill 2026-10-06): thinking {type: disabled} returns 400 on Opus 5.5 and Sonnet 5.5, thinking is always on on Fable 5/5.1, so off is the lowest effort",
+          "evidence": "unmeasured"
+        },
+        "low": {
+          "value": "low",
+          "source": "Anthropic docs (claude-api skill 2026-10-06): output_config.effort low/medium/high/xhigh/max; not called by us",
+          "evidence": "unmeasured"
+        },
+        "medium": {
+          "value": "medium",
+          "source": "Anthropic docs (claude-api skill 2026-10-06): output_config.effort low/medium/high/xhigh/max; not called by us",
+          "evidence": "unmeasured"
+        },
+        "high": {
+          "value": "high",
+          "source": "Anthropic docs (claude-api skill 2026-10-06): output_config.effort low/medium/high/xhigh/max; not called by us",
+          "evidence": "unmeasured"
+        }
+      },
+      "canTurnOff": false,
+      "reserve": {
+        "off": {
+          "value": 2048,
+          "source": "Anthropic docs (claude-api skill 2026-10-06): max_tokens includes the adaptive thinking, default ~16000; conservative, unmeasured",
+          "evidence": "unmeasured"
+        },
+        "low": {
+          "value": 2048,
+          "source": "Anthropic docs (claude-api skill 2026-10-06): max_tokens includes the adaptive thinking, default ~16000; conservative, unmeasured",
+          "evidence": "unmeasured"
+        },
+        "medium": {
+          "value": 4096,
+          "source": "Anthropic docs (claude-api skill 2026-10-06): max_tokens includes the adaptive thinking, default ~16000; conservative, unmeasured",
+          "evidence": "unmeasured"
+        },
+        "high": {
+          "value": 16000,
+          "source": "Anthropic docs (claude-api skill 2026-10-06): max_tokens includes the adaptive thinking, default ~16000; conservative, unmeasured",
+          "evidence": "unmeasured"
+        }
+      },
+      "unsupportedFields": {
+        "temperature": {
+          "value": "HTTP 400 on Claude 4.7 and newer",
+          "source": "Anthropic docs (claude-api skill 2026-10-06; OpenAI compatibility page 2026-10-16): temperature, top_p, top_k removed on Claude Fable 5/5.1, Opus 5.5/5/4.8/4.7, non-default values refused on Sonnet 5.5 and Haiku 5.5; compatibility layer: temperature below 1 and top_p other than 0.99 return 400 on Claude 4.7 and newer",
+          "evidence": "unmeasured"
+        },
+        "top_p": {
+          "value": "HTTP 400 on Claude 4.7 and newer",
+          "source": "Anthropic docs (claude-api skill 2026-10-06; OpenAI compatibility page 2026-10-16): temperature, top_p, top_k removed on Claude Fable 5/5.1, Opus 5.5/5/4.8/4.7, non-default values refused on Sonnet 5.5 and Haiku 5.5; compatibility layer: temperature below 1 and top_p other than 0.99 return 400 on Claude 4.7 and newer",
+          "evidence": "unmeasured"
+        },
+        "top_k": {
+          "value": "HTTP 400 on Claude 4.7 and newer",
+          "source": "Anthropic docs (claude-api skill 2026-10-06; OpenAI compatibility page 2026-10-16): temperature, top_p, top_k removed on Claude Fable 5/5.1, Opus 5.5/5/4.8/4.7, non-default values refused on Sonnet 5.5 and Haiku 5.5; compatibility layer: temperature below 1 and top_p other than 0.99 return 400 on Claude 4.7 and newer",
+          "evidence": "unmeasured"
+        },
+        "min_p": {
+          "value": "not a Claude parameter",
+          "source": "Anthropic docs (claude-api skill 2026-10-06; OpenAI compatibility page 2026-10-16): temperature, top_p, top_k removed on Claude Fable 5/5.1, Opus 5.5/5/4.8/4.7, non-default values refused on Sonnet 5.5 and Haiku 5.5; compatibility layer: temperature below 1 and top_p other than 0.99 return 400 on Claude 4.7 and newer",
+          "evidence": "unmeasured"
+        },
+        "presence_penalty": {
+          "value": "not a Claude parameter (ignored by the compatibility layer)",
+          "source": "Anthropic docs (claude-api skill 2026-10-06; OpenAI compatibility page 2026-10-16): temperature, top_p, top_k removed on Claude Fable 5/5.1, Opus 5.5/5/4.8/4.7, non-default values refused on Sonnet 5.5 and Haiku 5.5; compatibility layer: temperature below 1 and top_p other than 0.99 return 400 on Claude 4.7 and newer",
           "evidence": "unmeasured"
         }
       }
@@ -434,6 +532,27 @@
       },
       "source": "llm-configs openwebui-api.md § Welche Parameter ankommen (Open WebUI 0.11.3, 2026-09-17)"
     },
+    "anthropic": {
+      "label": "Anthropic",
+      "fields": {
+        "temperature": "unsupported",
+        "top_p": "unsupported",
+        "top_k": "unsupported",
+        "min_p": "unsupported",
+        "presence_penalty": "unsupported",
+        "reasoning_effort": "accepted",
+        "max_tokens": "accepted"
+      },
+      "source": "Anthropic docs (claude-api skill 2026-10-06): no sampling fields (400 on Claude 4.7 and newer), depth through output_config.effort, max_tokens required and includes the thinking; not called by us",
+      "effortParam": "effort",
+      "effortValues": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
     "ollama": {
       "label": "Ollama",
       "fields": {
@@ -494,6 +613,36 @@
       "source": "gpt-oss",
       "flags": "i",
       "family": "gpt-oss"
+    },
+    {
+      "source": "claude-fable",
+      "flags": "i",
+      "family": "claude"
+    },
+    {
+      "source": "claude-mythos",
+      "flags": "i",
+      "family": "claude"
+    },
+    {
+      "source": "claude-opus-5",
+      "flags": "i",
+      "family": "claude"
+    },
+    {
+      "source": "claude-opus-4-[78]",
+      "flags": "i",
+      "family": "claude"
+    },
+    {
+      "source": "claude-sonnet-5",
+      "flags": "i",
+      "family": "claude"
+    },
+    {
+      "source": "claude-haiku-5",
+      "flags": "i",
+      "family": "claude"
     }
   ],
   "genericEffort": {

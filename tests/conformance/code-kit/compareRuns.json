@@ -1,0 +1,441 @@
+{
+  "schema": 1,
+  "function": "compareRuns",
+  "cases": [
+    {
+      "name": "healed",
+      "args": [
+        [
+          {
+            "path": "a.md",
+            "rank": 5,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          }
+        ],
+        [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          }
+        ]
+      ],
+      "expected": {
+        "shared": 1,
+        "healed": [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          }
+        ],
+        "worsened": [],
+        "unchanged": 0,
+        "missing": []
+      }
+    },
+    {
+      "name": "worsened",
+      "args": [
+        [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          }
+        ],
+        [
+          {
+            "path": "a.md",
+            "rank": 3,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          }
+        ]
+      ],
+      "expected": {
+        "shared": 1,
+        "healed": [],
+        "worsened": [
+          {
+            "path": "a.md",
+            "rank": 3,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          }
+        ],
+        "unchanged": 0,
+        "missing": []
+      }
+    },
+    {
+      "name": "unchanged, both hit",
+      "args": [
+        [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          }
+        ],
+        [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          }
+        ]
+      ],
+      "expected": {
+        "shared": 1,
+        "healed": [],
+        "worsened": [],
+        "unchanged": 1,
+        "missing": []
+      }
+    },
+    {
+      "name": "unchanged, both miss",
+      "args": [
+        [
+          {
+            "path": "a.md",
+            "rank": 2,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          }
+        ],
+        [
+          {
+            "path": "a.md",
+            "rank": 7,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          }
+        ]
+      ],
+      "expected": {
+        "shared": 1,
+        "healed": [],
+        "worsened": [],
+        "unchanged": 1,
+        "missing": []
+      }
+    },
+    {
+      "name": "missing from the second run",
+      "args": [
+        [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          },
+          {
+            "path": "weg.md",
+            "rank": 4,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          }
+        ],
+        [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          }
+        ]
+      ],
+      "expected": {
+        "shared": 1,
+        "healed": [],
+        "worsened": [],
+        "unchanged": 1,
+        "missing": [
+          "weg.md"
+        ]
+      }
+    },
+    {
+      "name": "no shared note",
+      "args": [
+        [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          }
+        ],
+        [
+          {
+            "path": "b.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "b.md",
+            "mtime": 0
+          }
+        ]
+      ],
+      "expected": {
+        "shared": 0,
+        "healed": [],
+        "worsened": [],
+        "unchanged": 0,
+        "missing": [
+          "a.md"
+        ]
+      }
+    },
+    {
+      "name": "empty previous run",
+      "args": [
+        [],
+        [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          }
+        ]
+      ],
+      "expected": {
+        "shared": 0,
+        "healed": [],
+        "worsened": [],
+        "unchanged": 0,
+        "missing": []
+      }
+    },
+    {
+      "name": "rank -1 (not found): previous -1, next 0 is healed",
+      "args": [
+        [
+          {
+            "path": "a.md",
+            "rank": -1,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          }
+        ],
+        [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          }
+        ]
+      ],
+      "expected": {
+        "shared": 1,
+        "healed": [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          }
+        ],
+        "worsened": [],
+        "unchanged": 0,
+        "missing": []
+      }
+    },
+    {
+      "name": "rank -1 (not found): previous 0, next -1 is worsened",
+      "args": [
+        [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          }
+        ],
+        [
+          {
+            "path": "a.md",
+            "rank": -1,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          }
+        ]
+      ],
+      "expected": {
+        "shared": 1,
+        "healed": [],
+        "worsened": [
+          {
+            "path": "a.md",
+            "rank": -1,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          }
+        ],
+        "unchanged": 0,
+        "missing": []
+      }
+    },
+    {
+      "name": "mixed",
+      "args": [
+        [
+          {
+            "path": "a.md",
+            "rank": 5,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          },
+          {
+            "path": "b.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "b.md",
+            "mtime": 0
+          },
+          {
+            "path": "c.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "c.md",
+            "mtime": 0
+          },
+          {
+            "path": "d.md",
+            "rank": 4,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          },
+          {
+            "path": "e.md",
+            "rank": 1,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          }
+        ],
+        [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          },
+          {
+            "path": "b.md",
+            "rank": 2,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          },
+          {
+            "path": "c.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "c.md",
+            "mtime": 0
+          },
+          {
+            "path": "d.md",
+            "rank": 9,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          }
+        ]
+      ],
+      "expected": {
+        "shared": 4,
+        "healed": [
+          {
+            "path": "a.md",
+            "rank": 0,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "a.md",
+            "mtime": 0
+          }
+        ],
+        "worsened": [
+          {
+            "path": "b.md",
+            "rank": 2,
+            "score": 0.9,
+            "topScore": 0.9,
+            "top": "andere.md",
+            "mtime": 0
+          }
+        ],
+        "unchanged": 2,
+        "missing": [
+          "e.md"
+        ]
+      }
+    }
+  ]
+}
