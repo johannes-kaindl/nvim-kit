@@ -43,11 +43,12 @@ T.case('endpoints: the default is Ollama, then LM Studio; URLs are normalized', 
 end)
 
 T.case('normalize_url passes every code-kit normalizeEndpoint vector', function()
-  local v =
-    C.load_dir(vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h') .. '/conformance/code-kit')
+  local here = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h')
+  local v = C.load_dir(here .. '/conformance/code-kit')
+  local adapters = dofile(here .. '/adapters/llm.lua')
   T.ok(v.normalizeEndpoint, 'no vector file for normalizeEndpoint')
   T.eq(#v.normalizeEndpoint.cases, 7)
-  T.eq(C.run(v.normalizeEndpoint, L.normalize_url), {})
+  T.eq(C.run(v.normalizeEndpoint, adapters.normalizeEndpoint), {})
   -- counter-check: a normalizer that keeps the trailing /v1 fails the vectors
   local failures = C.run(v.normalizeEndpoint, function(url)
     return (vim.trim(url):gsub('/+$', ''))

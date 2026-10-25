@@ -6,7 +6,7 @@ Source library for Neovim plugins — vendored into each plugin, never installed
 
 ## What it is
 
-A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, time-zone-free calendar dates, a JSON state store two editors can share, view buffers, a panel above line 1, a buffer-bound winbar, keystroke tracking, a buffer in plain Neovim, small text pieces, a blocking wait for one asynchronous answer, health-check building blocks, searching a text with ripgrep and writing byte spans back in one undo step, and the pieces for talking to a language model: request profiles per model family, an OpenAI-compatible client over `curl`, a reader for JSON in a model's answer, and an HTTP server for tests. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
+A small set of Lua modules that the Neovim plugins of this workspace share: a test runner for headless Neovim, a conformance runner that checks a port of rules against reference vectors, a schema-checked JSON loader, time-zone-free calendar dates, a JSON state store two editors can share, view buffers, a panel above line 1, a buffer-bound winbar, keystroke tracking, a buffer in plain Neovim, small text pieces, a blocking wait for one asynchronous answer, health-check building blocks, searching a text with ripgrep and writing byte spans back in one undo step, and the pieces for talking to a language model: request profiles per model family, an OpenAI-compatible client over `curl` (chat and embeddings), a reader for JSON in a model's answer, and an HTTP server for tests. Since 0.13.0 also the core of a note-retrieval index: a Markdown chunker, vector maths with a cosine rank, the VRIX container file, the guards that stop an index write from losing data, a live indexer, a lock file and the self-find probe. Under the rule "Bibliothek ab Eins" (see `../AGENTS.md` in the `nvim-plugins` root), anything reusable a plugin needs lands here from its first use.
 
 ## How to consume it
 
@@ -50,6 +50,8 @@ assert(#report.failures == 0, vim.inspect(report.failures))
 
 A vector without an implementation counts as a failure; a vector file without cases, with a case missing `expected`, or defining the same function as another file is refused. Top-level `null` arguments arrive as `nil` at their position; `false` stays `false`.
 
+Since 0.13.0 `run` accepts `opts.tolerance` and `test.deep_equal(a, b, tol)` takes a tolerance, so float results of a port compare with a stated margin while everything else stays exact.
+
 **`nvim_kit.data`** — loads a JSON data file only if it declares the expected schema version.
 
 ```lua
@@ -83,6 +85,8 @@ end)
 ```
 
 `update` re-reads the file right before it writes, so an edit another Neovim saved in between is kept; the write goes to a temp file and is renamed over the old one. `null` and `{}` survive a round trip. A file without valid JSON is moved to `<path>.broken-<UTC time>` and reported in `info.broken` — never silently dropped.
+
+`write_bytes(path, bytes)` (0.13.0) writes bytes to a path atomically for binary files: parent directories are created, the bytes go to a temp file next to the path, are flushed to disk (`fsync`) and one rename puts them over the path; it raises on every failure and leaves no temp file behind.
 
 **`nvim_kit.scratch`** — a named view buffer with buffer-local keys.
 
@@ -161,6 +165,8 @@ It is set window-locally wherever the buffer is shown; another buffer in the sam
 
 `language_name(lang)` gives the English name of the language in a locale or language code, for a model prompt: `language_name('de_DE.UTF-8')` → `'German'`, `'pt_BR'` → `'Portuguese'`. A code is two letters, alone or followed by `_`, `.`, `-` or `@` and anything, in either case; 20 are known (cs da de en es fi fr it ja ko nb nl no pl pt ru sv tr uk zh). `lang` nil reads `vim.v.lang`. `'C'`, `'POSIX'`, an empty string and every other code give `'English'`. It raises when `lang` is neither nil nor a string. Choosing between an option and `v:lang` stays with the caller.
 
+Since 0.13.0 `text` also holds the helpers the chunker is built on: `utf16_len(s)` and `utf16_sub(s, i, j)` count and cut in UTF-16 code units like JavaScript, `char_at(s, i)` returns the code point and byte length of the character at byte index `i`, `is_js_space(cp)` and `js_trim(s)` use JavaScript's whitespace set (not Lua's `%s`), and `byte_less(a, b)` compares strings by bytes, never by the locale (it equals JavaScript's order for ASCII).
+
 **`nvim_kit.wait`** — `local value, answered = require('nvim_kit.wait').result(start, timeout_ms)` calls `start(cb)` and blocks with `vim.wait` until `cb` has been called or `timeout_ms` has passed. It returns the value given to `cb`, `true` and whatever `start` returned (a request handle, to `cancel()` after a timeout), or `nil, false, handle` on timeout; the second result tells an answer of `nil` (`nil, true`) from no answer. Only the first argument of `cb` is kept (`cb(nil, err)` gives `nil, true`), and a later call of `cb` is ignored. Events and callbacks run while it waits; Ctrl-C ends the wait early and looks like a timeout. Do not call it from a fast callback (`vim.uv` handlers, `vim.system` callbacks): it raises before `start` runs. It raises when `start` is not a function or `timeout_ms` is not a number ≥ 0; an error in `start` propagates.
 
 ```lua
@@ -204,6 +210,8 @@ r.explain -- per field: value, state ('sent-effective', 'not-sent-unsupported', 
 
 The tables are code-kit's export, vendored into `lua/nvim_kit/data/` and never edited here.
 
+Since 0.13.0 the profiles follow code-kit 0.28.0: Claude and Anthropic have profiles, gemma 4 on LM Studio turns `off` into `low` (`none` is ignored there), and an unknown backend or family no longer throws: `resolve` falls back to generic values and reports it as `unrecognised` (the ids as passed) and as `fallback` on every explain row. `family_thinking(family, backend)` returns the thinking table of a family on one backend.
+
 **`nvim_kit.llm`** — talks to an OpenAI-compatible server (Ollama, LM Studio, Open WebUI, a hosted API) over `curl`. Setting up a local server: [uplink.jkaindl.de/llm-setup](https://uplink.jkaindl.de/llm-setup).
 
 ```lua
@@ -224,6 +232,8 @@ end)
 ```
 
 An endpoint is `{ url, name?, model?, backend?, api_key_env? or api_key_cmd? }`; the default list is Ollama on `:11434`, then LM Studio on `:1234`. The first endpoint that can be reached wins; one that answers with an error (a wrong key, a refusal) or whose key is missing ends the search with that error, so the text never falls back to the next server. A key comes from an environment variable or a command (`{ 'pass', 'show', 'openai' }`), is read once per session, never appears in curl's argument list or in a message. The backend is detected by a reply only that backend gives, unless the endpoint names it. Errors are values with a `detail`: `unreachable`, `timeout`, `cancelled`, `key-missing`, `http` (the server refused; `status` and its message), `bad-response`, `no-model`, `empty`, `truncated`. Callbacks run on the main loop. Needs `curl` on `PATH`.
+
+Since 0.13.0 `llm.embed(req, cb)` asks `/v1/embeddings` for the vectors of a list of texts in groups of `batch_size`, strictly one request after the other, and answers `{ ok = true, vectors }` or `{ ok = false, error, detail }`; a group that does not return exactly one finite vector per text is `bad-response`, so no vector is ever matched to the wrong text and a failed call delivers no partial result. `req.endpoint`, `model`, `input`, `batch_size` and `timeout_ms` as for `chat`; the returned handle has `cancel()`. A `backend = 'anthropic'` is refused with an error that says to use `'openai'`: `llm` talks to `/v1/chat/completions` only.
 
 **`nvim_kit.llm_json`** — reads a model's answer: `strip_think(text, opts)` removes `<think>` blocks, `first_json_object(text)` returns the first JSON object in it (fenced blocks first), strictly as `JSON.parse` would read it — `vim.json.decode` alone also takes `NaN`, hex numbers and leading zeros. A port of code-kit's `stripThinkBlocks` and `firstJsonObject`; `llm` exposes both too.
 
@@ -267,6 +277,22 @@ local ok, n = edits.apply(buf, first, lines, { { start = 9, stop = 19, text = '2
 ```
 
 `apply` writes back to front, so earlier offsets stay valid, all in one undo step — it closes the buffer's open undo block first, since Vim closes it on a keystroke only in the current buffer. Insertions at one offset keep their order in the list. An edit that reaches into the range's final "\n" ends at the end of the last line, so the line after the range is never joined in. Invalid arguments raise before anything is read or written: `first` must be a whole number ≥ 0, `lines` a list of strings, each edit whole numbers `0 <= start <= stop` with a string `text`, and a non-empty list of edits needs non-empty `lines`; overlapping edits raise too. `locate` gives each edit its `row`, `col`, `end_row`, `end_col` (0-based, bytes).
+
+**`nvim_kit.chunker`** (0.13.0) — splits Markdown into overlapping chunks for embedding, a port of code-kit's `chunker.ts`. `strip_frontmatter(s)` drops a leading `---` block; `chunk_markdown(s, max_units, overlap)` returns `{ { text, start_offset, end_offset } }` (defaults 800 and 150), cutting preferably at a heading and after a hard cut repeating `overlap` units. Lengths and offsets count UTF-16 code units like JavaScript's `string.length`, so the chunks equal the TypeScript ones for any text (checked against code-kit's vectors); a cut inside a surrogate pair never splits a UTF-8 character, and invalid UTF-8 is replaced by U+FFFD first.
+
+**`nvim_kit.vectors`** (0.13.0) — unit vectors for notes and queries, their int8 form on disk and the cosine rank over a matrix of them, a port of code-kit's `embed-vector.ts` and `vector-index.ts`. `to_index_vector(vecs, dim)` truncates the embeddings of a note's chunks to `dim`, averages and L2-normalises them (one function for notes and queries), `quantize_int8(vec, scale)` gives the int8 row (default scale 127), `parse(manifest, paths, matrix)` reads a container's matrix into an index, `search(index, query, opts)` and `related(index, path, opts)` return `{ { path, score } }` best first (`opts = { k, min_sim, exclude }`), `values(index)` lists the matrix as a flat list (for tests and checks), and `fround(x)` rounds to float32. Every float32 of the source is rounded, so scores agree to the last bit. The matrix is a LuaJIT `float[]` where `ffi` exists and a Lua list where it does not; both give the same numbers (`parse` of a 12 547 × 256 index measured 4.5 ms with `ffi`, 139 ms without, on Neovim 0.12.6; a `related` call took about 6 ms both ways).
+
+**`nvim_kit.vrix`** (0.13.0) — the VRIX container, the one `index.bin` file of a note index, byte for byte what vault-rag writes: `"VRIX"`, header length, a JSON header (manifest, paths, optional stamps), the int8 matrix and a CRC32. `encode(manifest, paths, matrix, stamps)` and `decode(bytes)` (`nil, reason` with `reason` one of `truncated`, `magic`, `crc`, `header`, `schema`), `crc32(bytes)`, and the fields `SCHEMA_VERSION` and `HEADER_KEYS` (the frozen key order; `vim.json.decode` loses it).
+
+**`nvim_kit.index_guard`** (0.13.0) — the decisions where an index write could lose data, as pure functions: `assert_safe_to_persist`, `is_suspicious_shrink`, `embedding_model_matches_index`, `assert_model_safe_to_persist` and `assert_dim_safe_to_persist` answer `{ allowed = true }` or `{ allowed = false, kind }` with `kind` one of `shrink`, `model-mismatch`, `dim-mismatch`. `diff_index_vs_vault`, `find_dead_vector_paths` and `find_stale_vector_paths` compare an index with the vault; `UNKNOWN_STAMP` marks a row nobody could stamp. The caller words its notice from `kind`.
+
+**`nvim_kit.index_delta`** (0.13.0) — the numbers behind "embedded / total notes": `compute(total, missing, empty)` returns `{ embedded, total, emptyCount }` and `split_heal_targets(missing, empty)` splits the healing targets; empty notes (frontmatter only) have no chunks, so they count neither as missing nor in the target.
+
+**`nvim_kit.probe`** (0.13.0) — the core of the self-find probe: `rank(path, seed)` and `order(files, seed)` pick a stable, scattered sample of notes, `query(s, opts)` makes the query for one note (its first 300 UTF-16 units, or nil when the note is no candidate), and `compare_runs(previous, next)` compares two runs over the same notes. Reading the notes and asking the index stay with the caller. `SEED` and `N` are the defaults.
+
+**`nvim_kit.lock`** — a lock file so that two Neovim instances never write the same file at once: `acquire(path, opts)` returns a handle with `path` and an idempotent `release()`, or `nil, { error = 'locked', detail }`. The exclusive create is the arbiter; a lock older than `STALE_AFTER_S` (1800 s, `opts.stale_after_s`) belongs to a dead process and is taken over. `release()` deletes the file only while it is still the handle's own, and the handle also releases on `VimLeavePre`. Any open error other than "exists" raises (0.13.0).
+
+**`nvim_kit.live_indexer`** (0.13.0) — one vector per note in memory, kept current note by note and written as one VRIX container behind the guards of `index_guard`; a behavioural port of code-kit's `live-indexer`, so it writes the bytes vault-rag writes. `M.new(storage, dir, embedder, model, opts)` takes the file store (`M.fs_storage()` is one over the file system), the asynchronous embedder `embedder(texts, cb)`, the model name and `opts = { dim, now, warn }`. The indexer has `init`, `update(path, content, stamp, cb)`, `remove`, `rename`, `note_count`, `is_ready`, `build_index`, `persist(reason, stamp_model)`, `check_model_against_disk`, `reindex_all(paths, read, on_progress, stamp_for, cb)`, `cancel_reindex` and `heal_missing(missing, read, on_progress, stamp_for, cb)`. A full reindex embeds in groups of up to `EMBED_BATCH` chunks, writes an intermediate state every `CHECKPOINT_EVERY` notes, can be cancelled and never blocks Neovim between two embedder calls; the old index stays searchable until the end of the run, and what the live handlers change meanwhile wins.
 
 ## Development
 

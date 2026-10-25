@@ -4,6 +4,28 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Added
+- `nvim_kit.chunker` — Markdown into overlapping chunks, lengths and offsets in UTF-16 code units like JavaScript (`strip_frontmatter`, `chunk_markdown`); a port of code-kit `chunker.ts`.
+- `nvim_kit.vectors` — unit vectors, int8 quantisation and the cosine rank over an index matrix (`to_index_vector`, `quantize_int8`, `parse`, `search`, `related`, `values`, `fround`); a `float[]` matrix with `ffi`, a list without, same numbers.
+- `nvim_kit.vrix` — the VRIX container file `index.bin`, byte for byte what vault-rag writes (`encode`, `decode`, `crc32`, `SCHEMA_VERSION`, `HEADER_KEYS`).
+- `nvim_kit.index_guard` — pure guards against data loss on an index write, and index-versus-vault comparisons.
+- `nvim_kit.index_delta` — `compute` and `split_heal_targets`.
+- `nvim_kit.probe` — the core of the self-find probe (`rank`, `order`, `query`, `compare_runs`).
+- `nvim_kit.live_indexer` — one vector per note in memory, updated per note, rebuilt (`reindex_all`, with checkpoints and cancel) or healed (`heal_missing`), written as one VRIX container behind the guards.
+- `nvim_kit.lock` — `acquire(path, opts)`, a lock file with stale takeover.
+- `llm.embed(req, cb)` — `/v1/embeddings` in groups, strictly one request after the other; a group without exactly one finite vector per text is `bad-response`.
+- `store.write_bytes(path, bytes)` — atomic binary write with `fsync`.
+- `text.utf16_len`, `text.utf16_sub`, `text.char_at`, `text.is_js_space`, `text.js_trim`, `text.byte_less`.
+- `conformance.run` and `test.deep_equal` accept a numeric tolerance for float results.
+- `sampling.family_thinking(family, backend)`; `sampling.resolve` reports `unrecognised` and, on every explain row, `fallback` when it falls back.
+
+### Changed
+- `sampling` follows code-kit 0.28.0: Claude and Anthropic have profiles, gemma 4 on LM Studio turns reasoning `off` into `low`, and unknown backend or family ids no longer throw. Vendor pin code-kit 0.31.1.
+
+### Fixed
+- `llm` rejects `backend = 'anthropic'` (it talks to `/v1/chat/completions` only; use `'openai'`).
+- `lock.acquire` raises on an open error other than `EEXIST` instead of reporting `locked`.
+
 ## [0.12.0] — 2026-10-14
 
 ### Added

@@ -4,27 +4,8 @@ local J = require('nvim_kit.llm_json')
 local here = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h')
 local VECTORS = here .. '/conformance/code-kit'
 
-local function think_opts(o)
-  if o == false then
-    return false
-  end
-  return o and { drop_stray_close = o.dropStrayClose, drop_unclosed = o.dropUnclosed } or nil
-end
-
-local IMPLS = {
-  stripThinkBlocks = function(text, o)
-    return J.strip_think(text, think_opts(o))
-  end,
-  firstJsonObject = function(raw, o)
-    o = o or {}
-    return J.first_json_object(raw, {
-      think = think_opts(o.think),
-      fence = o.fence,
-      fence_tag = o.fenceTag,
-      repair = o.repair,
-    })
-  end,
-}
+-- The vectors use code-kit's names and shapes; the adapters are the only translation.
+local IMPLS = dofile(here .. '/adapters/llm_json.lua')
 
 local function run(name, impl)
   local v = C.load_dir(VECTORS)[name]
@@ -70,7 +51,7 @@ T.case('counter-check: dropping only the first stray close fails stripThinkBlock
       end
       return J.strip_think(text, { drop_unclosed = o.dropUnclosed })
     end
-    return J.strip_think(text, think_opts(o))
+    return IMPLS.stripThinkBlocks(text, o)
   end)
   T.ok(#failures > 0)
 end)

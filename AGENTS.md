@@ -31,6 +31,16 @@
 | `lua/nvim_kit/rg.lua` | searching a text with ripgrep over stdin: hits with byte offsets and rg's replaced text (`search`, `needs_multiline`, `check`, `version`, `reset`, `MIN_VERSION`, `TIMEOUT_MS`; ripgrep ≥ 15.0.0) | 0.9.0 |
 | `lua/nvim_kit/edits.lua` | byte offsets into a range of lines as positions, and replacements written back to front in one undo step (`text`, `line_starts`, `position`, `locate`, `apply`) | 0.9.0 |
 | `lua/nvim_kit/wait.lua` | blocking on an asynchronous answer with `vim.wait` (`result`: value and an answered flag, `nil, false` on timeout) | 0.12.0 |
+| `lua/nvim_kit/chunker.lua` | Markdown into overlapping chunks, UTF-16 units like JavaScript, a port of code-kit `chunker.ts` (`strip_frontmatter`, `chunk_markdown`) | 0.13.0 |
+| `lua/nvim_kit/vectors.lua` | unit vectors, int8 quantisation and the cosine rank over an index matrix (`to_index_vector`, `quantize_int8`, `parse`, `search`, `related`, `values`, `fround`); `float[]` with `ffi`, a list without | 0.13.0 |
+| `lua/nvim_kit/vrix.lua` | the VRIX container `index.bin`, byte for byte what vault-rag writes (`encode`, `decode`, `crc32`, `SCHEMA_VERSION`, `HEADER_KEYS`) | 0.13.0 |
+| `lua/nvim_kit/index_guard.lua` | pure guards against data loss on an index write (`assert_safe_to_persist`, `is_suspicious_shrink`, `embedding_model_matches_index`, `assert_model_safe_to_persist`, `assert_dim_safe_to_persist`, `diff_index_vs_vault`, `find_dead_vector_paths`, `find_stale_vector_paths`) | 0.13.0 |
+| `lua/nvim_kit/index_delta.lua` | "embedded / total notes" and the split of healing targets (`compute`, `split_heal_targets`) | 0.13.0 |
+| `lua/nvim_kit/probe.lua` | core of the self-find probe: sample, query, compare two runs (`rank`, `order`, `query`, `compare_runs`, `SEED`, `N`) | 0.13.0 |
+| `lua/nvim_kit/live_indexer.lua` | the live note index: `new`, `fs_storage`; methods `init`, `update`, `remove`, `rename`, `note_count`, `is_ready`, `persist`, `reindex_all`, `cancel_reindex`, `heal_missing`; a behavioural port of code-kit `live-indexer` | 0.13.0 |
+| `lua/nvim_kit/lock.lua` | lock file with stale takeover (`acquire`, `STALE_AFTER_S`); a port of code-kit's retrieval-store lock | 0.13.0 |
+
+Additions in 0.13.0: `llm.embed` (`/v1/embeddings` in groups), `store.write_bytes` (atomic, `fsync`), `text.utf16_len`, `utf16_sub`, `char_at`, `is_js_space`, `js_trim`, `byte_less`, a tolerance for `conformance.run` and `test.deep_equal`, `sampling.family_thinking` and the new `sampling.resolve` fallback (`unrecognised`, `fallback`); `llm` rejects `backend = 'anthropic'` (use `'openai'`).
 
 All of them are `0.x`: their interface may still change when the second real user arrives. That user may adapt or improve them through the gate; SemVer and the consumers' pins absorb the change.
 
@@ -71,6 +81,7 @@ Tools: `brew install stylua selene`. Neovim ≥ 0.10.
 - **Keys a plugin replays with `nvim_feedkeys(…, 't')` arrive as typed in `vim.on_key`** (which-key: `gg` counts 4) — indistinguishable from the person's keys.
 - **which-key maps a buffer's triggers from a 0 ms timer, not on `BufEnter`.** A check of `isolate.apply` runs in the same tick as the buffer's `BufEnter` (`scratch.open`, then `apply`), the way a plugin calls it; a probe that waits first passes against a broken fix (0.7.1, measured 2026-10-14 with which-key 3aab214).
 - **`debug.getinfo(2)` sees past a tail call.** In LuaJIT `return f()` drops the caller's frame, so a helper that looks one level up resolves against the caller's caller (measured 2026-10-14). That is why `data.beside` takes `debug.getinfo(1, 'S').source` from its caller.
+- **LuaJIT compares strings bytewise even after `os.setlocale('de_DE.UTF-8', 'collate')`** (measured 2026-10-25 on Neovim 0.12.6: `'Z' < 'a'` stays true and `table.sort` gives `Z a b ä`). So `text.byte_less` guards PUC-Lua builds only (where `<` may use `strcoll`), and a locale counter-check cannot turn red on LuaJIT; use a comparator mutation that really differs from byte order (e.g. `a:lower() < b:lower()`).
 - **`vim.json.decode` is more lenient than JSON:** it accepts `NaN`, `Infinity`, `nan`, `inf`, `0x10`, `01`, `+1`, `1.` and raw control characters in strings; it refuses a lone surrogate escape and nesting deeper than 1000, which `JSON.parse` accepts (measured on 0.12.6). Check with `llm_json.is_strict_json` first where strictness matters.
 - **Lua `%s` is ASCII whitespace only;** JS `\s` also matches U+00A0, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F, U+3000 and U+FEFF (finding M9).
 - **LM Studio answers unknown paths with HTTP 200 and `{"error": …}`** (0.4.x, `/api/version`, `/api/config`). Judge a probe by its body, never by the status alone.

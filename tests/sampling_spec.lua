@@ -4,32 +4,8 @@ local S = require('nvim_kit.sampling')
 local here = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h')
 local VECTORS = here .. '/conformance/code-kit'
 
--- The vectors use code-kit's names and shapes; these adapters are the only translation.
-local SAMPLING = {
-  familyFromName = function(model)
-    return S.family_from_name(model)
-  end,
-  thinkingFor = function(request, mode)
-    return S.thinking_for(request, mode)
-  end,
-  validateOverride = function(field, raw)
-    return S.validate_override(field, raw)
-  end,
-  sanitizeRequestSettings = function(raw)
-    local settings, dropped = S.sanitize(raw)
-    return { settings = settings, dropped = dropped }
-  end,
-  resolveRequestParams = function(input)
-    return S.resolve({
-      family = input.family,
-      mode = input.mode,
-      backend = input.backend,
-      thinking = input.thinking,
-      max_tokens = input.maxTokens,
-      overrides = input.overrides,
-    })
-  end,
-}
+-- The vectors use code-kit's names and shapes; the adapters are the only translation.
+local SAMPLING = dofile(here .. '/adapters/sampling.lua')
 
 local function only(names)
   local vectors = C.load_dir(VECTORS)
