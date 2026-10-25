@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.13.0] — 2026-10-25
+
 ### Added
 - `nvim_kit.chunker` — Markdown into overlapping chunks, lengths and offsets in UTF-16 code units like JavaScript (`strip_frontmatter`, `chunk_markdown`); a port of code-kit `chunker.ts`.
 - `nvim_kit.vectors` — unit vectors, int8 quantisation and the cosine rank over an index matrix (`to_index_vector`, `quantize_int8`, `parse`, `search`, `related`, `values`, `fround`); a `float[]` matrix with `ffi`, a list without, same numbers.
@@ -25,6 +27,10 @@ All notable changes to this project are documented here. The format is based on 
 ### Fixed
 - `llm` rejects `backend = 'anthropic'` (it talks to `/v1/chat/completions` only; use `'openai'`).
 - `lock.acquire` raises on an open error other than `EEXIST` instead of reporting `locked`.
+
+### Known limits
+- `live_indexer`, carried over from code-kit `live-indexer.ts` 0.31.1 on purpose (to be fixed there and ported again): `cancel_reindex` loses a note that came in through `update` or `rename` during the run, and a cancel while the index on disk belongs to another embedding model writes the mix anyway, so one container can hold vectors of two models.
+- `live_indexer`, deviations of the port: an embedder answer that `vectors.to_index_vector` rejects ends the run with `cb(nil, err)` (the source counts a row of length 0; `llm.embed` checks its answer); paths are ordered by code point, JavaScript orders by UTF-16 unit, so characters outside the BMP can give another CRC than vault-rag (also `probe.order`).
 
 ## [0.12.0] — 2026-10-14
 

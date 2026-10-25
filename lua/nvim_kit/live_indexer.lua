@@ -22,6 +22,18 @@
 -- (`read(path) -> text` or `nil, err`); numbers in the header are integers (`vrix.encode` raises
 -- on a fraction, so a stamp or a `source_dim` that is no whole number is refused, not rounded);
 -- a refusal text is English and no contract, the caller words its notice from `kind`.
+--
+-- Known limits (0.13.0). Two of them are in the source and carried over on purpose, so that the
+-- port stays what the conformance vectors check; they get fixed in code-kit and ported again.
+-- (1) `cancel_reindex` loses a note that came in through `update` or `rename` during the run: the
+-- mix with the stock walks only the paths of the snapshot. (2) A cancel while the index on disk
+-- belongs to another embedding model still writes the mix (reason `reindex`, which the model
+-- guard lets through), so one container can hold vectors of two models. The other two are ours:
+-- (3) an embedder answer that `vectors.to_index_vector` rejects (`{ vim.NIL }`, `{ 42 }`) ends the
+-- run with `cb(nil, err)`, where the source counts a row of length 0; `llm.embed` checks its
+-- answer, so only a foreign embedder can get there. (4) Paths are ordered by code point, as JS
+-- `.sort()` orders by UTF-16 unit: the two differ only for characters outside the BMP, and then
+-- the CRC differs from vault-rag's (`text.byte_less`, also used by `probe.order`).
 local M = {}
 
 -- Relative requires: a vendored copy loads its siblings under the plugin's namespace.
