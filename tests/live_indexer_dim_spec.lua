@@ -10,6 +10,19 @@ local here = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h')
 local VECTORS = here .. '/conformance/code-kit/'
 local ADAPTER = dofile(here .. '/adapters/vrix.lua')
 
+-- Neovim 0.10's `vim.fn.sha256` turns a string with NUL bytes into a Blob and refuses it (E976; 0.12 accepts it),
+-- so binary bytes go through the system hasher over stdin.
+local function sha256_hex(bytes)
+  for _, cmd in ipairs({ { 'sha256sum' }, { 'shasum', '-a', '256' } }) do
+    if vim.fn.executable(cmd[1]) == 1 then
+      local res = vim.system(cmd, { stdin = bytes }):wait()
+      T.eq(res.code, 0)
+      return res.stdout:match('^(%x+)')
+    end
+  end
+  error('no sha256sum or shasum on PATH')
+end
+
 local DIR = '_idx'
 local FILE = DIR .. '/' .. L.CONTAINER_FILE
 
@@ -374,7 +387,7 @@ T.case(
   function()
     local st, ix = loaded()
     T.ok(ix:persist('live'))
-    T.eq(vim.fn.sha256(st.written[FILE]), '19a7b93adb3afa7a6bf42ffd3ce42ea65e02236b3aad7a893dc54cb70a8e314a')
+    T.eq(sha256_hex(st.written[FILE]), '19a7b93adb3afa7a6bf42ffd3ce42ea65e02236b3aad7a893dc54cb70a8e314a')
   end
 )
 
