@@ -61,18 +61,54 @@ function M.read(path, opts)
   return value, {}
 end
 
---- Write value as JSON: a temp file next to path, then one rename over it.
-function M.write(path, value)
-  vim.fn.mkdir(vim.fn.fnamemodify(path, ':h'), 'p')
-  local tmp = ('%s.tmp-%d-%d'):format(path, uv.os_getpid(), uv.hrtime())
-  local f = assert(io.open(tmp, 'wb'))
-  f:write(vim.json.encode(value))
-  f:close()
+--- Write bytes to path: parent directories are created, the bytes go to a temp file next to path
+--- (.<name>.tmp-<pid>-<hrtime>), are flushed to disk (fsync), and one rename puts them over path.
+--- Raises on every failure and leaves no temp file behind; path is either the old or the new
+--- content, never a mix.
+function M.write_bytes(path, bytes)
+  if type(path) ~= 'string' or type(bytes) ~= 'string' then
+    error('nvim-kit store: write_bytes(path, bytes) takes two strings', 2)
+  end
+  local dir = vim.fn.fnamemodify(path, ':h')
+  vim.fn.mkdir(dir, 'p')
+  local tmp = ('%s/.%s.tmp-%d-%d'):format(dir, vim.fn.fnamemodify(path, ':t'), uv.os_getpid(), uv.hrtime())
+  local fd, open_err = uv.fs_open(tmp, 'w', 420)
+  if not fd then
+    error(('nvim-kit store: cannot create %s: %s'):format(tmp, tostring(open_err)), 0)
+  end
+  local function fail(what, err)
+    if fd then
+      uv.fs_close(fd)
+    end
+    uv.fs_unlink(tmp)
+    error(('nvim-kit store: cannot %s %s: %s'):format(what, path, tostring(err)), 0)
+  end
+  local offset = 0
+  while offset < #bytes do
+    local n, err = uv.fs_write(fd, bytes:sub(offset + 1), offset)
+    if not n or n == 0 then
+      fail('write', err or 'wrote no bytes')
+    end
+    offset = offset + n
+  end
+  local synced, sync_err = uv.fs_fsync(fd)
+  if not synced then
+    fail('flush', sync_err)
+  end
+  local closed, close_err = uv.fs_close(fd)
+  fd = nil
+  if not closed then
+    fail('close', close_err)
+  end
   local ok, err = uv.fs_rename(tmp, path)
   if not ok then
-    os.remove(tmp)
-    error(('nvim-kit store: cannot replace %s: %s'):format(path, err))
+    fail('replace', err)
   end
+end
+
+--- Write value as JSON, atomically (see write_bytes).
+function M.write(path, value)
+  M.write_bytes(path, vim.json.encode(value))
 end
 
 local function finish(path, ...)

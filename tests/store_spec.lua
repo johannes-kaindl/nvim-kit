@@ -11,6 +11,19 @@ local function raw(path)
   return table.concat(vim.fn.readfile(path), '\n')
 end
 
+-- names in the directory of path that are not path itself (temp files are dot files there)
+local function leftovers(path)
+  local dir, name = vim.fn.fnamemodify(path, ':h'), vim.fn.fnamemodify(path, ':t')
+  local out = {}
+  for entry in vim.fs.dir(dir) do
+    if entry ~= name then
+      table.insert(out, entry)
+    end
+  end
+  table.sort(out)
+  return out
+end
+
 T.case('a missing file reads as nil', function()
   local v, info = S.read(tmp())
   T.eq(v, nil)
@@ -65,7 +78,7 @@ T.case('update returns everything fn returned, and leaves no temp files', functi
   T.eq(a, { x = 1 })
   T.eq(b, 'second')
   T.eq(c, nil)
-  T.eq(vim.fn.glob(p .. '.tmp-*', false, true), {})
+  T.eq(leftovers(p), {})
 end)
 
 T.case('set_aside moves a file that is valid JSON but not usable', function()
@@ -112,4 +125,64 @@ T.case('a file that exists but cannot be read is an error, never "no file"', fun
   T.ok(tostring(err):find('cannot read', 1, true), tostring(err))
   T.eq(ok2, false)
   T.eq(vim.fn.readfile(p), { '{"total_xp": 500}' })
+end)
+
+T.case('write_bytes keeps NUL and 0xFF bytes and leaves no temp file', function()
+  local p = tmp()
+  local bytes = 'a\0b\255c\r\n\0'
+  S.write_bytes(p, bytes)
+  local f = assert(io.open(p, 'rb'))
+  local back = f:read('*a')
+  f:close()
+  T.eq(back, bytes)
+  T.eq(leftovers(p), {})
+  S.write_bytes(p, '')
+  T.eq(vim.uv.fs_stat(p).size, 0)
+  T.eq(leftovers(p), {})
+end)
+
+T.case('write_bytes creates the target directory', function()
+  local p = vim.fn.tempname() .. '/a/b/c.bin'
+  S.write_bytes(p, 'x')
+  T.eq(vim.uv.fs_stat(p).size, 1)
+  T.eq(leftovers(p), {})
+end)
+
+T.case('write_bytes replaces an existing file whole', function()
+  local p = tmp()
+  S.write_bytes(p, ('long'):rep(1000))
+  S.write_bytes(p, 'short')
+  T.eq(vim.uv.fs_stat(p).size, 5)
+end)
+
+T.case('write_bytes raises loudly and leaves no temp file when a directory is in the way', function()
+  local p = tmp()
+  vim.fn.mkdir(p, 'p') -- the target is a non-empty directory: rename over it fails
+  vim.fn.writefile({ 'x' }, p .. '/inner')
+  local ok, err = pcall(S.write_bytes, p, 'data')
+  T.eq(ok, false)
+  T.ok(tostring(err):find('cannot replace', 1, true), tostring(err))
+  T.eq(leftovers(p), {})
+  T.eq(vim.fn.isdirectory(p), 1)
+end)
+
+T.case('write_bytes raises loudly when the target directory cannot be created', function()
+  local blocker = tmp() -- a file where a directory should be
+  vim.fn.writefile({ 'x' }, blocker)
+  local ok = pcall(S.write_bytes, blocker .. '/sub/file.bin', 'data')
+  T.eq(ok, false)
+  T.eq(vim.fn.readfile(blocker), { 'x' })
+end)
+
+T.case('write_bytes refuses arguments that are not strings', function()
+  T.raises(function()
+    S.write_bytes(tmp(), 12)
+  end)
+end)
+
+T.case('write goes through write_bytes: JSON bytes, no temp file', function()
+  local p = tmp()
+  S.write(p, { a = 1 })
+  T.eq(raw(p), '{"a":1}')
+  T.eq(leftovers(p), {})
 end)
