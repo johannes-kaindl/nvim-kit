@@ -1090,6 +1090,57 @@ T.case('rename onto the same path leaves the note where it is', function()
   T.eq(ix:note_count(), 1)
 end)
 
+-- Review of task 10: two mutants of the port survived (M6, M8).
+
+T.case('a run that ends with an error leaves no live record behind', function()
+  -- M6: without `cleanup()` in the error path the record stays; the next run resets it at its
+  -- start, so only a look at the field right after the error can tell.
+  local ix = new_ix(nil, nil, function(_, cb)
+    cb({ vim.NIL }) -- an answer `vectors.to_index_vector` rejects
+  end)
+  local report, err
+  ix:reindex_all({ 'a.md' }, long_body, nil, nil, function(r, e)
+    report, err = r, e
+  end)
+  T.eq(report, nil)
+  T.ok(err, 'the error was not reported')
+  T.eq(ix._live, nil)
+  T.eq(ix._cancel, false)
+end)
+
+T.case('a live update with another stamp during a run keeps vector AND stamp together', function()
+  -- M8: in `_apply_live` the stamp must travel with the vector. The run reads n5.md with the stamp
+  -- { 1, 1 } from `stamp_for`; the live update during the run carries { 777, 7 } and wins, both
+  -- in memory and in the container.
+  local st = memory()
+  local ix = new_ix(st, nil, content_embedder())
+  ix:mark_fresh()
+  local paths = names(10)
+  local n = 0
+  reindex(
+    ix,
+    paths,
+    function(p)
+      n = n + 1
+      if n == 3 then
+        upd(ix, 'n5.md', '# n5\nlive geaendert, lang genug fuer einen Chunk', { 777, 7 })
+      end
+      return long_body(p)
+    end,
+    nil,
+    function()
+      return { 1, 1 }
+    end
+  )
+  T.eq(ix:stamps_snapshot()['n5.md'], { 777, 7 })
+  T.eq(ix:stamps_snapshot()['n4.md'], { 1, 1 })
+  T.ok(ix:persist('reindex'))
+  local d = decoded(st)
+  for i, p in ipairs(d.paths) do
+    T.eq(d.stamps[i], p == 'n5.md' and { 777, 7 } or { 1, 1 }, p)
+  end
+end)
+
 -- ── reindex_all ──────────────────────────────────────────────────────────────────────────────
 
 T.case('indexes all given paths, and build_index holds exactly these', function()
