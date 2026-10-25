@@ -44,7 +44,7 @@ function M.acquire(path, opts)
   local stale_after_s = opts and opts.stale_after_s or M.STALE_AFTER_S
   vim.fn.mkdir(vim.fn.fnamemodify(path, ':h'), 'p')
   for _ = 1, 3 do
-    local fd = uv.fs_open(path, 'wx', 420)
+    local fd, open_err, open_name = uv.fs_open(path, 'wx', 420)
     if fd then
       local content = ('%d %s\n'):format(uv.os_getpid(), os.date('%Y-%m-%dT%H:%M:%S'))
       local written = uv.fs_write(fd, content, 0)
@@ -74,8 +74,16 @@ function M.acquire(path, opts)
       autocmd = vim.api.nvim_create_autocmd('VimLeavePre', { callback = handle.release })
       return handle
     end
+    if open_name ~= 'EEXIST' then
+      -- Permissions, a file where a directory should be, a full disk: not contention, and
+      -- reporting "locked" would send the person looking for another instance.
+      error(('nvim-kit lock: cannot create %s: %s'):format(path, tostring(open_err)), 0)
+    end
     local stat = uv.fs_stat(path)
     if stat then
+      if stat.type ~= 'file' then
+        error(('nvim-kit lock: %s exists and is a %s, not a lock file'):format(path, stat.type), 0)
+      end
       local age = now_seconds() - mtime_seconds(stat)
       if age <= stale_after_s then
         return nil, { error = 'locked', detail = math.floor(age) }
@@ -85,7 +93,10 @@ function M.acquire(path, opts)
       -- stat and the unlink, the same as in the Python original.
       local again = uv.fs_stat(path)
       if again and again.mtime.sec == stat.mtime.sec and again.mtime.nsec == stat.mtime.nsec then
-        uv.fs_unlink(path)
+        local removed, unlink_err, unlink_name = uv.fs_unlink(path)
+        if not removed and unlink_name ~= 'ENOENT' then
+          error(('nvim-kit lock: cannot remove stale lock %s: %s'):format(path, tostring(unlink_err)), 0)
+        end
       end
     end
   end

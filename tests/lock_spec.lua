@@ -144,3 +144,35 @@ T.case('acquire refuses a path that is not a string', function()
     lock.acquire(nil)
   end)
 end)
+
+T.case('acquire raises, not "locked", when the directory is read-only', function()
+  if uv.getuid and uv.getuid() == 0 then
+    io.write('SKIPPED (root: chmod does not block): read-only directory\n')
+    return
+  end
+  local p, dir = tmp_lock()
+  assert(uv.fs_chmod(dir, tonumber('555', 8)))
+  local ok, err = pcall(lock.acquire, p)
+  assert(uv.fs_chmod(dir, tonumber('755', 8)))
+  vim.fn.delete(dir, 'rf')
+  T.eq(ok, false)
+  T.ok(tostring(err):find('cannot create', 1, true), tostring(err))
+end)
+
+T.case('acquire raises when the lock path is a directory', function()
+  local p, dir = tmp_lock()
+  vim.fn.mkdir(p, 'p')
+  local ok, err = pcall(lock.acquire, p)
+  T.eq(ok, false)
+  T.ok(tostring(err):find('not a lock file', 1, true), tostring(err))
+  age_by(p, 3600) -- an old directory must not be "taken over" either
+  T.eq(pcall(lock.acquire, p), false)
+  vim.fn.delete(dir, 'rf')
+end)
+
+T.case('acquire raises when a path component is a file', function()
+  local _, dir = tmp_lock()
+  vim.fn.writefile({ 'x' }, dir .. '/blocker')
+  T.eq(pcall(lock.acquire, dir .. '/blocker/sub/index.lock'), false)
+  vim.fn.delete(dir, 'rf')
+end)
