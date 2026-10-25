@@ -99,7 +99,10 @@ function M.load_dir(dir)
   return vectors
 end
 
-function M.run(vector, impl)
+--- Run one vector against impl; returns the failures. `opts.tolerance` lets two numbers differ by
+--- that much (float results); without it numbers compare exactly.
+function M.run(vector, impl, opts)
+  local tol = opts and opts.tolerance
   local failures = {}
   for _, c in ipairs(vector.cases) do
     local n = #c.args
@@ -114,7 +117,7 @@ function M.run(vector, impl)
     local ok, actual = pcall(impl, unpack(args, 1, n))
     if not ok then
       table.insert(failures, { name = c.name, expected = c.expected, error = actual })
-    elseif not T.deep_equal(actual, c.expected) then
+    elseif not T.deep_equal(actual, c.expected, tol) then
       table.insert(failures, { name = c.name, expected = c.expected, actual = actual })
     end
   end
@@ -122,8 +125,8 @@ function M.run(vector, impl)
 end
 
 --- Run every vector in dir against impls (function name → function). A vector without an
---- implementation is a failure: nothing measured is not a pass.
-function M.run_dir(dir, impls)
+--- implementation is a failure: nothing measured is not a pass. `opts` is passed to `run`.
+function M.run_dir(dir, impls, opts)
   local vectors = M.load_dir(dir)
   local names = vim.tbl_keys(vectors)
   table.sort(names)
@@ -134,7 +137,7 @@ function M.run_dir(dir, impls)
     if not impls[name] then
       table.insert(report.failures, { ['function'] = name, name = '(no implementation)' })
     else
-      for _, f in ipairs(M.run(v, impls[name])) do
+      for _, f in ipairs(M.run(v, impls[name], opts)) do
         f['function'] = name
         table.insert(report.failures, f)
       end

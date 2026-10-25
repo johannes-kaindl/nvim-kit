@@ -19,13 +19,17 @@ local DICT_MT = getmetatable(vim.empty_dict())
 
 --- Deep equality for test values: vim.NIL equals nil, numbers compare by value, metatables are
 --- ignored — except that an empty object (vim.empty_dict(), or {} from vim.json.decode) differs
---- from an empty list, as {} and [] do in JSON.
-function M.deep_equal(a, b)
+--- from an empty list, as {} and [] do in JSON. With `tol`, two numbers are equal when they differ
+--- by at most `tol` (passed down into tables); without it they compare exactly.
+function M.deep_equal(a, b, tol)
   if is_nil(a) and is_nil(b) then
     return true
   end
   if type(a) ~= type(b) then
     return false
+  end
+  if type(a) == 'number' and tol then
+    return a == b or math.abs(a - b) <= tol
   end
   if type(a) ~= 'table' then
     return a == b
@@ -34,7 +38,7 @@ function M.deep_equal(a, b)
     return (getmetatable(a) == DICT_MT) == (getmetatable(b) == DICT_MT)
   end
   for k, v in pairs(a) do
-    if not M.deep_equal(v, b[k]) then
+    if not M.deep_equal(v, b[k], tol) then
       return false
     end
   end

@@ -218,3 +218,31 @@ T.case('nulls the runner can pass stay allowed: top-level, inside objects, in ex
   T.ok(seen.a == nil)
   T.eq(seen.b, { {} })
 end)
+
+T.case('a tolerance lets a float result pass; without one it fails', function()
+  local vector = { cases = { { name = 'sum', args = {}, expected = 0.3 } } }
+  local impl = function()
+    return 0.1 + 0.2
+  end
+  T.eq(#C.run(vector, impl), 1)
+  T.eq(C.run(vector, impl, { tolerance = 1e-9 }), {})
+  T.eq(#C.run(vector, function()
+    return 0.31
+  end, { tolerance = 1e-9 }), 1)
+end)
+
+T.case('run_dir hands the tolerance to every vector', function()
+  local r = C.run_dir(DIR, {
+    add = function(a, b)
+      return a + b + 1e-12
+    end,
+    pick = impls.pick,
+  }, { tolerance = 1e-9 })
+  T.eq(r.failures, {})
+  T.ok(#C.run_dir(DIR, {
+    add = function(a, b)
+      return a + b + 1e-12
+    end,
+    pick = impls.pick,
+  }).failures > 0)
+end)
