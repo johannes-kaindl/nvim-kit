@@ -450,6 +450,15 @@ function Ix:mark_unready()
   self._ready = false
 end
 
+--- Asks a running `reindex_all` to stop at the next group boundary. Not the request: the loop. A
+--- request that is on its way finishes, so its vectors are not lost. Does nothing when no run is
+--- active; otherwise the wish would wait for the next run and kill it at once.
+function Ix:cancel_reindex()
+  if self._live ~= nil then
+    self._cancel = true
+  end
+end
+
 -- Stamps in row order, WITHOUT GAPS: a row without a known stamp carries the unknown one (a row
 -- that is unchecked, not suspect). nil only when no stamp is known at all (an index from before
 -- the guard); then the field stays out instead of filling every row with a placeholder. A gap
@@ -465,6 +474,27 @@ function Ix:_stamps_for(paths, source)
     out[i] = st and { st[1], st[2] } or { guard.UNKNOWN_STAMP[1], guard.UNKNOWN_STAMP[2] }
   end
   return out
+end
+
+-- Folds the paths a live handler touched during the run into a reindex result. The live state
+-- wins: it comes from an event the person caused while the reindex value comes from a read that
+-- lay before it. (Where the reindex read is the younger one - debounce - both values come from
+-- the same version of the file, as in the source.)
+function Ix:_apply_live(result, result_stamps)
+  if not self._live then
+    return
+  end
+  for path in pairs(self._live) do
+    local current = self._vectors[path]
+    if current then
+      result[path] = current
+      -- Vector and stamp always travel together.
+      result_stamps[path] = self._stamps[path]
+    else
+      result[path] = nil -- a remove, or a note that went empty
+      result_stamps[path] = nil
+    end
+  end
 end
 
 --- The index as it is in memory: `{ paths (sorted by bytes), dim, count, data, ffi, rows,
@@ -671,6 +701,235 @@ function Ix:check_model_against_disk(reason)
     return { allowed = false, kind = refusal.kind, message = refusal.message }
   end
   return { allowed = true }
+end
+
+-- Intermediate states only when the model on disk is the current one. They mix old and new
+-- vectors: harmless within one model, but two vector spaces in one container otherwise - the
+-- very damage `assert_model_safe_to_persist` prevents, and which reason 'reindex' deliberately
+-- does not check. Asked with 'heal' on purpose: for 'reindex' the answer is always yes.
+function Ix:_checkpoints_allowed()
+  local ok, decision = pcall(self.check_model_against_disk, self, 'heal')
+  return ok and decision.allowed
+end
+
+-- Recomputed rows plus the ones not yet reached from the stock so far: the complete state at any
+-- moment of a run. Vector and stamp always come from the same source: a recomputed row with the
+-- stamp of its previous embedding is exactly the mismatch the guard is built against.
+function Ix:_mix_with_stock(fresh, fresh_stamps, paths)
+  local mixed, mixed_stamps = {}, {}
+  for _, p in ipairs(paths) do
+    local f = fresh[p]
+    local v = f or self._vectors[p]
+    if v then
+      mixed[p] = v
+      if f then
+        mixed_stamps[p] = fresh_stamps[p]
+      else
+        mixed_stamps[p] = self._stamps[p]
+      end
+    end
+  end
+  return mixed, mixed_stamps
+end
+
+-- Writes an intermediate state: complete (see `_mix_with_stock`), with what came in live. A
+-- failure does not stop the run; an intermediate state is a bonus, not the promise.
+function Ix:_persist_checkpoint(fresh, fresh_stamps, paths)
+  local mixed, mixed_stamps = self:_mix_with_stock(fresh, fresh_stamps, paths)
+  self:_apply_live(mixed, mixed_stamps)
+  local ok, done, refusal = pcall(self._persist_vectors, self, mixed, 'reindex', nil, mixed_stamps)
+  if not ok then
+    self._warn('an intermediate state could not be written - the run goes on: ' .. tostring(done))
+  elseif not done then
+    self._warn(
+      'an intermediate state was refused - the run goes on: ' .. tostring(refusal and refusal.message)
+    )
+  end
+end
+
+local function new_report()
+  return { added = 0, skipped_empty = {}, failed = {}, cancelled = false }
+end
+
+--- Rebuilds the whole index from `paths`. `read(path)` returns the note's text, or `nil, err`
+--- (a note that cannot be read is `failed`); `on_progress(done, indexed, total)` hears each note
+--- as it is settled; `stamp_for(path)` gives `{ mtime, size }` or nil. `cb(report)` with `report =
+--- { added, skipped_empty, failed, cancelled }` (`cb(nil, err)` when `read`'s helpers or the
+--- indexer itself raise). The stock in memory is replaced at the END of the run, so the old index
+--- stays searchable meanwhile; what the live handlers change during the run wins over what the
+--- run read. The chunks of several notes go out in ONE embedder call per group of up to
+--- `EMBED_BATCH` chunks (one note may cross the limit); a call that fails, or answers with
+--- another number of vectors than chunks, falls back to one call per note. Every
+--- `CHECKPOINT_EVERY` notes an intermediate state goes to disk (complete: recomputed rows plus
+--- the stock) when the model on disk matches. `cancel_reindex` stops at a group boundary and
+--- writes the same mix. Without a cancel `reindex_all` does not persist at the end: that is the
+--- caller's `persist('reindex')`.
+function Ix:reindex_all(paths, read, on_progress, stamp_for, cb)
+  if type(paths) ~= 'table' or type(read) ~= 'function' or type(cb) ~= 'function' then
+    error(
+      'nvim-kit live_indexer: reindex_all(paths, read, on_progress?, stamp_for?, cb) needs a list, a function and a callback',
+      2
+    )
+  end
+  local fresh, fresh_stamps = {}, {}
+  local report = new_report()
+  local checkpoints = self:_checkpoints_allowed()
+  -- From here on the live handlers record their paths.
+  self._live = {}
+  self._cancel = false
+  local function cleanup()
+    self._live = nil
+    self._cancel = false
+  end
+  run(function(task)
+    local since_last, done_count, i, total = 0, 0, 1, #paths
+    local function progress()
+      done_count = done_count + 1
+      if on_progress then
+        on_progress(done_count, report.added, total)
+      end
+    end
+    while i <= total do
+      -- Cancel ONLY at a group boundary: in the middle the vectors of a request on its way would
+      -- be lost. Here the state is consistent - everything before `i` is decided.
+      if self._cancel then
+        report.cancelled = true
+        break
+      end
+      -- (a) Fill a group: read and chunk until EMBED_BATCH chunks are together. One note may
+      --     cross the limit.
+      local group, chunk_count, without = {}, 0, 0
+      while i <= total and chunk_count < M.EMBED_BATCH do
+        local p = paths[i]
+        i = i + 1
+        local ok, text = pcall(read, p)
+        if not ok or type(text) ~= 'string' then
+          report.failed[#report.failed + 1] = p
+          without = without + 1
+          progress()
+        else
+          -- The stamp AFTER the read: taken before it and the note changing in between, an old
+          -- stamp would sit on a new vector - the change would be invisible for good.
+          local stamp = stamp_for and stamp_for(p) or nil
+          check_stamp(stamp, 'reindex_all (stamp_for)')
+          local chunks = chunk_texts(text)
+          if #chunks == 0 then
+            report.skipped_empty[#report.skipped_empty + 1] = p
+            without = without + 1
+            progress()
+          else
+            group[#group + 1] = { path = p, chunks = chunks, stamp = stamp }
+            chunk_count = chunk_count + #chunks
+          end
+        end
+      end
+      -- (b) ONE call for the whole group.
+      if #group > 0 then
+        local all = {}
+        for _, g in ipairs(group) do
+          for _, c in ipairs(g.chunks) do
+            all[#all + 1] = c
+          end
+        end
+        local vecs = self:_embed(task, all)
+        -- The length check is the seat belt: the answer is split among the notes by chunk count.
+        -- An endpoint that returns fewer (or more) vectors than chunks would shift every
+        -- assignment from there by the same amount - the staircase mismatch that hit ~79 % of a
+        -- vault in the source's history, which a CRC cannot see. When in doubt, slow and right.
+        if vecs and #vecs == chunk_count then
+          local off = 0
+          for _, g in ipairs(group) do
+            local rows = slice(vecs, off + 1, off + #g.chunks)
+            off = off + #g.chunks
+            fresh[g.path] = self:_row_from(rows)
+            report.added = report.added + 1
+            fresh_stamps[g.path] = g.stamp
+            progress()
+          end
+        else
+          -- Fall back to one note at a time: a broken note must not drag the others down.
+          for _, g in ipairs(group) do
+            local single = self:_embed(task, g.chunks)
+            if single then
+              fresh[g.path] = self:_row_from(single)
+              report.added = report.added + 1
+              fresh_stamps[g.path] = g.stamp
+            else
+              report.failed[#report.failed + 1] = g.path
+            end
+            progress()
+          end
+        end
+      end
+      since_last = since_last + #group + without
+      if checkpoints and since_last >= M.CHECKPOINT_EVERY and i <= total then
+        since_last = 0
+        self:_persist_checkpoint(fresh, fresh_stamps, paths)
+      end
+    end
+    -- The vault as it is at the END: what came in during the run wins over the snapshot.
+    self:_apply_live(fresh, fresh_stamps)
+    if report.cancelled then
+      -- A cancel must cost NOTHING: `fresh` holds only the notes reached so far, and taking it
+      -- as the stock would shrink the index from thousands to a handful. The same mix as an
+      -- intermediate state is taken over instead.
+      local mixed, mixed_stamps = self:_mix_with_stock(fresh, fresh_stamps, paths)
+      local ok, done, refusal = pcall(self._persist_vectors, self, mixed, 'reindex', nil, mixed_stamps)
+      if not ok then
+        self._warn('the state after the cancel could not be written: ' .. tostring(done))
+      elseif not done then
+        self._warn('the state after the cancel was refused: ' .. tostring(refusal and refusal.message))
+      end
+      fresh, fresh_stamps = mixed, mixed_stamps
+    end
+    cleanup()
+    self._vectors, self._stamps = fresh, fresh_stamps
+    self._ready = true
+    return report
+  end, cb, cleanup)
+end
+
+--- The additive delta run: embeds only the `missing` paths and adds them to the stock in memory
+--- (NO reset): "complete the index", and the resume of an aborted full run. `cb(report)` as for
+--- `reindex_all` (`cancelled` stays false: a delta run is not cancelled). A note that cannot be
+--- read or embedded is `failed`, one without chunks `skipped_empty`. Ask
+--- `check_model_against_disk('heal')` before, and persist with `persist('heal')` after.
+function Ix:heal_missing(missing, read, on_progress, stamp_for, cb)
+  if type(missing) ~= 'table' or type(read) ~= 'function' or type(cb) ~= 'function' then
+    error(
+      'nvim-kit live_indexer: heal_missing(missing, read, on_progress?, stamp_for?, cb) needs a list, a function and a callback',
+      2
+    )
+  end
+  local report = new_report()
+  run(function(task)
+    for i, path in ipairs(missing) do
+      local ok, text = pcall(read, path)
+      if not ok or type(text) ~= 'string' then
+        report.failed[#report.failed + 1] = path
+      else
+        local row = self:_embed_note(task, text)
+        if row then
+          self._vectors[path] = row
+          report.added = report.added + 1
+          local st = stamp_for and stamp_for(path) or nil
+          check_stamp(st, 'heal_missing (stamp_for)')
+          if st then
+            self._stamps[path] = { st[1], st[2] }
+          end
+        elseif row == false then
+          report.skipped_empty[#report.skipped_empty + 1] = path
+        else
+          report.failed[#report.failed + 1] = path
+        end
+      end
+      if on_progress then
+        on_progress(i, report.added, #missing)
+      end
+    end
+    self._ready = true
+    return report
+  end, cb)
 end
 
 return M

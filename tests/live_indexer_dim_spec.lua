@@ -422,3 +422,118 @@ T.case('an indexer made for 1 024 columns refuses the golden at init', function(
     'dim-mismatch'
   )
 end)
+
+-- ===== commit b: cases that run a full reindex =====
+
+local function read(p)
+  return '# ' .. p .. '\ntext of ' .. p
+end
+
+local function reindex(ix, paths)
+  local report, err
+  ix:reindex_all(paths, read, nil, nil, function(r, e)
+    report, err = r, e
+  end)
+  if report == nil then
+    error('reindex_all failed: ' .. tostring(err), 2)
+  end
+  return report
+end
+
+local function row(idx, path)
+  local r = idx.rows[path]
+  local all = flat(idx)
+  local out = {}
+  for c = 1, idx.dim do
+    out[c] = all[(r - 1) * idx.dim + c]
+  end
+  return out
+end
+
+-- (dim, source): qwen3-embedding:8b at 1 024 dimensions (Oneiron), vault-rag, a model that
+-- returns exactly what the index keeps, and a smaller one
+-- (the reindex_all half of this case is in the second part of this file)
+local DIM_CASES = { { 1024, 4096 }, { 256, 4096 }, { 1024, 1024 }, { 256, 768 } }
+
+T.case(
+  'dim 1024/256 from a model with 4096/768 values: the container has that many columns, the rows are unit vectors, search finds the note',
+  function()
+    for _, c in ipairs(DIM_CASES) do
+      local dim, source = c[1], c[2]
+      local tag = ('dim %d, model %d'):format(dim, source)
+      local st = memory()
+      local ix = L.new(st, DIR, model_with(source), 'm', { dim = dim, now = CLOCK })
+      ix:mark_fresh()
+      local paths = { 'Lessons/a.md', 'Lessons/b.md', 'Lessons/c.md' }
+      local rep = reindex(ix, paths)
+      T.eq({ rep.added, rep.failed, rep.skipped_empty }, { 3, {}, {} }, tag)
+      T.ok(ix:persist('reindex')) -- reindex_all keeps the result in memory (and writes checkpoints); the caller persists
+      local d = vrix.decode(st.written[FILE])
+      for k, v in pairs({
+        index_dim = dim,
+        scale = L.INT8_SCALE,
+        count = 3,
+        embedding_model = 'm',
+        source_dim = source,
+        built_at = '2026-10-11T12:00:00.000Z',
+      }) do
+        T.eq(d.manifest[k], v, tag .. ' ' .. k)
+      end
+      T.eq(#d.matrix, 3 * dim, tag)
+      local index = V.parse(d.manifest, d.paths, d.matrix)
+      T.eq(index.dim, dim, tag)
+      for _, p in ipairs(paths) do
+        local v = row(index, p)
+        T.eq(#v, dim, tag)
+        local sum = 0
+        local beyond = false
+        for i, x in ipairs(v) do
+          sum = sum + x * x
+          if i > 256 and x ~= 0 then
+            beyond = true
+          end
+        end
+        T.ok(math.abs(math.sqrt(sum) - 1) < 1e-4, tag .. ' norm ' .. math.sqrt(sum))
+        -- the row really uses the columns beyond 256 when the model has them (a row cut at 256 and padded would not)
+        if dim > 256 and source > 256 then
+          T.ok(beyond, tag .. ' columns beyond 256 are empty')
+        end
+      end
+      -- the stored row of a note is the best hit for the vector it was made from
+      local q = row(ix:build_index(), 'Lessons/b.md')
+      T.eq(V.search(index, q, { k = 1, min_sim = 0, exclude = {} })[1].path, 'Lessons/b.md', tag)
+    end
+  end
+)
+
+T.case(
+  'reindex may replace a container of another dimension: the way from 256 to 1 024 is a full rebuild',
+  function()
+    local st = memory()
+    st.written[FILE] = disk_index(256)
+    local ix = L.new(st, DIR, model_with(4096), 'm', { dim = 1024, now = CLOCK })
+    ix:mark_fresh()
+    reindex(ix, { 'a.md', 'b.md' })
+    T.ok(ix:persist('reindex'))
+    local m = header(st)
+    T.eq(m.index_dim, 1024)
+    T.eq(m.count, 2)
+  end
+)
+
+T.case(
+  'a reindex does not write intermediate states over a container of another dimension (checkpoints ask first)',
+  function()
+    local st = memory()
+    st.written[FILE] = disk_index(256)
+    local ix = L.new(st, DIR, model_with(8), 'm', { dim = 1024, now = CLOCK })
+    ix:mark_fresh()
+    local paths = {}
+    for i = 1, 300 do
+      paths[i] = ('n%03d.md'):format(i)
+    end
+    reindex(ix, paths)
+    T.eq(st.writes, 0) -- the dimension on disk differs: no checkpoint
+    T.eq(ix:note_count(), 300)
+  end
+)
