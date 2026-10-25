@@ -1,6 +1,6 @@
 -- Talking to an OpenAI-compatible model server (Ollama, LM Studio, Open WebUI, hosted APIs):
 -- endpoints in priority order, keys from an environment variable or a command, backend
--- detection, the model list, and an asynchronous, cancellable chat call over `curl`.
+-- detection, the model list, and asynchronous, cancellable chat and embedding calls over `curl`.
 -- Knows HOW to ask a model, never WHAT: no prompt, no domain. Errors are values
 -- ({ error = kind, detail }), never exceptions; a call with invalid arguments raises.
 -- Error kinds: unreachable, timeout, cancelled, key-missing, http, bad-response, no-model,
@@ -22,6 +22,8 @@ M.DEFAULT_ENDPOINTS = {
 }
 M.PING_TIMEOUT_MS = 3000
 M.CHAT_TIMEOUT_MS = 60000
+-- Texts per /v1/embeddings request when req.batch_size is not given (code-kit DEFAULT_BATCH).
+M.EMBED_BATCH_SIZE = 32
 M.KEY_CMD_TIMEOUT_MS = 30000
 -- A detected backend is kept this long per URL (code-kit BACKEND_CACHE_MS).
 M.BACKEND_CACHE_MS = 30000
@@ -619,6 +621,161 @@ function M.chat(req, cb)
     else
       detect(ep, key, send)
     end
+  end)
+  if not handle.sent then
+    handle.stop = stop_key
+  end
+  return handle
+end
+
+-- One embedding item's vector, or nil when `embedding` is missing, not a list, or holds a value
+-- that is not a finite number (NaN and Infinity decode as numbers; a vector with them poisons
+-- every dot product).
+local function read_vector(item)
+  local v = type(item) == 'table' and item.embedding or nil
+  if type(v) ~= 'table' or not vim.islist(v) then
+    return nil
+  end
+  for _, x in ipairs(v) do
+    if type(x) ~= 'number' or x ~= x or x == math.huge or x == -math.huge then
+      return nil
+    end
+  end
+  return v
+end
+
+--- Embeddings of a list of texts (POST /v1/embeddings), asynchronous. The texts go out in groups of
+--- `batch_size`, one request per group, strictly one after the other; the vectors come back in the
+--- order of `input`. Each returned item is taken by its position in `data` (code-kit does the same;
+--- the `index` field is not read). A group whose answer does not hold exactly one finite vector per
+--- text is `bad-response` naming the group, the expected and the received count: vectors are never
+--- matched to the wrong text, and a failed call delivers no partial result. Returns a handle;
+--- handle.cancel() stops the running request and answers { ok = false, error = 'cancelled' } at once,
+--- no further group is sent.
+--- req = { endpoint, model, input = string[], batch_size = M.EMBED_BATCH_SIZE,
+---         timeout_ms = M.CHAT_TIMEOUT_MS (per request, not for the whole call) }
+--- cb({ ok = true, vectors = number[][] }) | cb({ ok = false, error = kind, detail, status? })
+--- Empty `input`: cb({ ok = true, vectors = {} }) on the main loop, no request. Text that is not
+--- UTF-8 is sent with U+FFFD in place of the bad bytes, so the body stays JSON.
+function M.embed(req, cb)
+  if type(req) ~= 'table' or type(req.endpoint) ~= 'table' or type(req.model) ~= 'string' then
+    error('nvim-kit llm: embed needs req.endpoint (table) and req.model (string)', 2)
+  end
+  if type(req.input) ~= 'table' or not vim.islist(req.input) then
+    error('nvim-kit llm: embed needs req.input (a list of strings)', 2)
+  end
+  for i, t in ipairs(req.input) do
+    if type(t) ~= 'string' then
+      error(('nvim-kit llm: embed: req.input[%d] is not a string'):format(i), 2)
+    end
+  end
+  local batch_size = req.batch_size == nil and M.EMBED_BATCH_SIZE or req.batch_size
+  if type(batch_size) ~= 'number' or batch_size < 1 or batch_size % 1 ~= 0 or batch_size == math.huge then
+    error('nvim-kit llm: embed: req.batch_size must be a positive integer', 2)
+  end
+  if req.timeout_ms ~= nil and (type(req.timeout_ms) ~= 'number' or req.timeout_ms <= 0) then
+    error('nvim-kit llm: embed: req.timeout_ms must be a positive number', 2)
+  end
+  if type(cb) ~= 'function' then
+    error('nvim-kit llm: embed needs a callback function', 2)
+  end
+  local ep = normalize(req.endpoint, 1)
+  local timeout_ms = req.timeout_ms or M.CHAT_TIMEOUT_MS
+  local finish = once(cb)
+  local handle = { stop = function() end }
+  function handle.cancel()
+    handle.cancelled = true
+    handle.stop()
+    finish({ ok = false, error = 'cancelled', detail = 'cancelled' })
+  end
+  local function fail(e)
+    e.ok = false
+    finish(e)
+  end
+  if #req.input == 0 then
+    finish({ ok = true, vectors = {} })
+    return handle
+  end
+  -- Cleaned and grouped here, before any key command: the callbacks below must not fail.
+  local groups = {}
+  for i, t in ipairs(req.input) do
+    local g = math.floor((i - 1) / batch_size) + 1
+    groups[g] = groups[g] or {}
+    groups[g][#groups[g] + 1] = text.clean_utf8(t)
+  end
+  local vectors = {}
+  local stop_key = get_key(ep, function(key, kerr)
+    if kerr then
+      return fail(kerr)
+    end
+    local function send(g)
+      if handle.cancelled then
+        return
+      end
+      handle.sent = true
+      local batch = groups[g]
+      handle.stop = http(
+        ep,
+        key,
+        'POST',
+        '/v1/embeddings',
+        { model = req.model, input = batch },
+        timeout_ms,
+        function(res)
+          if handle.cancelled then
+            return
+          end
+          if res.error then
+            return fail(res)
+          end
+          local herr, j = http_error(res, key)
+          if herr then
+            return fail(herr)
+          end
+          local data = j and type(j.data) == 'table' and vim.islist(j.data) and j.data or nil
+          if not data then
+            return fail({
+              error = 'bad-response',
+              detail = ('group %d of %d: no data list: %s'):format(
+                g,
+                #groups,
+                vim.trim(redact(res.body, key)):sub(1, 200)
+              ),
+            })
+          end
+          if #data ~= #batch then
+            return fail({
+              error = 'bad-response',
+              detail = ('group %d of %d: expected %d vectors, received %d'):format(g, #groups, #batch, #data),
+            })
+          end
+          local got = {}
+          for i, item in ipairs(data) do
+            got[i] = read_vector(item)
+            if not got[i] then
+              return fail({
+                error = 'bad-response',
+                detail = ('group %d of %d: expected %d vectors, item %d has no list of finite numbers in `embedding`'):format(
+                  g,
+                  #groups,
+                  #batch,
+                  i
+                ),
+              })
+            end
+          end
+          for _, v in ipairs(got) do
+            vectors[#vectors + 1] = v
+          end
+          if g < #groups then
+            send(g + 1)
+          else
+            finish({ ok = true, vectors = vectors })
+          end
+        end
+      )
+    end
+    send(1)
   end)
   if not handle.sent then
     handle.stop = stop_key
