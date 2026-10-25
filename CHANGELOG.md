@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.14.0] — 2026-10-26
+
 ### Added
 - `live_indexer`: `Ix:stamps_snapshot()` returns the stamps by path as a copy, and `Ix:init(index, stamps)` also takes such a map (next to the list parallel to the rows): an indexer re-seeded from another one's `build_index()` keeps the stamps of the rows nobody touched, where it used to write `{ 0, 0 }` for them on the next persist. A map entry that is no stamp is skipped, a row without an entry stays unstamped, nothing is stamped that was not (code-kit 0.37.3).
 - `index_guard.count_unstamped_rows(stamps)` — how many rows are stamped `{ 0, 0 }`, the rows `find_stale_vector_paths` skips; `0` for no stamps at all (code-kit 0.37.0).
