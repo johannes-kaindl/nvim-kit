@@ -31,6 +31,11 @@ for _, b in ipairs(sampling.data.backendIds) do
   BACKENDS[b] = true
 end
 
+-- code-kit's tables know the backend `anthropic` (its native Messages API); this module only talks
+-- to /v1/chat/completions, so the id is refused at the door instead of failing as a 404 later.
+local ANTHROPIC_UNSUPPORTED =
+  "nvim-kit llm: backend 'anthropic' is not supported (llm talks to /v1/chat/completions); use backend = 'openai' for Claude's OpenAI-compatible API"
+
 local FIELDS =
   { url = true, name = true, model = true, backend = true, api_key_env = true, api_key_cmd = true }
 
@@ -59,6 +64,9 @@ local function normalize(ep, i)
     if ep[k] ~= nil and type(ep[k]) ~= 'string' then
       bad(i, k .. ' must be a string')
     end
+  end
+  if ep.backend == 'anthropic' then
+    error(ANTHROPIC_UNSUPPORTED, 3)
   end
   if ep.backend ~= nil and not BACKENDS[ep.backend] then
     bad(i, ('unknown backend %q'):format(tostring(ep.backend)))
@@ -506,6 +514,9 @@ function M.chat(req, cb)
     if type(m) ~= 'table' then
       error(('nvim-kit llm: chat: req.messages[%d] is not a table'):format(i), 2)
     end
+  end
+  if req.backend == 'anthropic' then
+    error(ANTHROPIC_UNSUPPORTED, 2)
   end
   local mode = req.mode or 'structured'
   -- Checked here, before any key command or probe: later, an unknown id would fail inside a

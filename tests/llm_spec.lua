@@ -1,4 +1,5 @@
 local T = require('nvim_kit.test')
+local C = require('nvim_kit.conformance')
 local L = require('nvim_kit.llm')
 local S = require('nvim_kit.sampling')
 local stub = require('nvim_kit.http_stub')
@@ -39,6 +40,40 @@ T.case('endpoints: the default is Ollama, then LM Studio; URLs are normalized', 
   T.eq({ d[1].url, d[2].url }, { 'http://localhost:11434', 'http://localhost:1234' })
   T.eq(L.endpoints({ endpoints = { { url = ' http://h:1234/v1/ ' } } })[1].url, 'http://h:1234')
   T.eq(L.normalize_url('http://h/v1'), 'http://h')
+end)
+
+T.case('normalize_url passes every code-kit normalizeEndpoint vector', function()
+  local v =
+    C.load_dir(vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h') .. '/conformance/code-kit')
+  T.ok(v.normalizeEndpoint, 'no vector file for normalizeEndpoint')
+  T.eq(#v.normalizeEndpoint.cases, 7)
+  T.eq(C.run(v.normalizeEndpoint, L.normalize_url), {})
+  -- counter-check: a normalizer that keeps the trailing /v1 fails the vectors
+  local failures = C.run(v.normalizeEndpoint, function(url)
+    return (vim.trim(url):gsub('/+$', ''))
+  end)
+  T.ok(#failures > 0)
+end)
+
+T.case('backend anthropic is refused: llm talks to /v1/chat/completions only', function()
+  local msg = "use backend = 'openai'"
+  T.raises(function()
+    L.endpoints({ endpoints = { { url = 'http://x', backend = 'anthropic' } } })
+  end, msg)
+  T.raises(function()
+    L.chat(
+      { endpoint = { url = 'http://x' }, model = 'm', messages = msgs(), backend = 'anthropic' },
+      function() end
+    )
+  end, msg)
+  T.raises(function()
+    L.chat(
+      { endpoint = { url = 'http://x', backend = 'anthropic' }, model = 'm', messages = msgs() },
+      function() end
+    )
+  end, msg)
+  -- control: the advised backend passes the same door
+  T.eq(L.endpoints({ endpoints = { { url = 'http://x', backend = 'openai' } } })[1].backend, 'openai')
 end)
 
 T.case('endpoints: an invalid entry raises, naming index and field', function()
