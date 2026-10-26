@@ -186,3 +186,81 @@ T.case('write goes through write_bytes: JSON bytes, no temp file', function()
   T.eq(raw(p), '{"a":1}')
   T.eq(leftovers(p), {})
 end)
+
+T.case('mkdir_p creates nested directories, accepts existing ones and a trailing slash', function()
+  local base = vim.fn.tempname()
+  S.mkdir_p(base .. '/a/b/c')
+  T.eq(vim.fn.isdirectory(base .. '/a/b/c'), 1)
+  S.mkdir_p(base .. '/a/b/c') -- already there
+  S.mkdir_p(base .. '/a/b/d/')
+  T.eq(vim.fn.isdirectory(base .. '/a/b/d'), 1)
+  S.mkdir_p('') -- nothing to create
+  S.mkdir_p('/')
+  vim.fn.delete(base, 'rf')
+end)
+
+T.case('mkdir_p raises when a file is in the way, at the end or on the way', function()
+  local base = vim.fn.tempname()
+  vim.fn.mkdir(base, 'p')
+  vim.fn.writefile({ 'x' }, base .. '/file')
+  local ok, err = pcall(S.mkdir_p, base .. '/file')
+  T.eq(ok, false)
+  T.ok(tostring(err):find('in the way', 1, true), tostring(err))
+  ok, err = pcall(S.mkdir_p, base .. '/file/sub')
+  T.eq(ok, false)
+  T.ok(tostring(err):find('in the way', 1, true), tostring(err))
+  T.raises(function()
+    S.mkdir_p(nil)
+  end, 'string')
+  vim.fn.delete(base, 'rf')
+end)
+
+T.case('mkdir_p and write_bytes work in a fast callback, where vim.fn.mkdir raises E5560', function()
+  local base = vim.fn.tempname()
+  local res
+  local timer = vim.uv.new_timer()
+  timer:start(0, 0, function()
+    res = {
+      fast = vim.in_fast_event(),
+      fn = { pcall(vim.fn.mkdir, base .. '/via-fn', 'p') },
+      ours = { pcall(S.write_bytes, base .. '/deep/er/f.bin', 'abc') },
+    }
+  end)
+  vim.wait(2000, function()
+    return res ~= nil
+  end, 5)
+  timer:close()
+  T.ok(res, 'the timer did not fire')
+  T.eq(res.fast, true)
+  T.eq(
+    res.fn[1],
+    false,
+    'vim.fn.mkdir is expected to refuse here; if it does not, this test no longer proves anything'
+  )
+  T.eq(res.ours[1], true, tostring(res.ours[2]))
+  T.eq(vim.fn.readfile(base .. '/deep/er/f.bin'), { 'abc' })
+  vim.fn.delete(base, 'rf')
+end)
+
+T.case(
+  'write_bytes: a write that fails half way (EFBIG under ulimit, as ENOSPC on a full disk) raises and keeps the old file',
+  function()
+    local dir = vim.fn.tempname()
+    vim.fn.mkdir(dir, 'p')
+    local root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h')
+    local script = ('ulimit -f 4; trap "" XFSZ; exec %s --headless -u NONE -l %s %s'):format(
+      vim.fn.shellescape(vim.v.progpath),
+      vim.fn.shellescape(root .. '/tests/store_efbig_child.lua'),
+      vim.fn.shellescape(dir)
+    )
+    local res = vim.system({ 'sh', '-c', script }, { text = true, timeout = 20000 }):wait()
+    local out = (res.stdout or '') .. (res.stderr or '')
+    local raised, intact, names, err = out:match('RESULT (%a+) (%a+) ([^|]*)| ([^\n]*)')
+    T.ok(raised, 'the child printed no RESULT: ' .. out:sub(-500))
+    T.eq(raised, 'true', 'write_bytes must raise: ' .. out)
+    T.ok(err:find('EFBIG', 1, true), 'expected a file-too-large error: ' .. err)
+    T.eq(intact, 'true', 'the old file changed')
+    T.eq(vim.trim(names), 'f.bin', 'a temp file was left behind')
+    vim.fn.delete(dir, 'rf')
+  end
+)

@@ -61,16 +61,44 @@ function M.read(path, opts)
   return value, {}
 end
 
+--- `mkdir -p`: create `path` and its missing parents (mode 0755, `/`-separated paths). A directory
+--- that is there already is fine; a file in the way raises. Written with `vim.uv` only, so unlike
+--- `vim.fn.mkdir` it also works in a fast callback (`vim.in_fast_event()`).
+function M.mkdir_p(path)
+  if type(path) ~= 'string' then
+    error('nvim-kit store: mkdir_p(path) takes a string', 2)
+  end
+  path = path:gsub('/+$', '')
+  if path == '' then
+    return -- the root, or an empty path: nothing to create
+  end
+  local st = uv.fs_stat(path)
+  if st then
+    if st.type ~= 'directory' then
+      error(('nvim-kit store: cannot create directory %s: a %s is in the way'):format(path, st.type), 0)
+    end
+    return
+  end
+  local parent = path:match('^(.*)/[^/]*$')
+  if parent and parent ~= '' then
+    M.mkdir_p(parent)
+  end
+  local ok, err, name = uv.fs_mkdir(path, 493)
+  if not ok and name ~= 'EEXIST' then
+    error(('nvim-kit store: cannot create directory %s: %s'):format(path, tostring(err)), 0)
+  end
+end
+
 --- Write bytes to path: parent directories are created, the bytes go to a temp file next to path
 --- (.<name>.tmp-<pid>-<hrtime>), are flushed to disk (fsync), and one rename puts them over path.
 --- Raises on every failure and leaves no temp file behind; path is either the old or the new
---- content, never a mix.
+--- content, never a mix. Uses no Vimscript function that a fast callback may not call (0.15.0).
 function M.write_bytes(path, bytes)
   if type(path) ~= 'string' or type(bytes) ~= 'string' then
     error('nvim-kit store: write_bytes(path, bytes) takes two strings', 2)
   end
   local dir = vim.fn.fnamemodify(path, ':h')
-  vim.fn.mkdir(dir, 'p')
+  M.mkdir_p(dir)
   local tmp = ('%s/.%s.tmp-%d-%d'):format(dir, vim.fn.fnamemodify(path, ':t'), uv.os_getpid(), uv.hrtime())
   local fd, open_err = uv.fs_open(tmp, 'w', 420)
   if not fd then

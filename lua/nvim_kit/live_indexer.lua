@@ -8,7 +8,11 @@
 -- and the way a note is read (`read`); there is no I/O in here besides them. The embedder is
 -- asynchronous, by callback: `embedder(texts, cb)` with `cb(vectors)` (one list of numbers per
 -- text) or `cb(nil, err)`. Call `cb` from the main loop: the indexer carries on right there and
--- then reads, decodes and writes files. A long run does not block Neovim: between two embedder
+-- then reads, decodes and writes files. A call from a fast `vim.uv` handler (`vim.in_fast_event()`)
+-- works too since 0.15.0 (measured 2026-10-26: before, an intermediate state failed with E5560 and
+-- the default `warn` aborted the run), with `fs_storage` or any storage that avoids Vimscript
+-- functions; the callbacks you pass (`cb`, `on_progress`, `read`, `stamp_for`) then run there as
+-- well, so a `cb` that persists or touches buffers should `vim.schedule` first. A long run does not block Neovim: between two embedder
 -- calls the indexer only does cheap work, and the next call waits for its answer. An embedder
 -- that answers at once (a test double) works as well, with no recursion.
 --
@@ -183,7 +187,7 @@ end
 --- `opts = { dim = 256, now = function() return ms end, warn = function(message) end }`: `now`
 --- is the clock for `built_at` in milliseconds since the epoch (default `os.time() * 1000`),
 --- `warn` hears what a run survives (an intermediate state that could not be written; default
---- `vim.notify`). A `dim` that is no positive whole number raises.
+--- `vim.notify`, scheduled when called from a fast event). A `dim` that is no positive whole number raises.
 function M.new(storage, dir, embedder, model, opts)
   opts = opts or {}
   if
@@ -214,7 +218,14 @@ function M.new(storage, dir, embedder, model, opts)
       return os.time() * 1000
     end,
     _warn = opts.warn or function(message)
-      vim.notify('nvim-kit live_indexer: ' .. message, vim.log.levels.WARN)
+      local function notify()
+        vim.notify('nvim-kit live_indexer: ' .. message, vim.log.levels.WARN)
+      end
+      if vim.in_fast_event() then
+        vim.schedule(notify) -- an embedder that answers from a `vim.uv` callback
+      else
+        notify()
+      end
     end,
     _vectors = {}, -- path -> list of numbers
     -- path -> { mtime, size } of the note when it was embedded; kept in step with `_vectors`:
@@ -256,7 +267,7 @@ function M.fs_storage()
       store.write_bytes(path, bytes)
     end,
     mkdir = function(path)
-      vim.fn.mkdir(path, 'p')
+      store.mkdir_p(path)
     end,
   }
 end
