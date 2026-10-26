@@ -212,7 +212,7 @@ The tables are code-kit's export, vendored into `lua/nvim_kit/data/` and never e
 
 Since 0.13.0 the profiles follow code-kit 0.28.0: Claude and Anthropic have profiles, gemma 4 on LM Studio turns `off` into `low` (`none` is ignored there), and an unknown backend or family no longer throws: `resolve` falls back to generic values and reports it as `unrecognised` (the ids as passed) and as `fallback` on every explain row. `family_thinking(family, backend)` returns the thinking table of a family on one backend.
 
-**`nvim_kit.llm`** — talks to an OpenAI-compatible server (Ollama, LM Studio, Open WebUI, a hosted API) over `curl`. Setting up a local server: [uplink.jkaindl.de/llm-setup](https://uplink.jkaindl.de/llm-setup).
+**`nvim_kit.llm`** — talks to an OpenAI-compatible server (Ollama, LM Studio, Open WebUI, a hosted API) over `curl`. Setting up a local server: [jkaindl.de/uplink/llm-setup](https://jkaindl.de/uplink/llm-setup/).
 
 ```lua
 local llm = require('myplugin.kit.llm')
