@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.15.0] — 2026-10-26
+
+### Added
+- `nvim_kit.walk` — `markdown(root, opts)` lists the `*.md` notes under a directory, relative and `/`-separated, sorted by bytes; names starting with `.` and symbolic links to directories are left out, `opts.exclude` (prefixes) and `opts.skip` (predicate) prune, unreadable directories come back in `skipped`. Measured on a personal vault: 10 766 notes in 34-42 ms (Neovim 0.12.6, 2026-10-26).
+- `nvim_kit.debounce` — `new(ms, fn)` with `call(...)`, `cancel()` and `flush()`; `fn` runs once with the last arguments on the main loop, the timer closes on `VimLeavePre`.
+- `store.mkdir_p(path)` — `mkdir -p` with `vim.uv` only.
+
+### Fixed
+- `live_indexer`: an embedder that answers from a fast `vim.uv` callback (without `vim.schedule`) no longer breaks a full reindex. The intermediate states failed there (`vim.fn.mkdir` raises E5560) and the default `warn` (`vim.notify`) raised too, which ended `reindex_all` with an error. `fs_storage` and `store.write_bytes` create directories with `store.mkdir_p`, and the default `warn` is scheduled in a fast event. `cb`, `on_progress`, `read` and `stamp_for` still run in the caller's context.
+
+### Measured
+- `live_indexer` and `vectors` without `ffi`: the indexer, vector and container specs (180 cases) pass in a Neovim where `require('ffi')` fails, and a container written from deterministic vectors has the same bytes and CRC as with `ffi` (`tests/no_ffi_spec.lua`).
+- A failing `fs_storage().write` (no write permission, a directory in the way of the rename, a file where the directory should be, `EFBIG` under `ulimit -f`; once a real full volume, `ENOSPC`): `persist` raises (as documented), the container on disk stays the old one byte for byte, no temp file is left, the indexer's memory is untouched and a later `persist` succeeds. A plugin calls `persist` under `pcall`.
+
 ## [0.14.0] — 2026-10-26
 
 ### Added

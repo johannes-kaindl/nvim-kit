@@ -16,7 +16,7 @@
 | `lua/nvim_kit/conformance.lua` | runs a port of rules against JSON vectors from the reference implementation | 0.1.0 |
 | `lua/nvim_kit/data.lua` | loads JSON data with a required schema version (`load`); a path beside the calling file (`beside`, 0.8.0) | 0.1.0 |
 | `lua/nvim_kit/date.lua` | `YYYY-MM-DD` calendar arithmetic without time zones (`days_from_civil`, `civil_from_days`, `add_days`, `utc_today`) | 0.2.0 |
-| `lua/nvim_kit/store.lua` | JSON state file: exact read, atomic write, re-read before every write, broken file moved aside (`read`, `write`, `update`, `set_aside`) | 0.3.0 |
+| `lua/nvim_kit/store.lua` | JSON state file: exact read, atomic write, re-read before every write, broken file moved aside (`read`, `write`, `update`, `set_aside`; `mkdir_p`, 0.15.0) | 0.3.0 |
 | `lua/nvim_kit/scratch.lua` | named view buffer with buffer-local keys (`open`, `find`, `set_lines`, `close`; `reveal`, 0.12.0) | 0.3.0 |
 | `lua/nvim_kit/panel.lua` | virtual lines above line 1 kept visible (`set`, `wrap`) | 0.3.0 |
 | `lua/nvim_kit/keytrack.lua` | typed keys and time in one buffer, own commands excluded (`start`, `format_clock`); a mapping costs its lhs, the command-line window counts, `exclude_cmdline` as a function, `free_if_left`, `pause_outside` (0.7.0) | 0.3.0 |
@@ -37,8 +37,10 @@
 | `lua/nvim_kit/index_guard.lua` | pure guards against data loss on an index write (`assert_safe_to_persist`, `is_suspicious_shrink`, `embedding_model_matches_index`, `assert_model_safe_to_persist`, `assert_dim_safe_to_persist`, `diff_index_vs_vault`, `find_dead_vector_paths`, `find_stale_vector_paths`; `count_unstamped_rows`, 0.14.0) | 0.13.0 |
 | `lua/nvim_kit/index_delta.lua` | "embedded / total notes" and the split of healing targets (`compute`, `split_heal_targets`) | 0.13.0 |
 | `lua/nvim_kit/probe.lua` | core of the self-find probe: sample, query, compare two runs (`rank`, `order`, `query`, `compare_runs`, `SEED`, `N`) | 0.13.0 |
-| `lua/nvim_kit/live_indexer.lua` | the live note index: `new`, `fs_storage`; methods `init`, `update`, `remove`, `rename`, `note_count`, `is_ready`, `persist`, `reindex_all`, `cancel_reindex`, `heal_missing`; `stamps_snapshot` and `init(index, map)`, 0.14.0; a behavioural port of code-kit `live-indexer` at 0.37.6 | 0.13.0 |
+| `lua/nvim_kit/live_indexer.lua` | the live note index: `new`, `fs_storage`; methods `init`, `update`, `remove`, `rename`, `note_count`, `is_ready`, `persist`, `reindex_all`, `cancel_reindex`, `heal_missing`; `stamps_snapshot` and `init(index, map)`, 0.14.0; an embedder may answer from a fast `uv` callback, 0.15.0; a behavioural port of code-kit `live-indexer` at 0.37.6 | 0.13.0 |
 | `lua/nvim_kit/lock.lua` | lock file with stale takeover (`acquire`, `STALE_AFTER_S`); a port of code-kit's retrieval-store lock | 0.13.0 |
+| `lua/nvim_kit/walk.lua` | the Markdown notes under a directory: relative, `/`-separated, byte-sorted, dot names and symlinked directories left out, unreadable directories reported (`markdown`) | 0.15.0 |
+| `lua/nvim_kit/debounce.lua` | `new(ms, fn)` with `call`, `cancel`, `flush`; `fn` runs once with the last arguments on the main loop; the timer closes on `VimLeavePre` | 0.15.0 |
 
 Additions in 0.13.0: `llm.embed` (`/v1/embeddings` in groups), `store.write_bytes` (atomic, `fsync`), `text.utf16_len`, `utf16_sub`, `char_at`, `is_js_space`, `js_trim`, `byte_less`, a tolerance for `conformance.run` and `test.deep_equal`, `sampling.family_thinking` and the new `sampling.resolve` fallback (`unrecognised`, `fallback`); `llm` rejects `backend = 'anthropic'` (use `'openai'`).
 
@@ -86,6 +88,10 @@ Tools: `brew install stylua selene`. Neovim ≥ 0.10.
 - **Lua `%s` is ASCII whitespace only;** JS `\s` also matches U+00A0, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F, U+3000 and U+FEFF (finding M9).
 - **LM Studio answers unknown paths with HTTP 200 and `{"error": …}`** (0.4.x, `/api/version`, `/api/config`). Judge a probe by its body, never by the status alone.
 - **curl:** `-q` must be the first argument or `~/.curlrc` applies. Secrets go in the configuration over stdin (`-K -`), in double quotes with `\` and `"` escaped — never in argv, which `ps` shows. `vim.system`'s `timeout` ends with `code 124`, `kill(15)` with `code 0, signal 15`.
+- **`vim.fn.*` and `vim.notify` raise E5560 in a fast event** (a `vim.uv` callback, `vim.in_fast_event()`); `vim.fn.fnamemodify` and `vim.json` are fine (measured 2026-10-26 on 0.12.6). Code that an embedder's or a timer's callback may reach (`live_indexer`, `store.write_bytes`) uses `vim.uv` only (`store.mkdir_p`) and schedules its notifications. A test makes the callback fast with a `vim.uv.new_timer()` and checks `vim.in_fast_event()` inside it, or it proves nothing.
+- **`live_indexer` persist raises on a storage failure** (full disk, no write permission); the old container stays whole and no temp file is left (measured 2026-10-26, also on a real 600 KB FAT volume: `ENOSPC`). A test of a failing write without root uses a `chmod 555` directory, a directory named `index.bin`, or `ulimit -f` with `trap "" XFSZ` (EFBIG).
+- **Two timers with the same timeout fire in start order in one `uv_run` turn:** `vim.uv.sleep(n)` blocks the loop so both are overdue, and their `vim.schedule` callbacks queue in that order. That is how `debounce_spec` puts a `cancel` between a timer firing and its scheduled run.
+- **The `ffi` and the list path of `vectors` and `live_indexer` are both tested:** `tests/no_ffi_spec.lua` starts a second Neovim (`tests/no_ffi_child.lua`) where `require('ffi')` fails and runs the indexer, vector and container specs there; the golden sha256 and a deterministic container's CRC agree with the run that has `ffi`.
 - **A test that starts another Neovim uses `vim.v.progpath`,** not `'nvim'`: `make test NVIM=…` replaces only the outer one.
 
 ## Memory
