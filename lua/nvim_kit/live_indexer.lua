@@ -12,9 +12,11 @@
 -- works too since 0.15.0 (measured 2026-10-26: before, an intermediate state failed with E5560 and
 -- the default `warn` aborted the run), with `fs_storage` or any storage that avoids Vimscript
 -- functions; the callbacks you pass (`cb`, `on_progress`, `read`, `stamp_for`) then run there as
--- well, so a `cb` that persists or touches buffers should `vim.schedule` first. A long run does not block Neovim: between two embedder
--- calls the indexer only does cheap work, and the next call waits for its answer. An embedder
--- that answers at once (a test double) works as well, with no recursion.
+-- well, so a `cb` that persists or touches buffers should `vim.schedule` first.
+--
+-- A long run does not block Neovim: between two embedder calls the indexer only does cheap work,
+-- and the next call waits for its answer. An embedder that answers at once (a test double) works as
+-- well, with no recursion.
 --
 -- `dim` is the number of columns of the index (default 256, what vault-rag always wrote). An
 -- index on disk with other columns is refused like one built with another model. `source_dim` in
@@ -187,7 +189,8 @@ end
 --- `opts = { dim = 256, now = function() return ms end, warn = function(message) end }`: `now`
 --- is the clock for `built_at` in milliseconds since the epoch (default `os.time() * 1000`),
 --- `warn` hears what a run survives (an intermediate state that could not be written; default
---- `vim.notify`, scheduled when called from a fast event). A `dim` that is no positive whole number raises.
+--- `vim.notify`, scheduled when called from a fast event). A `dim` that is no positive whole number
+--- raises.
 function M.new(storage, dir, embedder, model, opts)
   opts = opts or {}
   if

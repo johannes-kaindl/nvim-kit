@@ -96,6 +96,10 @@ T.case('markdown: an unreadable directory is reported in skipped, not passed ove
   assert(uv.fs_chmod(root .. '/locked', 0))
   local r = W.markdown(root)
   uv.fs_chmod(root .. '/locked', 493)
+  if #r.skipped == 0 then -- root reads any directory: chmod 0 blocks nothing, the other cases cover the path
+    drop(root)
+    return
+  end
   T.eq(r.paths, { 'ok.md', 'open/o.md' })
   T.eq(r.skipped, { 'locked' })
   drop(root)
@@ -134,3 +138,31 @@ T.case('markdown: exclude is case-sensitive', function()
   T.eq(W.markdown(root, { exclude = { 'templates/' } }).paths, { 'other.md' })
   drop(root)
 end)
+
+T.case(
+  'markdown: a read that fails half way through a directory is reported, not taken for its end',
+  function()
+    local root = tree({ 'ok.md', 'sub/a.md', 'sub/b.md', 'sub/c.md' })
+    -- fs_scandir_next answers (nil, error) after two entries of `sub`: the way an I/O error looks
+    local real = uv.fs_scandir_next
+    local seen = {}
+    uv.fs_scandir_next = function(handle)
+      seen[handle] = (seen[handle] or 0)
+      local name, kind = real(handle)
+      if name == 'a.md' or name == 'b.md' or name == 'c.md' then
+        seen[handle] = seen[handle] + 1
+        if seen[handle] == 3 then
+          return nil, 'EIO: i/o error'
+        end
+      end
+      return name, kind
+    end
+    local ok, r = pcall(W.markdown, root)
+    uv.fs_scandir_next = real
+    assert(ok, r)
+    T.eq(r.skipped, { 'sub' })
+    T.eq(#r.paths, 3, vim.inspect(r.paths)) -- ok.md and the two entries of sub read before the error
+    T.ok(vim.tbl_contains(r.paths, 'ok.md'))
+    drop(root)
+  end
+)

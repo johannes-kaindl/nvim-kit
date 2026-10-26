@@ -12,8 +12,10 @@ end
 
 --- The paths of all Markdown notes (`*.md`, extension in lower case) under `root`, relative to it
 --- and `/`-separated, sorted by bytes (`text.byte_less`), as `{ paths = {...}, skipped = {...} }`.
---- `skipped` lists the directories that could not be read (relative, `/`-separated, sorted the
---- same way); their notes are missing from `paths`, so the caller must say so. A `root` that
+--- `skipped` lists the directories that could not be read, or not to the end because the read
+--- failed half way (the notes listed before the failure stay in `paths`); relative,
+--- `/`-separated, sorted the same way, `.` for the root itself. Their notes are missing from
+--- `paths`, so the caller must say so. A `root` that
 --- cannot be read raises: an empty result for a vault that is not there would look like an empty
 --- vault.
 ---
@@ -77,6 +79,11 @@ function M.markdown(root, opts)
       while true do
         local name, kind = uv.fs_scandir_next(handle)
         if not name then
+          if kind ~= nil then
+            -- (nil, error) in the middle of a directory is no end of it: what was listed before
+            -- stays, and the directory is reported as not fully read
+            skipped[#skipped + 1] = rel_dir == '' and '.' or rel_dir
+          end
           break
         end
         if name:sub(1, 1) ~= '.' then
