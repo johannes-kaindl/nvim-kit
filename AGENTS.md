@@ -41,6 +41,7 @@
 | `lua/nvim_kit/lock.lua` | lock file with stale takeover (`acquire`, `STALE_AFTER_S`); a port of code-kit's retrieval-store lock | 0.13.0 |
 | `lua/nvim_kit/walk.lua` | the Markdown notes under a directory: relative, `/`-separated, byte-sorted, dot names and symlinked directories left out, unreadable directories reported (`markdown`) | 0.15.0 |
 | `lua/nvim_kit/debounce.lua` | `new(ms, fn)` with `call`, `cancel`, `flush`; `fn` runs once with the last arguments on the main loop; the timer closes on `VimLeavePre` | 0.15.0 |
+| `lua/nvim_kit/endpoint_model.lua` | the model chosen per server, remembered in a state file: `new(path, opts)` (path a string or a function) gives `model(url)`, `set_model(url, id)`, `choose(endpoint, models, cb, opts)`, `path()`; through `store`, extracted from the identical `state.lua` of transmute.nvim and note-retrieval.nvim | 0.16.0 |
 
 Additions in 0.13.0: `llm.embed` (`/v1/embeddings` in groups), `store.write_bytes` (atomic, `fsync`), `text.utf16_len`, `utf16_sub`, `char_at`, `is_js_space`, `js_trim`, `byte_less`, a tolerance for `conformance.run` and `test.deep_equal`, `sampling.family_thinking` and the new `sampling.resolve` fallback (`unrecognised`, `fallback`); `llm` rejects `backend = 'anthropic'` (use `'openai'`).
 

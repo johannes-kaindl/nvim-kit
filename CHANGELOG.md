@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Added
+- `nvim_kit.endpoint_model` — the model a person chose per server, remembered across sessions: `new(path, opts)` returns `model(url)`, `set_model(url, id)`, `choose(endpoint, models, cb, opts)` and `path()`. `path` is a string or a function (read on every use); `opts.prompt_prefix` starts the picker's prompt, and `choose` takes its own to override. Behaviour of the two plugin copies it replaces (`state.lua` in transmute.nvim and note-retrieval.nvim): a broken file or a file that is no object reads as `nil` and is set aside, `models` as a list is replaced by an object on the next write, an entry that is no string is no model, a dismissed picker stores nothing and answers `cb(nil)`.
+
 ## [0.15.0] — 2026-10-26
 
 ### Added
