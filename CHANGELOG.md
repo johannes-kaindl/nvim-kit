@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.16.1] — 2026-11-01
+
+### Fixed
+- `endpoint_model` required `nvim_kit.store` by its absolute name, so a vendored copy (`lua/<plugin>/kit/`) failed to load: `module 'nvim_kit.store' not found`. It requires its sibling relative to its own name now, like every other module. Found when 0.16.0 was vendored into note-retrieval.nvim; 0.16.0 is not vendorable, use 0.16.1.
+
+### Added
+- `tests/relative_requires_spec.lua`: no module under `lua/nvim_kit/` requires a sibling by its absolute name (with a control that the scan finds one). The kit's own tests load every module as `nvim_kit.*`, so they could not see this.
+
 ## [0.16.0] — 2026-11-01
 
 ### Added

@@ -1,7 +1,8 @@
 -- The model a person chose per server, remembered across sessions in a JSON state file:
 -- { "models": { "<endpoint url>": "<model id>" } }, through nvim_kit.store (atomic write, re-read
 -- before every write, a broken file set aside). The file's path belongs to the plugin.
-local store = require('nvim_kit.store')
+-- Relative require: a vendored copy loads its sibling under lua/<plugin>/kit/.
+local store = require(((...):gsub('endpoint_model$', 'store')))
 
 local M = {}
 
