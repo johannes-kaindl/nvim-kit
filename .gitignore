@@ -1,3 +1,4 @@
 .DS_Store
 .remember/
-.claude/
+.claude/*
+!.claude/rules/
