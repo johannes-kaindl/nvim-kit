@@ -463,7 +463,7 @@ local function row(idx, path)
   return out
 end
 
--- (dim, source): qwen3-embedding:8b at 1 024 dimensions (Oneiron), vault-rag, a model that
+-- (dim, source): qwen3-embedding:8b at 1 024 dimensions, vault-rag, a model that
 -- returns exactly what the index keeps, and a smaller one
 -- (the reindex_all half of this case is in the second part of this file)
 local DIM_CASES = { { 1024, 4096 }, { 256, 4096 }, { 1024, 1024 }, { 256, 768 } }
