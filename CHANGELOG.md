@@ -4,7 +4,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.18.0] — 2026-11-11
+
 ### Added
+- `LICENSING.md` and `CLA.md`; the README names code-kit as a private reference implementation whose vectors ship in `tests/conformance/code-kit/`.
 - `nvim_kit.linediff` — `align(a, b, opts)` aligns two lists of lines along a longest common subsequence with a fixed rule: common prefix first, the suffix only over what the prefix left, a suffix-LCS table over the middle (a tie drops first, then adds), and above `opts.cell_limit` cells (default 250000, `n * m > limit`) no table at all — the middle of `a` is dropped, then the middle of `b` is added. Returns `{ prefix, suffix, common, dropped, added }` with 1-based indices (`added` as runs `{ at, count }`). Written so that a port of a reference with the same rule can be built on it line for line; checked against 34 line-alignment cases of such a reference outside this repository, none of them copied here.
 - `date.local_today(t)` — today's date in the local time zone (`os.date('%Y-%m-%d')`), next to `utc_today`. Between local midnight and the zone's offset the two days differ, so a streak counted by the UTC day breaks or doubles there. `add_days` stays pure calendar arithmetic and is tested not to move with the zone.
 - `date.utc_today(t)` and `date.local_today(t)` take an optional instant (seconds since the epoch, default now), so a test holds the clock still without the system clock; a value that is no number raises. Compatible: `utc_today()` is unchanged.
