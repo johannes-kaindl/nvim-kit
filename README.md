@@ -319,4 +319,4 @@ New modules start at `0.x` and become stable with their second real user. Every 
 
 ## License
 
-Code: [AGPL-3.0](LICENSE). Documentation: [CC BY-SA 4.0](LICENSE-DOCS).
+Code: [AGPL-3.0](LICENSE), with a commercial license available ([LICENSING.md](LICENSING.md)); contributions come under the [CLA](CLA.md). Documentation: [CC BY-SA 4.0](LICENSE-DOCS).
