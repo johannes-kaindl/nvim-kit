@@ -4,6 +4,11 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.17.1] — 2026-11-11
+
+### Changed
+- `walk`: the comment on the measured walk no longer names a private vault (comment only, no behaviour change). Tagged so that plugins can vendor a copy without the name.
+
 ## [0.17.0] — 2026-11-11
 
 ### Fixed
