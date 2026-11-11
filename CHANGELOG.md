@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Added
+- `date.local_today(t)` — today's date in the local time zone (`os.date('%Y-%m-%d')`), next to `utc_today`. Between local midnight and the zone's offset the two days differ, so a streak counted by the UTC day breaks or doubles there. `add_days` stays pure calendar arithmetic and is tested not to move with the zone.
+- `date.utc_today(t)` and `date.local_today(t)` take an optional instant (seconds since the epoch, default now), so a test holds the clock still without the system clock; a value that is no number raises. Compatible: `utc_today()` is unchanged.
+
 ## [0.17.1] — 2026-11-11
 
 ### Changed

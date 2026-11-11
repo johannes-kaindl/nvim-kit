@@ -70,10 +70,14 @@ It raises on a missing file, broken JSON, or a different or missing schema. `nul
 local date = require('nvim_kit.date')
 date.add_days('2026-03-30', -1)  -- '2026-03-29', also under TZ=Europe/Berlin
 date.utc_today()                  -- today's UTC date
+date.local_today()                -- today's date in the local time zone (0.18.0)
+date.local_today(1792017000)      -- the same for an instant (seconds since the epoch): holds the clock still in a test
 date.days_from_civil(1970, 1, 1)  -- 0; date.civil_from_days(0) → 1970, 1, 1
 ```
 
 Day arithmetic is pure calendar math, never `os.time`: in local time a daylight-saving switch moves "one day earlier" by an hour and can land on the wrong date. A malformed or impossible date (`2025-02-29`) raises.
+
+`local_today` is the calendar day a person on this machine is living in. Between local midnight and the zone's offset it differs from `utc_today` (22:30 UTC on 14 October is 00:30 on the 15th in Berlin), so a streak or a "done today" mark that counts by the UTC day breaks or doubles there. Count with `local_today`, then step with `add_days`, which never goes through local midnight. Both take an optional instant in seconds since the epoch (default: now); anything that is not a number raises. The tests switch the zone for real (`TZ=Europe/Berlin` against `TZ=UTC`) and check first that the switch arrived.
 
 **`nvim_kit.store`** — a JSON state file that two editors can share.
 
