@@ -190,3 +190,56 @@ T.case('model: an unreadable state file reads as nil instead of raising', functi
   vim.uv.fs_chmod(path, tonumber('644', 8))
   assert(ok, err)
 end)
+
+-- A state file that cannot be written: a directory sits where the file should be, so the atomic
+-- rename inside `set_model` raises (checked in the case itself, not assumed).
+local function unwritable()
+  local em, _, _, path = fresh()
+  vim.fn.mkdir(path, 'p')
+  local ok = pcall(em.set_model, 'http://x', 'b')
+  T.eq(ok, false, 'precondition: set_model must raise on this state file')
+  return em
+end
+
+T.case('choose: a pick survives a state file that cannot be written, cb(id, err) fires once', function()
+  local em = unwritable()
+  with_select(2, function()
+    local calls = {}
+    em.choose({ url = 'http://x' }, { 'a', 'b' }, function(...)
+      calls[#calls + 1] = { ... }
+    end)
+    vim.wait(0)
+    T.eq(#calls, 1, 'cb fires exactly once')
+    T.eq(calls[1][1], 'b', 'the pick is answered')
+    T.eq(type(calls[1][2]), 'string', 'the write error comes as the second argument')
+  end)
+end)
+
+T.case('choose: a successful pick answers cb(id) with no error, a dismissal cb(nil) with none', function()
+  local em = fresh()
+  with_select(1, function()
+    local got
+    em.choose({ url = 'http://x' }, { 'a' }, function(...)
+      got = { ... }
+    end)
+    T.eq({ got[1], got[2] }, { 'a', nil })
+  end)
+  with_select(nil, function()
+    local got
+    em.choose({ url = 'http://x' }, { 'a' }, function(...)
+      got = { ... }
+    end)
+    T.eq({ got[1], got[2] }, { nil, nil })
+  end)
+end)
+
+T.case('choose: a dismissal on an unwritable state file stays cb(nil) without an error', function()
+  local em = unwritable()
+  with_select(nil, function()
+    local got
+    em.choose({ url = 'http://x' }, { 'a' }, function(...)
+      got = { ... }
+    end)
+    T.eq({ got[1], got[2] }, { nil, nil })
+  end)
+end)
