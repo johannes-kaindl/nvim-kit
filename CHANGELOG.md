@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.17.0] — 2026-11-11
+
 ### Fixed
 - `endpoint_model.choose`: a pick no longer gets lost when `set_model` raises (state file not writable). `choose` called `set_model` unguarded inside the `vim.ui.select` callback, so the error escaped and `cb` never fired. It now catches the error and calls `cb(id, err)` once, `err` being the write error's message (`nil` on success and when the picker is dismissed). Compatible: a caller that reads only `id` is unaffected, and one that wants to say "could not be remembered" reads `err`. Measured in note-retrieval.nvim 2026-11-11 (`pcall` ok=false, cb_fired=0).
 
